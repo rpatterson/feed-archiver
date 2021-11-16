@@ -24,14 +24,14 @@ urllib.parse.quote`_ function.  Note that this will double-escape any
 Then the URL is converted to a corresponding filesystem path:
 
   ``https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541`` ->
-  ``./foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
+  ``./https/foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
 
 Assuming the archived feeds are all hosted via HTTPS/TLS from an `nginx server_name`_ of
 ``feeds.example.com``, then subscribing to the archived feed in a syndication client,
 such as a pod-catcher app can be done by transforming the URL like so:
 
   ``https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541`` ->
-  ``https://feeds.example.com/foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
+  ``https://feeds.example.com/https/foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
 
 IOW, it's as close as possible to simply prepending your archives host name to the feed
 URL.
