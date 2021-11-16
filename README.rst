@@ -1,24 +1,46 @@
-==============================================================================
-python-project-structure
-==============================================================================
-Python project structure foundation or template
-------------------------------------------------------------------------------
+========================================================================================
+feed-archiver
+========================================================================================
+Archive the full contents of RSS/Atom syndication feeds including enclosures and assets.
+----------------------------------------------------------------------------------------
 
-.. image:: https://github.com/rpatterson/python-project-structure/workflows/Run%20linter,%20tests%20and,%20and%20release/badge.svg
+.. image:: https://github.com/rpatterson/feed-archiver/workflows/Run%20linter,%20tests%20and,%20and%20release/badge.svg
 
-This repository is meant to be used as a minimal, yet opinionated baseline for `Python`_
-software projects.  It includes:
+The ``$ feed-archiver`` command aims to archive RSS/Atom feeds as fully as possible in
+such a way that it can be served simply by a static site server such as `nginx`_.  It
+downloads feed XML, feed item enclosures, such as podcast audio files, and assets, such
+as images or icons.  Downloaded enclosures and assets are stored in a static filesystem
+tree, and their URLs in the feed XML are adjusted to point to the relative archived
+location.  The adjusted feed XML is then written to the same filesystem tree.
 
-- Basic `Python "distribution"/project`_ metadata
-- A `Makefile`_ for local development build and maintenance tasks
+All URLs are transformed into file-system paths that are as readable as possible while
+avoiding special characters that may cause issues with common file-systems.
+Specifically, special characters are ``%xx`` escaped using `Python's
+urllib.parse.quote`_ function.  Note that this will double-escape any
+``%xx`` escapes in the existing URL:
 
-The intended use is to add this repository as a VCS remote for your project.  Thus
-developers can merge changes from this repository as we make changes related to Python
-project structure and tooling.  As we add structure specific to certain types of
-projects (e.g. CLI scripts, web development, etc.), frameworks (e.g. Flask, Pyramid,
-Django, etc.), libraries and such, branches will be used for each such variation such
-that structure common to different variations can be merged back into the branches for
-those specific variations.
+  ``.../foo?bar=qux%2Fbaz#corge`` -> ``.../foo%3Fbar%3Dqux%252Fbaz%23corge``
+
+Then the URL is converted to a corresponding filesystem path:
+
+  ``https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541`` ->
+  ``./foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
+
+Assuming the archived feeds are all hosted via HTTPS/TLS from an `nginx server_name`_ of
+``feeds.example.com``, then subscribing to the archived feed in a syndication client,
+such as a pod-catcher app can be done by transforming the URL like so:
+
+  ``https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541`` ->
+  ``https://feeds.example.com/foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
+
+IOW, it's as close as possible to simply prepending your archives host name to the feed
+URL.
+
+As feeds change over time, ``feed-archiver`` preserves the earliest form of feed content
+as much as possible.  If a feed item is changed in a subsequent retrieval of the feed,
+the original item XML is preserved instead of updating to the newer XML.  More
+specifically, items will be ignored on subsequent retrievals of the same feed if they
+have the same ``guid``/``id`` as items that have previously been archived for that feed.
 
 
 Installation
@@ -26,48 +48,49 @@ Installation
 
 Install using any tool for installing standard Python 3 distributions such as `pip`_::
 
-  $ sudo pip3 install python-project-structure
+  $ sudo pip3 install feed-archiver
 
 
 Usage
 =====
 
-See the command-line help for details on options and arguments::
+Create a ``./.feed-archiver.csv`` CSV file in a directory to serve as the root directory
+for all feeds to be archived.  The CSV file should have a header row and the first cell
+of each row after that should contain the URL of a feed to archive in this directory.
+In the simplest form, this can just be a file with one header line and one feed URL per
+line from there::
 
-  $ usage: python-project-structure [-h]
+  Feed URL
+  https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541
+  ...
 
-  Python project structure foundation or template, top-level package.
+Then simple run the ``$ feed-archiver`` command in that directory to update the archive
+from the current version of the feeds::
+
+  $ cd "/var/www/html/feeds/"
+  $ feed-archiver
+  INFO:Retrieving feed URL: https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541
+  ...
+
+See also the command-line help for details on options and arguments::
+
+  $ usage: feed-archiver [-h] [archive-dir...]
+
+  Archive the full contents of RSS/Atom syndication feeds including enclosures and
+  assets.
+
+  positional arguments:
+    archive-dir  filesystem path to the root of an archive of feeds (default: ./)
 
   optional arguments:
     -h, --help  show this help message and exit
 
-
-Motivation
-==========
-
-There are many other Python project templates so why make another? I've been doing
-Python development since 1998, so I've had plenty of time to develop plenty of opinions
-of my own.
-
-What I want in a template is complete tooling (e.g. test coverage, linting, formatting,
-CI/CD, etc.) but minimal dependencies, structure, and opinion beyond complete tooling
-(e.g. some non-Python build/task system, structure for frameworks/libraries not
-necessarily being used, etc.).  I couldn't find a template that manages that balance so
-here we are.
-
-I also find it hard to discern from other templates why they made what choices the did.
-As such, I also use this template as a way to try out various different options in the
-Python development world and evaluate them for myself.  You can learn about my findings
-and the reasons the choices I've made in the commit history.
-
-Most importantly, however, I've never found a satisfactory approach to keeping project
-structure up to date over time.  So the primary motivation is to use this repository as
-a remote from which we can merge structure updates over the life of projects using the
-template.
+  ...
 
 
-.. _Python: https://docs.python.org/3/library/logging.html
-.. _Python "distribution"/project: https://docs.python.org/3/distributing/index.html
 .. _pip: https://pip.pypa.io/en/stable/installing/
+.. _Python's urllib.parse.quote:
+   https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote
 
-.. _Makefile: ./Makefile
+.. _nginx: https://nginx.org/en/docs/
+.. _nginx server_name: https://www.nginx.com/resources/wiki/start/topics/examples/server_blocks/

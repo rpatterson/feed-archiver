@@ -5,5 +5,5 @@ build-backend = "setuptools.build_meta"
 
 # https://github.com/pypa/setuptools_scm#pyprojecttoml-usage
 [tool.setuptools_scm]
-write_to = "src/pythonprojectstructure/version.py"
+write_to = "src/feedarchiver/version.py"
 local_scheme = "no-local-version"

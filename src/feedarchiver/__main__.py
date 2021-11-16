@@ -1,5 +1,5 @@
 """
-Python project structure foundation or template, command-line execution.
+feed archiver foundation or template, command-line execution.
 """
 
 from . import main  # pragma: no cover

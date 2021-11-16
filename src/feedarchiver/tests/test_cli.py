@@ -1,5 +1,5 @@
 """
-Test the python-project-structure Command-Line Interface.
+Test the feed-archiver Command-Line Interface.
 """
 
 import sys
@@ -9,12 +9,12 @@ import contextlib
 
 import unittest
 
-import pythonprojectstructure
+import feedarchiver
 
 
-class PythonProjectStructureTests(unittest.TestCase):
+class FeedarchiverTests(unittest.TestCase):
     """
-    Test the python-project-structure Command-Line Interface.
+    Test the feed-archiver Command-Line Interface.
     """
 
     def test_importable(self):
@@ -22,7 +22,7 @@ class PythonProjectStructureTests(unittest.TestCase):
         The Python package is on `sys.path` and thus importable.
         """
         import_process = subprocess.run(
-            [sys.executable, "-c", "import pythonprojectstructure"],
+            [sys.executable, "-c", "import feedarchiver"],
             check=True,
         )
         self.assertEqual(
@@ -38,7 +38,7 @@ class PythonProjectStructureTests(unittest.TestCase):
         stderr_file = io.StringIO()
         with self.assertRaises(SystemExit):
             with contextlib.redirect_stderr(stderr_file):
-                pythonprojectstructure.main(args=args)
+                feedarchiver.main(args=args)
         return stderr_file.getvalue()
 
     def test_cli_help(self):
@@ -48,10 +48,10 @@ class PythonProjectStructureTests(unittest.TestCase):
         stdout_file = io.StringIO()
         with self.assertRaises(SystemExit):
             with contextlib.redirect_stdout(stdout_file):
-                pythonprojectstructure.main(args=["--help"])
+                feedarchiver.main(args=["--help"])
         stdout = stdout_file.getvalue()
         self.assertIn(
-            pythonprojectstructure.__doc__.strip(),
+            feedarchiver.__doc__.strip(),
             stdout,
             "The console script name missing from --help output",
         )
@@ -60,7 +60,7 @@ class PythonProjectStructureTests(unittest.TestCase):
         """
         The command line script accepts options controlling behavior.
         """
-        result = pythonprojectstructure.main(args=[])
+        result = feedarchiver.main(args=[])
         self.assertIsNone(
             result,
             "Wrong console script options return value",

@@ -1,5 +1,5 @@
 """
-Python project structure foundation or template, top-level package.
+feed archiver foundation or template, top-level package.
 """
 
 import argparse
