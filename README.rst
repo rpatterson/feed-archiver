@@ -23,15 +23,15 @@ urllib.parse.quote`_ function.  Note that this will double-escape any
 
 Then the URL is converted to a corresponding filesystem path:
 
-  ``https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541`` ->
-  ``./https/foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
+  ``https://foo-username:secret@grault.example.com/feeds/garply.rss`` ->
+  ``./https/foo-username%3Asecret%40grault.example.com/feeds/garply.rss``
 
 Assuming the archived feeds are all hosted via HTTPS/TLS from an `nginx server_name`_ of
 ``feeds.example.com``, then subscribing to the archived feed in a syndication client,
 such as a pod-catcher app can be done by transforming the URL like so:
 
-  ``https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541`` ->
-  ``https://feeds.example.com/https/foo-username%3Asecret%40feeds.feedburner.com/~u/14068851158158936541``
+  ``https://foo-username:secret@grault.example.com/feeds/garply.rss`` ->
+  ``https://feeds.example.com/https/foo-username%3Asecret%40grault.example.com/feeds/garply.rss``
 
 IOW, it's as close as possible to simply prepending your archives host name to the feed
 URL.
@@ -61,7 +61,7 @@ In the simplest form, this can just be a file with one header line and one feed 
 line from there::
 
   Feed URL
-  https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541
+  https://foo-username:secret@grault.example.com/feeds/garply.rss
   ...
 
 Then simple run the ``$ feed-archiver`` command in that directory to update the archive
@@ -69,7 +69,7 @@ from the current version of the feeds::
 
   $ cd "/var/www/html/feeds/"
   $ feed-archiver
-  INFO:Retrieving feed URL: https://foo-username:secret@feeds.feedburner.com/~u/14068851158158936541
+  INFO:Retrieving feed URL: https://foo-username:secret@grault.example.com/feeds/garply.rss
   ...
 
 See also the command-line help for details on options and arguments::
