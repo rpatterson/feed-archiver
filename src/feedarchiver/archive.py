@@ -4,6 +4,11 @@ An archive of RSS/Atom syndication feeds.
 
 import pathlib
 import urllib.parse
+import csv
+
+import requests
+
+from . import feed
 
 
 class Archive:
@@ -11,11 +16,19 @@ class Archive:
     An archive of RSS/Atom syndication feeds.
     """
 
+    FEEDS_BASENAME = ".feed-archiver.csv"
+
     def __init__(self, root_dir):
         """
         Instantiate a representation of an archive from a file-system path.
         """
         self.root_path = pathlib.Path(root_dir)
+        self.config_path = self.root_path / self.FEEDS_BASENAME
+        assert (
+            self.config_path.is_file()
+        ), f"Feeds definition path is not a file: {self.config_path}"
+        self.archive_feeds = {}
+        self.requests = requests.Session()
 
     def url_to_path(self, url):
         """
@@ -57,3 +70,31 @@ class Archive:
             fragment="",
         )
         return split_url.geturl()
+
+    def update(self):
+        """
+        Request the URL of each feed in the archive and update contents accordingly.
+        """
+        updated_feeds = {}
+        with self.config_path.open() as feeds_opened:
+            # We use CSV for the definition of archive feeds because many podcast
+            # addicts may have hundreds of feed "subscriptions" so there may be real
+            # value to using a format that users can open in very common tools such as
+            # spreadsheet applications.  That said, in real world usage there may come
+            # to be use cases that are more important to support that require a
+            # different format, so open an issue and make your case if you have one.
+            feed_reader = csv.DictReader(feeds_opened)
+            for feed_config in feed_reader:
+                # Try to encapsulate all CSV implementation details here, avoid putting
+                # anywhere else such as the `feed.ArchiveFeed` class.
+                feed_url_field = feed_reader.fieldnames[0]
+                feed_url = feed_config[feed_url_field]
+                archive_feed = self.archive_feeds[feed_url] = feed.ArchiveFeed(
+                    archive=self,
+                    config=feed_config,
+                    url=feed_url,
+                )
+                updated_items = archive_feed.update()
+                if updated_items:
+                    updated_feeds[feed_url] = updated_items
+        return updated_feeds

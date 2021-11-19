@@ -2,52 +2,24 @@
 Test the feed-archiver URL escaping for file-system paths.
 """
 
-import pathlib
-
-import unittest
-
-from feedarchiver import archive
+from .. import tests
 
 
-class FeedarchiverTests(unittest.TestCase):
+class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
     """
     Test the feed-archiver URL escaping for file-system paths.
     """
-
-    ARCHIVES_PATH = pathlib.Path(__file__).parent / "archives"
-
-    WIKIPEDIA_EXAMPLE_RSS_URL = (
-        "https://foo-username:secret@grault.example.com/feeds/garply.rss"
-        "?bar=qux%2Fbaz#corge"
-    )
-    WIKIPEDIA_EXAMPLES_PATH = ARCHIVES_PATH / "wikipedia-examples"
-    WIKIPEDIA_EXAMPLE_RSS_PATH = (
-        WIKIPEDIA_EXAMPLES_PATH
-        / "https"
-        / "foo-username%3Asecret%40grault.example.com"
-        / "feeds"
-        / "garply.rss%3Fbar%3Dqux%252Fbaz%23corge"
-    )
-
-    def setUp(self):
-        """
-        Set up an example feeds archive from test data.
-        """
-        super().setUp()
-        self.wikipedia_examples_archive = archive.Archive(
-            self.WIKIPEDIA_EXAMPLES_PATH,
-        )
 
     def test_url_to_archive_path(self):
         """
         A URL is escaped to a safe file-system path.
         """
         wikipedia_example_rss_path = self.wikipedia_examples_archive.url_to_path(
-            self.WIKIPEDIA_EXAMPLE_RSS_URL,
+            self.wikipedia_example_rss_url,
         )
         self.assertEqual(
             wikipedia_example_rss_path,
-            self.WIKIPEDIA_EXAMPLE_RSS_PATH,
+            self.wikipedia_example_rss_path,
             "Wrong safe file-system path for escaped URL",
         )
 
@@ -56,11 +28,11 @@ class FeedarchiverTests(unittest.TestCase):
         A safe file-system path is un-escaped to a URL.
         """
         wikipedia_example_rss_url = self.wikipedia_examples_archive.path_to_url(
-            self.WIKIPEDIA_EXAMPLE_RSS_PATH,
+            self.wikipedia_example_rss_path,
         )
         self.assertEqual(
             wikipedia_example_rss_url,
-            self.WIKIPEDIA_EXAMPLE_RSS_URL,
+            self.wikipedia_example_rss_url,
             "Wrong un-escaped URL for safe file-system path",
         )
 
@@ -71,18 +43,18 @@ class FeedarchiverTests(unittest.TestCase):
         self.assertEqual(
             self.wikipedia_examples_archive.path_to_url(
                 self.wikipedia_examples_archive.url_to_path(
-                    self.WIKIPEDIA_EXAMPLE_RSS_URL,
+                    self.wikipedia_example_rss_url,
                 ),
             ),
-            self.WIKIPEDIA_EXAMPLE_RSS_URL,
+            self.wikipedia_example_rss_url,
             "Different URL after escaping and un-escaping",
         )
         self.assertEqual(
             self.wikipedia_examples_archive.url_to_path(
                 self.wikipedia_examples_archive.path_to_url(
-                    self.WIKIPEDIA_EXAMPLE_RSS_PATH,
+                    self.wikipedia_example_rss_path,
                 ),
             ),
-            self.WIKIPEDIA_EXAMPLE_RSS_PATH,
+            self.wikipedia_example_rss_path,
             "Different path after un-escaping and re-escaping",
         )

@@ -16,8 +16,12 @@ backports.entry-points-selectable==1.1.1
     # via virtualenv
 black==21.11b1
     # via flake8-black
+certifi==2021.10.8
+    # via requests
 cfgv==3.3.1
     # via pre-commit
+charset-normalizer==2.0.7
+    # via requests
 click==8.0.3
     # via
     #   black
@@ -38,6 +42,8 @@ flake8-black==0.2.3
     # via feed-archiver (./pyproject.toml)
 identify==2.4.0
     # via pre-commit
+idna==3.3
+    # via requests
 iniconfig==1.1.1
     # via pytest
 isort==5.10.1
@@ -89,10 +95,18 @@ pyyaml==6.0
     # via pre-commit
 regex==2021.11.10
     # via black
+requests==2.26.0
+    # via
+    #   feed-archiver (./pyproject.toml)
+    #   requests-mock
+requests-mock==1.9.3
+    # via feed-archiver (./pyproject.toml)
 rstcheck==3.3.1
     # via feed-archiver (./pyproject.toml)
 six==1.16.0
-    # via virtualenv
+    # via
+    #   requests-mock
+    #   virtualenv
 toml==0.10.2
     # via
     #   autopep8
@@ -104,11 +118,15 @@ tomli==1.2.2
     # via
     #   black
     #   pep517
+types-requests==2.26.0
+    # via feed-archiver (./pyproject.toml)
 typing-extensions==4.0.0
     # via
     #   astroid
     #   black
     #   pylint
+urllib3==1.26.7
+    # via requests
 virtualenv==20.10.0
     # via pre-commit
 wheel==0.37.0
