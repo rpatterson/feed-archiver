@@ -13,7 +13,9 @@ Known bugs and desirable features for which contributions are most welcome.
   "it just works".
 
 - Parallelize both the processing of whole feeds and the downloading of enclosures and
-  assets within each feed using a shared pool.
+  assets within each feed using a shared pool.  Maybe using httpx/async:
+  https://www.python-httpx.org/async/
+  https://docs.python.org/3/library/asyncio-queue.html#examples
 
 - Option to re-download enclosures/assets if
   Last-Modified/If-Modified-Since/If-Unmodified-Since
