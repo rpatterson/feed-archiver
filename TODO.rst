@@ -14,3 +14,8 @@ Known bugs and desirable features for which contributions are most welcome.
 
 - Parallelize both the processing of whole feeds and the downloading of enclosures and
   assets within each feed using a shared pool.
+
+- Option to re-download enclosures/assets if
+  Last-Modified/If-Modified-Since/If-Unmodified-Since
+
+- Option to re-download enclosures/assets if Content-Length is different
