@@ -8,6 +8,8 @@ Known bugs and desirable features for which contributions are most welcome.
 - Example ``./docker-compose.yml`` file with Traefik for HTTPS/TLS and nginx for static
   file hosting.
 
+- Option to use an alternate element as each item's unique identifier within a feed.
+
 - A 404 handler or somesuch to add feeds to ``./.feed-archiver.csv`` and run ``$
   feed-archiver`` automatically?  IOW, transform feed URL and add to pod-catcher app and
   "it just works".
