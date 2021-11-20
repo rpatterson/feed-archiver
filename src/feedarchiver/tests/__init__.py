@@ -7,12 +7,13 @@ import csv
 import tempfile
 import shutil
 
-import unittest
+import testtools
+from requests_mock.contrib import fixture
 
 from .. import archive
 
 
-class FeedarchiverTestCase(unittest.TestCase):
+class FeedarchiverTestCase(testtools.TestCase):
     """
     Common feed-archiver test constants and set-up.
     """
@@ -21,7 +22,7 @@ class FeedarchiverTestCase(unittest.TestCase):
     FEEDS_PATH = pathlib.Path(__file__).parent / "feeds"
 
     WIKIPEDIA_EXAMPLE_RSS_SRC_PATH = (
-        FEEDS_PATH / "wikipedia-examples" / "feeds" / "garply.rss"
+        FEEDS_PATH / "wikipedia-examples" / "feeds" / "garply-orig.rss"
     )
     WIKIPEDIA_EXAMPLES_PATH = ARCHIVES_PATH / "wikipedia-examples"
     WIKIPEDIA_EXAMPLES_FEEDS_PATH = (
@@ -42,6 +43,9 @@ class FeedarchiverTestCase(unittest.TestCase):
         Set up an example feeds archive from test data.
         """
         super().setUp()
+
+        # https://requests-mock.readthedocs.io/en/latest/fixture.html#fixtures
+        self.requests_mock = self.useFixture(fixture.Fixture())
 
         # Extract the feed URL from the CSV
         with open(self.WIKIPEDIA_EXAMPLES_FEEDS_PATH, encoding="utf-8") as feeds_opened:

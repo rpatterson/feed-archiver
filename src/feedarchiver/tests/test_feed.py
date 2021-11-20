@@ -2,13 +2,10 @@
 Test the feed-archiver CSV listing of feed URLs.
 """
 
-import requests_mock
-
 from feedarchiver import feed
 from feedarchiver import tests
 
 
-@requests_mock.Mocker()
 class FeedarchiverTests(tests.FeedarchiverTestCase):
     """
     Test the feed-archiver CSV listing of feed URLs.
@@ -26,22 +23,24 @@ class FeedarchiverTests(tests.FeedarchiverTestCase):
             url=self.wikipedia_example_rss_url,
         )
 
-    def test_feeds_requested(self, requests_mocker):
+        # All tests start with an initial request and update
+        self.orig_feed_text = self.WIKIPEDIA_EXAMPLE_RSS_SRC_PATH.read_text()
+        self.orig_get_mock = self.requests_mock.get(
+            self.wikipedia_example_rss_url,
+            text=self.orig_feed_text,
+        )
+
+    def test_feeds_requested(self):
         """
         Requests are sent for each feed URL in the archive CSV file.
         """
-        feed_text = self.WIKIPEDIA_EXAMPLE_RSS_SRC_PATH.read_text()
-        get_mock = requests_mocker.get(
-            self.wikipedia_example_rss_url,
-            text=feed_text,
-        )
         self.assertFalse(
             self.wikipedia_example_rss_path.exists(),
             "Archive of feed XML exists before updating",
         )
         self.wikipedia_example_rss_feed_archive.update()
         self.assertEqual(
-            get_mock.call_count,
+            self.orig_get_mock.call_count,
             1,
             "Wrong number of original feed URL requests",
         )
@@ -51,6 +50,6 @@ class FeedarchiverTests(tests.FeedarchiverTestCase):
         )
         self.assertEqual(
             self.wikipedia_example_rss_path.read_text(),
-            feed_text,
+            self.orig_feed_text,
             "Archive of feed XML is different from original",
         )
