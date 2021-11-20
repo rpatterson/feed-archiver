@@ -6,14 +6,14 @@ import pathlib
 import csv
 import tempfile
 import shutil
+import unittest
 
-import testtools
-from requests_mock.contrib import fixture
+import requests_mock
 
 from .. import archive
 
 
-class FeedarchiverTestCase(testtools.TestCase):
+class FeedarchiverTestCase(unittest.TestCase):
     """
     Common feed-archiver test constants and set-up.
     """
@@ -45,7 +45,9 @@ class FeedarchiverTestCase(testtools.TestCase):
         super().setUp()
 
         # https://requests-mock.readthedocs.io/en/latest/fixture.html#fixtures
-        self.requests_mock = self.useFixture(fixture.Fixture())
+        self.requests_mock = requests_mock.Mocker()
+        self.addCleanup(self.requests_mock.stop)
+        self.requests_mock.start()
 
         # Extract the feed URL from the CSV
         with open(self.WIKIPEDIA_EXAMPLES_FEEDS_PATH, encoding="utf-8") as feeds_opened:
