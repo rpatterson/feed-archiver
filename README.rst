@@ -38,7 +38,7 @@ URL.
 
 As feeds change over time, ``feed-archiver`` preserves the earliest form of feed content
 as much as possible.  If a feed item is changed in a subsequent retrieval of the feed,
-the original item XML is preserved instead of updating to the newer XML.  More
+the remote item XML is preserved instead of updating to the newer XML.  More
 specifically, items will be ignored on subsequent retrievals of the same feed if they
 have the same ``guid``/``id`` as items that have previously been archived for that feed.
 

@@ -51,5 +51,5 @@ class FeedarchiverTests(tests.FeedarchiverTestCase):
         self.assertEqual(
             self.wikipedia_example_rss_path.read_text(),
             self.orig_feed_text,
-            "Archive of feed XML is different from original",
+            "Archive of feed XML is different from remote",
         )
