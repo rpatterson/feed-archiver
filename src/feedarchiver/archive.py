@@ -16,14 +16,14 @@ class Archive:
     An archive of RSS/Atom syndication feeds.
     """
 
-    FEEDS_BASENAME = ".feed-archiver.csv"
+    FEED_CONFIGS_BASENAME = ".feed-archiver.csv"
 
     def __init__(self, root_dir):
         """
         Instantiate a representation of an archive from a file-system path.
         """
         self.root_path = pathlib.Path(root_dir)
-        self.config_path = self.root_path / self.FEEDS_BASENAME
+        self.config_path = self.root_path / self.FEED_CONFIGS_BASENAME
         assert (
             self.config_path.is_file()
         ), f"Feeds definition path is not a file: {self.config_path}"

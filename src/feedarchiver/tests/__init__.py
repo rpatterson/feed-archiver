@@ -25,8 +25,8 @@ class FeedarchiverTestCase(unittest.TestCase):
         FEEDS_PATH / "wikipedia-examples" / "feeds" / "garply-orig.rss"
     )
     WIKIPEDIA_EXAMPLES_PATH = ARCHIVES_PATH / "wikipedia-examples"
-    WIKIPEDIA_EXAMPLES_FEEDS_PATH = (
-        WIKIPEDIA_EXAMPLES_PATH / archive.Archive.FEEDS_BASENAME
+    WIKIPEDIA_EXAMPLES_FEED_CONFIGS_PATH = (
+        WIKIPEDIA_EXAMPLES_PATH / archive.Archive.FEED_CONFIGS_BASENAME
     )
     WIKIPEDIA_EXAMPLE_RSS_RELATIVE = pathlib.Path(
         "https",
@@ -50,7 +50,10 @@ class FeedarchiverTestCase(unittest.TestCase):
         self.requests_mock.start()
 
         # Extract the feed URL from the CSV
-        with open(self.WIKIPEDIA_EXAMPLES_FEEDS_PATH, encoding="utf-8") as feeds_opened:
+        with open(
+            self.WIKIPEDIA_EXAMPLES_FEED_CONFIGS_PATH,
+            encoding="utf-8",
+        ) as feeds_opened:
             self.wikipedia_example_feeds_rows = list(csv.DictReader(feeds_opened))
         self.wikipedia_example_rss_url = self.wikipedia_example_feeds_rows[0][
             "Feed URL"
