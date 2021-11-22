@@ -13,6 +13,8 @@ Known bugs and desirable features for which contributions are most welcome.
    file hosting.
 
 #. Option to use an alternate element as each item's unique identifier within a feed.
+   Also requires generalized element value handling (e.g. ``value`` attribute vs an
+   element's child text nodes).
 
 #. Order new items based on which siblings they're next to in the previous feed version.
 
@@ -33,3 +35,6 @@ Known bugs and desirable features for which contributions are most welcome.
 #. A 404 handler or somesuch to add feeds to ``./.feed-archiver.csv`` and run ``$
    feed-archiver`` automatically?  IOW, transform feed URL and add to pod-catcher app
    and "it just works".
+
+#. Add ``prune`` sub-command to remove all downloads not referenced in any archive feed
+   file.
