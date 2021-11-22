@@ -5,10 +5,13 @@ An archive of RSS/Atom syndication feeds.
 import pathlib
 import urllib.parse
 import csv
+import logging
 
 import requests
 
 from . import feed
+
+logger = logging.getLogger("feedarchiver")
 
 
 class Archive:
@@ -94,7 +97,14 @@ class Archive:
                     config=feed_config,
                     url=feed_url,
                 )
-                updated_items = archive_feed.update()
+                try:
+                    updated_items = archive_feed.update()
+                except Exception:  # pragma: no cover, pylint: disable=broad-except
+                    logger.exception(
+                        "Unhandled exception updating feed: %r",
+                        feed_url,
+                    )
+                    continue
                 if updated_items:
                     updated_feeds[feed_url] = updated_items
         return updated_feeds

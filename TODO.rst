@@ -3,6 +3,8 @@ Seeking Contributions
 ===========================================================================
 Known bugs and desirable features for which contributions are most welcome.
 
+#. Logging
+
 #. File modification dates match response ``Last-Modified`` header.
 
 #. Abstract feed handling and add Atom support.
