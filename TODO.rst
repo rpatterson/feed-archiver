@@ -6,6 +6,9 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
+#. Download assets and enclosures.  Use XPaths to identify URLs to
+   download and then update to archive URLs.
+
 #. File modification dates match response ``Last-Modified`` header.
 
 #. Add CLI options and subcommand.
@@ -33,6 +36,8 @@ High Priority
 
 Nice to Have
 ============
+
+#. Feed config option to override downloads XPath expression.
 
 #. `lxml.etree <https://lxml.de/3.2/parsing.html#iterparse-and-iterwalk>`_
 

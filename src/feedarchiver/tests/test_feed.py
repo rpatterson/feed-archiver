@@ -20,7 +20,8 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             relative_path=(
                 tests.FeedarchiverTestCase.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE
             ),
-            items_parent_tag=formats.RssFeedFormat.ITEMS_PARENT_TAG,
+            items_parent_tag="channel",
+            item_tag="item",
             item_id="7bd204c6-1655-4c27-aeee-53f933c5395f",
         ),
         dict(
@@ -31,6 +32,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             items_parent_tag=(
                 f"{{http://www.w3.org/2005/Atom}}{formats.AtomFeedFormat.ROOT_TAG}"
             ),
+            item_tag="entry",
             item_id="urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a",
         ),
     ]
@@ -221,7 +223,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
                 )
                 self.assertEqual(
                     etree.QName(items[0].tag).localname,
-                    feed_format.ITEM_TAG,
+                    feed_format_params["item_tag"],
                     "Wrong feed XML items container element tag name",
                 )
 
