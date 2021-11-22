@@ -3,11 +3,17 @@ Seeking Contributions
 ===========================================================================
 Known bugs and desirable features for which contributions are most welcome.
 
+Required
+========
+
 #. Logging
 
 #. File modification dates match response ``Last-Modified`` header.
 
 #. Add CLI options and subcommand.
+
+High Priority
+=============
 
 #. Docker image published to a registry automatically in CI/CD
 
@@ -26,6 +32,9 @@ Known bugs and desirable features for which contributions are most welcome.
    https://www.python-httpx.org/async/
 
    https://docs.python.org/3/library/asyncio-queue.html#examples
+
+Nice to Have
+============
 
 #. `lxml.etree <https://lxml.de/3.2/parsing.html#iterparse-and-iterwalk>`_
 
