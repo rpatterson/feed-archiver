@@ -20,6 +20,7 @@ class Archive:
     """
 
     FEED_CONFIGS_BASENAME = ".feed-archiver.csv"
+    FEED_URL_FIELD = "Feed URL"
 
     def __init__(self, root_dir):
         """
@@ -91,10 +92,14 @@ class Archive:
             # to be use cases that are more important to support that require a
             # different format, so open an issue and make your case if you have one.
             feed_reader = csv.DictReader(feeds_opened)
+            # Use the column with the same label as the docs if present, otherwise use
+            # the first field.
+            feed_url_field = self.FEED_URL_FIELD
+            if feed_url_field not in feed_reader.fieldnames:  # pragma: no cover
+                feed_url_field = feed_reader.fieldnames[0]
             for feed_config in feed_reader:
                 # Try to encapsulate all CSV implementation details here, avoid putting
                 # anywhere else such as the `feed.ArchiveFeed` class.
-                feed_url_field = feed_reader.fieldnames[0]
                 feed_url = feed_config[feed_url_field]
                 archive_feed = self.archive_feeds[feed_url] = feed.ArchiveFeed(
                     archive=self,
