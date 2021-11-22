@@ -11,7 +11,7 @@ import requests
 
 from . import feed
 
-logger = logging.getLogger("feedarchiver")
+logger = logging.getLogger(__name__)
 
 
 class Archive:
@@ -79,6 +79,10 @@ class Archive:
         Request the URL of each feed in the archive and update contents accordingly.
         """
         updated_feeds = {}
+        logger.info(
+            "Retrieving feed configurations: %r",
+            str(self.config_path),
+        )
         with self.config_path.open() as feeds_opened:
             # We use CSV for the definition of archive feeds because many podcast
             # addicts may have hundreds of feed "subscriptions" so there may be real

@@ -2,9 +2,13 @@
 An RSS/Atom syndication feed in an archive.
 """
 
+import logging
+
 from lxml import etree
 
 from . import formats
+
+logger = logging.getLogger(__name__)
 
 
 class ArchiveFeed:
@@ -30,9 +34,11 @@ class ArchiveFeed:
         """
         Request the URL of one feed in the archive and update contents accordingly.
         """
-        updated_items = {}
+        updated_items = []
         feed_archive_path = self.archive.url_to_path(self.url)
+        logger.info("Requesting feed: %r", self.url)
         feed_response = self.archive.requests.get(self.url)
+        logger.debug("Parsing feed XML: %r", self.url)
         remote_root = etree.fromstring(feed_response.content)
 
         # Be as permissive as possible in identifying the feed format to tolerate poorly
@@ -48,16 +54,22 @@ class ArchiveFeed:
         if not feed_archive_path.exists():
             # First time requesting this feed, simply copy the remote feed to the
             # archive
+            logger.info(
+                "Initializing feed in archive: %r -> %r",
+                self.url,
+                str(feed_archive_path),
+            )
             feed_archive_path.parent.mkdir(parents=True, exist_ok=True)
             with feed_archive_path.open("w") as feed_archive_opened:
                 feed_archive_opened.write(feed_response.text)
 
-            updated_items.update(
-                (feed_format.get_item_id(remote_item_elem), remote_item_elem)
+            updated_items.extend(
+                feed_format.get_item_id(remote_item_elem)
                 for remote_item_elem in feed_format.iter_items(remote_root)
             )
             return updated_items
 
+        logger.debug("Parsing archive XML: %r", self.url)
         with feed_archive_path.open() as feed_archive_opened:
             archive_tree = etree.parse(feed_archive_opened)
         archive_root = archive_tree.getroot()
@@ -67,6 +79,11 @@ class ArchiveFeed:
 
         # Iterate through the remote feed to make updates to the archived feed as
         # appropriate.
+        logger.info(
+            "Updating feed in archive: %r -> %r",
+            self.url,
+            str(feed_archive_path),
+        )
         for remote_item_elem in feed_format.iter_items(remote_root):
             remote_item_id = feed_format.get_item_id(remote_item_elem)
             if remote_item_id in archived_item_ids:
@@ -83,7 +100,12 @@ class ArchiveFeed:
             else:
                 # The remote item ID was not found in the archived feed, update the feed
                 # by adding this remote item.
-                updated_items[remote_item_id] = remote_item_elem
+                logger.info(
+                    "Adding feed item to archive: %r -> %r",
+                    remote_item_id,
+                    str(feed_archive_path),
+                )
+                updated_items.append(remote_item_id)
                 archived_items_parent.insert(0, remote_item_elem)
 
         if updated_items:

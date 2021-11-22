@@ -6,8 +6,6 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
-#. Logging
-
 #. File modification dates match response ``Last-Modified`` header.
 
 #. Add CLI options and subcommand.
