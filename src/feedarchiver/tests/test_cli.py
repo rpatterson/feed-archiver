@@ -12,7 +12,7 @@ import unittest
 import feedarchiver
 
 
-class FeedarchiverTests(unittest.TestCase):
+class FeedarchiverCLITests(unittest.TestCase):
     """
     Test the feed-archiver Command-Line Interface.
     """

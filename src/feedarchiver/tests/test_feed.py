@@ -6,7 +6,7 @@ from feedarchiver import feed
 from feedarchiver import tests
 
 
-class FeedarchiverTests(tests.FeedarchiverTestCase):
+class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
     """
     Test the feed-archiver CSV listing of feed URLs.
     """
