@@ -1,5 +1,5 @@
 """
-An archive of RSS/Atom syndication feeds.
+An RSS/Atom syndication feed in an archive.
 """
 
 from xml import etree
@@ -9,7 +9,7 @@ from . import formats
 
 class ArchiveFeed:
     """
-    An archive of one RSS/Atom syndication feed.
+    An RSS/Atom syndication feed in an archive.
     """
 
     FEED_FORMATS = {
