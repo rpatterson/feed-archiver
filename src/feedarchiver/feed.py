@@ -2,7 +2,7 @@
 An RSS/Atom syndication feed in an archive.
 """
 
-from xml import etree
+from lxml import etree
 
 from . import formats
 
@@ -33,12 +33,17 @@ class ArchiveFeed:
         updated_items = {}
         feed_archive_path = self.archive.url_to_path(self.url)
         feed_response = self.archive.requests.get(self.url)
-        remote_root = etree.ElementTree.fromstring(feed_response.text)
-        if remote_root.tag.lower() not in self.FEED_FORMATS:  # pragma: no cover
+        remote_root = etree.fromstring(feed_response.content)
+
+        # Be as permissive as possible in identifying the feed format to tolerate poorly
+        # behaved feeds (e.g. wrong `Content-Type` header, XML namespace, etc.).
+        # Identify feeds by the top-level XML tag name (e.g. `<rss>` or `<feed>`).
+        remote_root_tag = etree.QName(remote_root.tag).localname.lower()
+        if remote_root_tag not in self.FEED_FORMATS:  # pragma: no cover
             raise NotImplementedError(
                 f"No feed format handler for {remote_root.tag!r} root element"
             )
-        feed_format = self.FEED_FORMATS[remote_root.tag.lower()]()
+        feed_format = self.FEED_FORMATS[remote_root_tag]()
 
         if not feed_archive_path.exists():
             # First time requesting this feed, simply copy the remote feed to the
@@ -53,7 +58,8 @@ class ArchiveFeed:
             )
             return updated_items
 
-        archive_tree = etree.ElementTree.parse(feed_archive_path)
+        with feed_archive_path.open() as feed_archive_opened:
+            archive_tree = etree.parse(feed_archive_opened)
         archive_root = archive_tree.getroot()
         archived_items_parent = feed_format.get_items_parent(archive_root)
         archived_items_iter = feed_format.iter_items(archive_root)
@@ -82,7 +88,7 @@ class ArchiveFeed:
 
         if updated_items:
             # Update the archived feed file
-            archive_tree.write(feed_archive_path)
+            archive_tree.write(str(feed_archive_path))
             return updated_items
 
         return None

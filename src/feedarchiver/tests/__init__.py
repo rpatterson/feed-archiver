@@ -7,7 +7,8 @@ import csv
 import tempfile
 import shutil
 import unittest
-from xml import etree
+
+from lxml import etree
 
 import requests_mock
 
@@ -29,6 +30,9 @@ class FeedarchiverTestCase(unittest.TestCase):
         WIKIPEDIA_EXAMPLE_FEEDS_RELATIVE / "garply-orig.rss"
     )
     WIKIPEDIA_EXAMPLE_RSS_SRC_PATH = FEEDS_PATH / WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE
+    WIKIPEDIA_EXAMPLE_ATOM_SRC_RELATIVE = (
+        WIKIPEDIA_EXAMPLE_FEEDS_RELATIVE / "waldo-orig.atom"
+    )
 
     # Paths for test data in the checkout that represents local archived feed data
     ARCHIVES_PATH = pathlib.Path(__file__).parent / "archives"
@@ -109,7 +113,8 @@ def get_feed_items(feed_path):
     """
     Map item ID to item element for all the items in the given feed XML.
     """
-    tree = etree.ElementTree.parse(feed_path)
+    with feed_path.open() as feed_opened:
+        tree = etree.parse(feed_opened)
     channel = tree.getroot().find("channel")
     return {
         item_elem.find("guid").text: item_elem for item_elem in channel.iter("item")

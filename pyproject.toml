@@ -7,3 +7,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 write_to = "src/feedarchiver/version.py"
 local_scheme = "no-local-version"
+
+[tool.pylint]
+extension-pkg-allow-list = ["lxml"]

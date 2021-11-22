@@ -27,16 +27,31 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
 
         updated_feeds = self.wikipedia_examples_archive.update()
 
-        mock_feed_class.assert_called_once_with(
+        mock_feed_class.assert_any_call(
             archive=self.wikipedia_examples_archive,
             url=self.wikipedia_example_rss_url,
             config={"Feed URL": self.wikipedia_example_rss_url},
         )
-        mock_update_method.assert_called_once()
         self.assertEqual(
+            mock_feed_class.call_count,
+            2,
+            "Wrong number of archive feeds instantiated",
+        )
+        mock_update_method.assert_called_with()
+        self.assertEqual(
+            mock_update_method.call_count,
+            2,
+            "Wrong number of archive feeds updates",
+        )
+        self.assertIn(
+            self.wikipedia_example_rss_url,
             updated_feeds,
-            {self.wikipedia_example_rss_url: self.UPDATE_RETURN_VALUE},
-            "Wrong archive updated feed items",
+            "RSS feed URL missing from archive updates",
+        )
+        self.assertEqual(
+            updated_feeds[self.wikipedia_example_rss_url],
+            self.UPDATE_RETURN_VALUE,
+            "Wrong archive updates RSS feed item",
         )
 
     @mock.patch("feedarchiver.feed.ArchiveFeed")

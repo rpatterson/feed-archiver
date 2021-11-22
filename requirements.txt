@@ -50,6 +50,8 @@ isort==5.10.1
     # via pylint
 lazy-object-proxy==1.6.0
     # via astroid
+lxml==4.6.4
+    # via feed-archiver (./pyproject.toml)
 mccabe==0.6.1
     # via
     #   flake8
@@ -90,6 +92,10 @@ pylint==2.11.1
 pyparsing==3.0.6
     # via packaging
 pytest==6.2.5
+    # via
+    #   feed-archiver (./pyproject.toml)
+    #   pytest-subtests
+pytest-subtests==0.5.0
     # via feed-archiver (./pyproject.toml)
 pyyaml==6.0
     # via pre-commit

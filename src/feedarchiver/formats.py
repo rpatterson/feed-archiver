@@ -17,19 +17,21 @@ class FeedFormat:
         """
         Return the element that contains all feed item elements per the feed format.
         """
-        return feed_root.find(self.ITEMS_PARENT_TAG)
+        if self.ITEMS_PARENT_TAG:
+            return feed_root.find(f"{{*}}{self.ITEMS_PARENT_TAG}")
+        return feed_root
 
     def iter_items(self, feed_root):
         """
         Iterate over the feed items given a feed tree root element.
         """
-        return self.get_items_parent(feed_root).iter(self.ITEM_TAG)
+        return self.get_items_parent(feed_root).iter(f"{{*}}{self.ITEM_TAG}")
 
     def get_item_id(self, item_elem):
         """
         Return the item element value that uniquely identifies it within this feed.
         """
-        id_elem = item_elem.find(self.ITEM_ID_TAG)
+        id_elem = item_elem.find(f"{{*}}{self.ITEM_ID_TAG}")
         if id_elem is None:  # pragma: no cover
             raise ValueError(
                 f"Could not find feed item unique identifier: {self.ITEM_ID_TAG}"
@@ -46,3 +48,14 @@ class RssFeedFormat(FeedFormat):
     ITEMS_PARENT_TAG = "channel"
     ITEM_TAG = "item"
     ITEM_ID_TAG = "guid"
+
+
+class AtomFeedFormat(FeedFormat):
+    """
+    Handle the Atom feed XML format.
+    """
+
+    ROOT_TAG = "feed"
+    ITEMS_PARENT_TAG = ""
+    ITEM_TAG = "entry"
+    ITEM_ID_TAG = "id"

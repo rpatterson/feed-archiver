@@ -2,7 +2,10 @@
 Test the feed-archiver CSV listing of feed URLs.
 """
 
+from lxml import etree
+
 from feedarchiver import feed
+from feedarchiver import formats
 from feedarchiver import tests
 
 
@@ -10,6 +13,27 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
     """
     Test the feed-archiver CSV listing of feed URLs.
     """
+
+    FEED_FORMAT_PARAMS = [
+        dict(
+            feed_format_class=formats.RssFeedFormat,
+            relative_path=(
+                tests.FeedarchiverTestCase.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE
+            ),
+            items_parent_tag=formats.RssFeedFormat.ITEMS_PARENT_TAG,
+            item_id="7bd204c6-1655-4c27-aeee-53f933c5395f",
+        ),
+        dict(
+            feed_format_class=formats.AtomFeedFormat,
+            relative_path=(
+                tests.FeedarchiverTestCase.WIKIPEDIA_EXAMPLE_ATOM_SRC_RELATIVE
+            ),
+            items_parent_tag=(
+                f"{{http://www.w3.org/2005/Atom}}{formats.AtomFeedFormat.ROOT_TAG}"
+            ),
+            item_id="urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a",
+        ),
+    ]
 
     def setUp(self):
         """
@@ -165,3 +189,45 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             2,
             "Wrong number of items in archived feed after an item was removed",
         )
+
+    def test_feed_formats(self):
+        """
+        Both RSS and Atom XML feed formats are supported.
+        """
+        for feed_format_params in self.FEED_FORMAT_PARAMS:
+            feed_format_class = feed_format_params["feed_format_class"]
+            relative_path = feed_format_params["relative_path"]
+            with self.subTest(
+                msg="Test one XML feed format",
+                feed_format_class=feed_format_class,
+            ):
+                with (self.FEEDS_PATH / relative_path).open() as feed_opened:
+                    feed_tree = etree.parse(feed_opened)
+                feed_root = feed_tree.getroot()
+                feed_format = feed_format_class()
+
+                items_parent = feed_format.get_items_parent(feed_root)
+                self.assertEqual(
+                    items_parent.tag,
+                    feed_format_params["items_parent_tag"],
+                    "Wrong feed XML items container element tag name",
+                )
+
+                items = list(feed_format.iter_items(feed_root))
+                self.assertEqual(
+                    len(items),
+                    1,
+                    "Wrong number of feed XML items",
+                )
+                self.assertEqual(
+                    etree.QName(items[0].tag).localname,
+                    feed_format.ITEM_TAG,
+                    "Wrong feed XML items container element tag name",
+                )
+
+                items_id = feed_format.get_item_id(items[0])
+                self.assertEqual(
+                    items_id,
+                    feed_format_params["item_id"],
+                    "Wrong feed item unique identifier",
+                )

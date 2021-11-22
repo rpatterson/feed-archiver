@@ -7,8 +7,6 @@ Known bugs and desirable features for which contributions are most welcome.
 
 #. File modification dates match response ``Last-Modified`` header.
 
-#. Abstract feed handling and add Atom support.
-
 #. Docker image published to a registry automatically in CI/CD
 
 #. Example ``./docker-compose.yml`` file with Traefik for HTTPS/TLS and nginx for static
