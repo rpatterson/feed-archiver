@@ -18,7 +18,8 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         dict(
             feed_format_class=formats.RssFeedFormat,
             relative_path=(
-                tests.FeedarchiverTestCase.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE
+                tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
+                / tests.FeedarchiverTestCase.FEED_REMOTE_RELATIVE
             ),
             items_parent_tag="channel",
             item_tag="item",
@@ -27,7 +28,9 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         dict(
             feed_format_class=formats.AtomFeedFormat,
             relative_path=(
-                tests.FeedarchiverTestCase.WIKIPEDIA_EXAMPLE_ATOM_SRC_RELATIVE
+                tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
+                / tests.FeedarchiverTestCase.FEED_REMOTE_RELATIVE.parent
+                / "waldo-orig.atom"
             ),
             items_parent_tag=(
                 f"{{http://www.w3.org/2005/Atom}}{formats.AtomFeedFormat.ROOT_TAG}"
@@ -43,34 +46,32 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         """
         super().setUp()
 
-        self.wikipedia_example_rss_archive_feed = feed.ArchiveFeed(
-            archive=self.wikipedia_examples_archive,
-            config=self.wikipedia_example_feeds_rows[0],
-            url=self.wikipedia_example_rss_url,
+        self.archive_feed = feed.ArchiveFeed(
+            archive=self.archive,
+            config=self.feed_configs_rows[0],
+            url=self.feed_url,
         )
 
-    def test_feeds_requested(self):
+    def test_feed_configs_requested(self):
         """
         Requests are sent for each feed URL in the archive CSV file.
         """
         self.assertFalse(
-            self.wikipedia_example_rss_path.exists(),
+            self.feed_path.exists(),
             "Archive of feed XML exists before updating",
         )
-        feed_path, get_mock, _ = self.update_feed(
-            self.wikipedia_example_rss_archive_feed,
-        )
+        feed_path, get_mock, _ = self.update_feed(self.archive_feed)
         self.assertEqual(
             get_mock.call_count,
             1,
             "Wrong number of original feed URL requests",
         )
         self.assertTrue(
-            self.wikipedia_example_rss_path.is_file(),
+            self.feed_path.is_file(),
             "Archive of feed XML does not exist after updating",
         )
         self.assertEqual(
-            self.wikipedia_example_rss_path.read_text(),
+            self.feed_path.read_text(),
             feed_path.read_text(),
             "Archive of feed XML is different from remote",
         )
@@ -80,10 +81,8 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         Archive feed is untouched if the remote feed XML is unchanged.
         """
         # Confirm initial fixture
-        feed_path, get_mock, _ = self.update_feed(
-            self.wikipedia_example_rss_archive_feed,
-        )
-        orig_archive_item_elems = tests.get_feed_items(self.wikipedia_example_rss_path)
+        feed_path, get_mock, _ = self.update_feed(self.archive_feed)
+        orig_archive_item_elems = tests.get_feed_items(self.feed_path)
         self.assertEqual(
             len(orig_archive_item_elems),
             1,
@@ -91,14 +90,14 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         )
 
         # Feed XML hasn't changed
-        self.wikipedia_example_rss_archive_feed.update()
+        self.archive_feed.update()
         self.assertEqual(
             get_mock.call_count,
             2,
             "Wrong number of original feed URL requests",
         )
         self.assertEqual(
-            self.wikipedia_example_rss_path.read_text(),
+            self.feed_path.read_text(),
             feed_path.read_text(),
             "Archive of feed XML is different from remote",
         )
@@ -108,15 +107,13 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         Items are added to the archive feed XML as the remote feed XML changes.
         """
         # Populate with an archived copy of the original remote feed XML.
-        _, get_mock, _ = self.update_feed(
-            self.wikipedia_example_rss_archive_feed,
-        )
+        _, get_mock, _ = self.update_feed(self.archive_feed)
 
         # Update the archive after the remote feed is updated with a new item added
         _, added_item_get_mock, _ = self.update_feed(
-            archive_feed=self.wikipedia_example_rss_archive_feed,
-            relative_path=self.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE.with_stem(
-                self.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE.stem.replace(
+            archive_feed=self.archive_feed,
+            relative_path=self.FEED_REMOTE_RELATIVE.with_stem(
+                self.FEED_REMOTE_RELATIVE.stem.replace(
                     "-orig",
                     "-added-item",
                 ),
@@ -136,7 +133,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         )
 
         # The item has been added to the archived feed XML
-        added_archive_item_elems = tests.get_feed_items(self.wikipedia_example_rss_path)
+        added_archive_item_elems = tests.get_feed_items(self.feed_path)
         self.assertEqual(
             len(added_archive_item_elems),
             2,
@@ -150,9 +147,9 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         # Populate with an archived copy of the original remote feed XML containing more
         # than one item.
         _, added_item_get_mock, _ = self.update_feed(
-            archive_feed=self.wikipedia_example_rss_archive_feed,
-            relative_path=self.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE.with_stem(
-                self.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE.stem.replace(
+            archive_feed=self.archive_feed,
+            relative_path=self.FEED_REMOTE_RELATIVE.with_stem(
+                self.FEED_REMOTE_RELATIVE.stem.replace(
                     "-orig",
                     "-added-item",
                 ),
@@ -161,9 +158,9 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
 
         # Update the archive after the remote feed is updated with an item removed
         _, removed_item_get_mock, _ = self.update_feed(
-            archive_feed=self.wikipedia_example_rss_archive_feed,
-            relative_path=self.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE.with_stem(
-                self.WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE.stem.replace(
+            archive_feed=self.archive_feed,
+            relative_path=self.FEED_REMOTE_RELATIVE.with_stem(
+                self.FEED_REMOTE_RELATIVE.stem.replace(
                     "-orig",
                     "-removed-item",
                 ),
@@ -183,9 +180,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         )
 
         # The item has been preserved in the archived feed XML
-        removed_archive_item_elems = tests.get_feed_items(
-            self.wikipedia_example_rss_path,
-        )
+        removed_archive_item_elems = tests.get_feed_items(self.feed_path)
         self.assertEqual(
             len(removed_archive_item_elems),
             2,
@@ -203,7 +198,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
                 msg="Test one XML feed format",
                 feed_format_class=feed_format_class,
             ):
-                with (self.FEEDS_PATH / relative_path).open() as feed_opened:
+                with (self.REMOTES_PATH / relative_path).open() as feed_opened:
                     feed_tree = etree.parse(feed_opened)
                 feed_root = feed_tree.getroot()
                 feed_format = feed_format_class()

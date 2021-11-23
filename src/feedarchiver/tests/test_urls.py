@@ -14,12 +14,10 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
         """
         A URL is escaped to a safe file-system path.
         """
-        wikipedia_example_rss_path = self.wikipedia_examples_archive.url_to_path(
-            self.wikipedia_example_rss_url,
-        )
+        feed_path = self.archive.url_to_path(self.feed_url)
         self.assertEqual(
-            wikipedia_example_rss_path,
-            self.wikipedia_example_rss_path,
+            feed_path,
+            self.feed_path,
             "Wrong safe file-system path for escaped URL",
         )
 
@@ -27,12 +25,10 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
         """
         A safe file-system path is un-escaped to a URL.
         """
-        wikipedia_example_rss_url = self.wikipedia_examples_archive.path_to_url(
-            self.wikipedia_example_rss_path,
-        )
+        feed_url = self.archive.path_to_url(self.feed_path)
         self.assertEqual(
-            wikipedia_example_rss_url,
-            self.wikipedia_example_rss_url,
+            feed_url,
+            self.feed_url,
             "Wrong un-escaped URL for safe file-system path",
         )
 
@@ -41,20 +37,12 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
         URL escaping to safe filesystem paths is stable and reproducible.
         """
         self.assertEqual(
-            self.wikipedia_examples_archive.path_to_url(
-                self.wikipedia_examples_archive.url_to_path(
-                    self.wikipedia_example_rss_url,
-                ),
-            ),
-            self.wikipedia_example_rss_url,
+            self.archive.path_to_url(self.archive.url_to_path(self.feed_url)),
+            self.feed_url,
             "Different URL after escaping and un-escaping",
         )
         self.assertEqual(
-            self.wikipedia_examples_archive.url_to_path(
-                self.wikipedia_examples_archive.path_to_url(
-                    self.wikipedia_example_rss_path,
-                ),
-            ),
-            self.wikipedia_example_rss_path,
+            self.archive.url_to_path(self.archive.path_to_url(self.feed_path)),
+            self.feed_path,
             "Different path after un-escaping and re-escaping",
         )

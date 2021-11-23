@@ -17,92 +17,82 @@ from .. import archive
 
 class FeedarchiverTestCase(unittest.TestCase):
     """
-    Common feed-archiver test constants and set-up.
+    Constants and set-up used in all feed-archiver tests.
     """
 
-    # Paths for test data in the checkout that represents remote feed data
-    FEEDS_PATH = pathlib.Path(__file__).parent / "feeds"
-    WIKIPEDIA_EXAMPLE_FEEDS_RELATIVE = pathlib.Path(
-        "wikipedia-examples",
-        "feeds",
-    )
-    WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE = (
-        WIKIPEDIA_EXAMPLE_FEEDS_RELATIVE / "garply-orig.rss"
-    )
-    WIKIPEDIA_EXAMPLE_RSS_SRC_PATH = FEEDS_PATH / WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE
-    WIKIPEDIA_EXAMPLE_ATOM_SRC_RELATIVE = (
-        WIKIPEDIA_EXAMPLE_FEEDS_RELATIVE / "waldo-orig.atom"
-    )
-
-    # Paths for test data in the checkout that represents local archived feed data
-    ARCHIVES_PATH = pathlib.Path(__file__).parent / "archives"
-    WIKIPEDIA_EXAMPLES_PATH = ARCHIVES_PATH / "wikipedia-examples"
-    WIKIPEDIA_EXAMPLES_FEED_CONFIGS_PATH = (
-        WIKIPEDIA_EXAMPLES_PATH / archive.Archive.FEED_CONFIGS_BASENAME
-    )
-    WIKIPEDIA_EXAMPLE_RSS_RELATIVE = pathlib.Path(
+    # The relative path to the example/sample test data this test will use.
+    # Default examples are copied from the Wikipedia page of each RSS/Atom syndication
+    # XML format to represent the cleanest, simplest form of feeds.
+    EXAMPLE_RELATIVE = pathlib.Path("simple")
+    # Relative path to the feed XML content in the checkout test data to be used to mock
+    # responses to requests for the remote feed URL.
+    FEED_REMOTE_RELATIVE = pathlib.Path("feeds", "garply-orig.rss")
+    # Relative path that corresponds to the remote feed URL within the archive.
+    FEED_ARCHIVE_RELATIVE = pathlib.Path(
         "https",
         "foo-username%3Asecret%40grault.example.com",
         "feeds",
         "garply.rss%3Fbar%3Dqux%252Fbaz%23corge",
     )
-    WIKIPEDIA_EXAMPLE_RSS_PATH = (
-        WIKIPEDIA_EXAMPLES_PATH / WIKIPEDIA_EXAMPLE_RSS_RELATIVE
-    )
+
+    # Test data in the checkout that represents remote feed data
+    REMOTES_PATH = pathlib.Path(__file__).parent / "remotes"
+    # Test data in the checkout that represents local archived feed data.
+    ARCHIVES_PATH = REMOTES_PATH.parent / "archives"
 
     def setUp(self):
         """
-        Set up an example feeds archive from test data.
+        Set up used in all feed-archiver tests.
         """
         super().setUp()
 
+        # Mock HTTP/S requests:
         # https://requests-mock.readthedocs.io/en/latest/fixture.html#fixtures
         self.requests_mock = requests_mock.Mocker()
         self.addCleanup(self.requests_mock.stop)
         self.requests_mock.start()
 
-        # Extract the feed URL from the CSV
-        with open(
-            self.WIKIPEDIA_EXAMPLES_FEED_CONFIGS_PATH,
-            encoding="utf-8",
-        ) as feeds_opened:
-            self.wikipedia_example_feeds_rows = list(csv.DictReader(feeds_opened))
-        self.wikipedia_example_rss_url = self.wikipedia_example_feeds_rows[0][
-            "Feed URL"
-        ]
-
-        # Copy the testing example feeds archive
-        self.wikipedia_examples_tmp = (
+        # Create a temporary directory for mutable test data
+        self.tmp_dir = (
             tempfile.TemporaryDirectory(  # pylint: disable=consider-using-with
-                suffix=self.WIKIPEDIA_EXAMPLES_PATH.suffix,
-                prefix=f"{self.WIKIPEDIA_EXAMPLES_PATH.stem}-",
+                suffix=self.EXAMPLE_RELATIVE.suffix,
+                prefix=f"{self.EXAMPLE_RELATIVE.stem}-",
             )
         )
-        self.addCleanup(self.wikipedia_examples_tmp.cleanup)
+        self.addCleanup(self.tmp_dir.cleanup)
+
+        # Use the example/sample test data basename to assemble the rest of the
+        # filesystem paths used by the tests.
+        self.remotes_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE
+        self.archive_path = self.ARCHIVES_PATH / self.EXAMPLE_RELATIVE
+
+        # Extract the feed URL from the CSV
+        self.feed_configs_path = (
+            self.archive_path / archive.Archive.FEED_CONFIGS_BASENAME
+        )
+        with open(self.feed_configs_path, encoding="utf-8") as feed_configs_opened:
+            self.feed_configs_rows = list(csv.DictReader(feed_configs_opened))
+        self.feed_url = self.feed_configs_rows[0]["Feed URL"]
+
+        # Copy the testing example feeds archive
         shutil.copytree(
-            src=self.WIKIPEDIA_EXAMPLES_PATH,
-            dst=self.wikipedia_examples_tmp.name,
+            src=self.archive_path,
+            dst=self.tmp_dir.name,
             dirs_exist_ok=True,
         )
-        self.wikipedia_examples_archive = archive.Archive(
-            self.wikipedia_examples_tmp.name,
-        )
-        self.wikipedia_example_rss_path = (
-            self.wikipedia_examples_archive.root_path
-            / self.WIKIPEDIA_EXAMPLE_RSS_RELATIVE
-        )
+        self.archive = archive.Archive(self.tmp_dir.name)
+        self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE
 
-    def update_feed(
-        self,
-        archive_feed,
-        relative_path=WIKIPEDIA_EXAMPLE_RSS_SRC_RELATIVE,
-    ):
+    def update_feed(self, archive_feed, relative_path=None):
         """
         Mock the request response with the feed file contents and update the archive.
         """
-        feed_path = self.FEEDS_PATH / relative_path
+        if relative_path is None:
+            relative_path = self.FEED_REMOTE_RELATIVE
+
+        feed_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / relative_path
         get_mock = self.requests_mock.get(
-            self.wikipedia_example_rss_url,
+            self.feed_url,
             text=feed_path.read_text(),
         )
         updated_feeds = archive_feed.update()
