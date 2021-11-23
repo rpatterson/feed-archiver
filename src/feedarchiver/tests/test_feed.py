@@ -4,9 +4,9 @@ Test the feed-archiver CSV listing of feed URLs.
 
 from lxml import etree
 
-from feedarchiver import feed
-from feedarchiver import formats
-from feedarchiver import tests
+from .. import feed
+from .. import formats
+from .. import tests
 
 
 class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
