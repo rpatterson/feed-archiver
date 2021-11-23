@@ -78,9 +78,11 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             self.feed_path.is_file(),
             "Archive of feed XML does not exist after updating",
         )
+        remote_tree = etree.parse(feed_path.open())
+        etree.indent(remote_tree)
         self.assertEqual(
             self.feed_path.read_text(),
-            feed_path.read_text(),
+            etree.tostring(remote_tree).decode(),
             "Archive of feed XML is different from remote",
         )
 
@@ -105,9 +107,11 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             2,
             "Wrong number of original feed URL requests",
         )
+        remote_tree = etree.parse(feed_path.open())
+        etree.indent(remote_tree)
         self.assertEqual(
             self.feed_path.read_text(),
-            feed_path.read_text(),
+            etree.tostring(remote_tree).decode(),
             "Archive of feed XML is different from remote",
         )
 

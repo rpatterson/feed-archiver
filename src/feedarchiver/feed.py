@@ -51,7 +51,8 @@ class ArchiveFeed:
             )
         feed_format = self.FEED_FORMATS[remote_root_tag]()
 
-        if not feed_archive_path.exists():
+        is_feed_initialized = feed_archive_path.exists()
+        if not is_feed_initialized:
             # First time requesting this feed, simply copy the remote feed to the
             # archive
             logger.info(
@@ -63,18 +64,19 @@ class ArchiveFeed:
             with feed_archive_path.open("w") as feed_archive_opened:
                 feed_archive_opened.write(feed_response.text)
 
-            updated_items.extend(
-                feed_format.get_item_id(remote_item_elem)
-                for remote_item_elem in feed_format.iter_items(remote_root)
-            )
-            return updated_items
-
         logger.debug("Parsing archive XML: %r", self.url)
         with feed_archive_path.open() as feed_archive_opened:
             archive_tree = etree.parse(feed_archive_opened)
         archive_root = archive_tree.getroot()
         archived_items_parent = feed_format.get_items_parent(archive_root)
-        archived_items_iter = feed_format.iter_items(archive_root)
+        if not is_feed_initialized:
+            # Re-use remote item processing logic below, clear archived children when
+            # initializing the feed.
+            for archive_item_elem in feed_format.iter_items(archive_root):
+                archived_items_parent.remove(archive_item_elem)
+            archived_items = []
+        else:
+            archived_items = list(feed_format.iter_items(archive_root))
         archived_item_ids = set()
 
         # Iterate through the remote feed to make updates to the archived feed as
@@ -92,6 +94,8 @@ class ArchiveFeed:
         ):
             if etree.QName(item_sibling.tag).localname.lower() == feed_format.ITEM_TAG:
                 break
+        else:
+            first_item_idx += 1
         remote_items = list(feed_format.iter_items(remote_root))
         # Ensure that the order of new feed items is preserved
         remote_items.reverse()
@@ -101,7 +105,7 @@ class ArchiveFeed:
                 # This item was already seen in the archived feed, we don't need to
                 # update the archive or search further in the archived feed.
                 continue
-            for archived_item_elem in archived_items_iter:
+            for archived_item_elem in archived_items:
                 archived_item_ids.add(feed_format.get_item_id(archived_item_elem))
                 if remote_item_id in archived_item_ids:
                     # Found this item in the archived feed, we don't need to
@@ -120,6 +124,8 @@ class ArchiveFeed:
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
 
         if updated_items:
+            # Pretty format the feed for readability
+            etree.indent(archive_tree)
             # Update the archived feed file
             archive_tree.write(str(feed_archive_path))
             return updated_items
