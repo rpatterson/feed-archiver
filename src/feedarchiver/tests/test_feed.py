@@ -19,7 +19,11 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             feed_format_class=formats.RssFeedFormat,
             relative_path=(
                 tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
-                / tests.FeedarchiverTestCase.FEED_REMOTE_RELATIVE
+                / tests.FeedarchiverTestCase.REMOTE_MOCK
+                / "https"
+                / "foo-username%3Asecret%40grault.example.com"
+                / "feeds"
+                / "garply.rss%3Fbar%3Dqux%252Fbaz%23corge"
             ),
             items_parent_tag="channel",
             item_tag="item",
@@ -29,8 +33,11 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             feed_format_class=formats.AtomFeedFormat,
             relative_path=(
                 tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
-                / tests.FeedarchiverTestCase.FEED_REMOTE_RELATIVE.parent
-                / "waldo-orig.atom"
+                / tests.FeedarchiverTestCase.REMOTE_MOCK
+                / "https"
+                / "waldo.example.com"
+                / "feeds"
+                / "waldo"
             ),
             items_parent_tag=(
                 f"{{http://www.w3.org/2005/Atom}}{formats.AtomFeedFormat.ROOT_TAG}"
@@ -60,7 +67,8 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             self.feed_path.exists(),
             "Archive of feed XML exists before updating",
         )
-        feed_path, get_mock, _ = self.update_feed(self.archive_feed)
+        orig_request_mocks, _ = self.update_feed(self.archive_feed)
+        feed_path, get_mock = orig_request_mocks[self.feed_url]
         self.assertEqual(
             get_mock.call_count,
             1,
@@ -81,7 +89,8 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         Archive feed is untouched if the remote feed XML is unchanged.
         """
         # Confirm initial fixture
-        feed_path, get_mock, _ = self.update_feed(self.archive_feed)
+        orig_request_mocks, _ = self.update_feed(self.archive_feed)
+        feed_path, get_mock = orig_request_mocks[self.feed_url]
         orig_archive_item_elems = tests.get_feed_items(self.feed_path)
         self.assertEqual(
             len(orig_archive_item_elems),
@@ -107,18 +116,21 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         Items are added to the archive feed XML as the remote feed XML changes.
         """
         # Populate with an archived copy of the original remote feed XML.
-        _, get_mock, _ = self.update_feed(self.archive_feed)
+        orig_request_mocks, _ = self.update_feed(self.archive_feed)
+        _, get_mock = orig_request_mocks[self.feed_url]
+        orig_archive_item_elems = tests.get_feed_items(self.feed_path)
+        self.assertEqual(
+            len(orig_archive_item_elems),
+            1,
+            "Wrong number of original items in archived feed",
+        )
 
         # Update the archive after the remote feed is updated with a new item added
-        _, added_item_get_mock, _ = self.update_feed(
+        added_item_request_mocks, _ = self.update_feed(
             archive_feed=self.archive_feed,
-            relative_path=self.FEED_REMOTE_RELATIVE.with_stem(
-                self.FEED_REMOTE_RELATIVE.stem.replace(
-                    "-orig",
-                    "-added-item",
-                ),
-            ),
+            remote_mock="added-item",
         )
+        _, added_item_get_mock = added_item_request_mocks[self.feed_url]
 
         # Confirm that the correct request mocks have been used
         self.assertEqual(
@@ -146,26 +158,17 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         """
         # Populate with an archived copy of the original remote feed XML containing more
         # than one item.
-        _, added_item_get_mock, _ = self.update_feed(
+        added_item_request_mocks, _ = self.update_feed(
             archive_feed=self.archive_feed,
-            relative_path=self.FEED_REMOTE_RELATIVE.with_stem(
-                self.FEED_REMOTE_RELATIVE.stem.replace(
-                    "-orig",
-                    "-added-item",
-                ),
-            ),
         )
+        _, added_item_get_mock = added_item_request_mocks[self.feed_url]
 
         # Update the archive after the remote feed is updated with an item removed
-        _, removed_item_get_mock, _ = self.update_feed(
+        removed_item_request_mocks, _ = self.update_feed(
             archive_feed=self.archive_feed,
-            relative_path=self.FEED_REMOTE_RELATIVE.with_stem(
-                self.FEED_REMOTE_RELATIVE.stem.replace(
-                    "-orig",
-                    "-removed-item",
-                ),
-            ),
+            remote_mock="removed-item",
         )
+        _, removed_item_get_mock = removed_item_request_mocks[self.feed_url]
 
         # Confirm that the correct request mocks have been used
         self.assertEqual(

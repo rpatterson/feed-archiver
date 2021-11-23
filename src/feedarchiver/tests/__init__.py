@@ -2,6 +2,7 @@
 Tests for this feed archiver foundation or template.
 """
 
+import os
 import pathlib
 import csv
 import tempfile
@@ -26,7 +27,7 @@ class FeedarchiverTestCase(unittest.TestCase):
     EXAMPLE_RELATIVE = pathlib.Path("simple")
     # Relative path to the feed XML content in the checkout test data to be used to mock
     # responses to requests for the remote feed URL.
-    FEED_REMOTE_RELATIVE = pathlib.Path("feeds", "garply-orig.rss")
+    REMOTE_MOCK = pathlib.Path("orig")
     # Relative path that corresponds to the remote feed URL within the archive.
     FEED_ARCHIVE_RELATIVE = pathlib.Path(
         "https",
@@ -83,20 +84,37 @@ class FeedarchiverTestCase(unittest.TestCase):
         self.archive = archive.Archive(self.tmp_dir.name)
         self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE
 
-    def update_feed(self, archive_feed, relative_path=None):
+    def update_feed(self, archive_feed, remote_mock=None):
         """
-        Mock the request response with the feed file contents and update the archive.
-        """
-        if relative_path is None:
-            relative_path = self.FEED_REMOTE_RELATIVE
+        Mock the request responses with the mock dir and update the archive.
 
-        feed_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / relative_path
-        get_mock = self.requests_mock.get(
-            self.feed_url,
-            text=feed_path.read_text(),
-        )
+        The relative paths in the mock dir are un-escaped to URLs and used to create the
+        request mocks for those URLs.
+        """
+        if remote_mock is None:
+            remote_mock = self.REMOTE_MOCK
+
+        request_mocks = {}
+        remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / remote_mock
+        for root, dirs, files in os.walk(remote_mock_path):
+            for mock_basename in files:
+                if mock_basename.endswith("~"):
+                    continue
+                mock_path = pathlib.Path(root, mock_basename)
+                mock_relative = mock_path.relative_to(remote_mock_path)
+                mock_url = archive_feed.archive.path_to_url(
+                    archive_feed.archive.root_path / mock_relative
+                )
+                request_mocks[mock_url] = (
+                    mock_path,
+                    self.requests_mock.get(
+                        mock_url,
+                        text=mock_path.read_text(),
+                    ),
+                )
+
         updated_feeds = archive_feed.update()
-        return feed_path, get_mock, updated_feeds
+        return request_mocks, updated_feeds
 
 
 def get_feed_items(feed_path):
