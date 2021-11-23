@@ -46,3 +46,20 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
             self.feed_path,
             "Different path after un-escaping and re-escaping",
         )
+
+    def test_url_dir_index(self):
+        """
+        URLs with trailing slashes are escaped to an index file: e.g. `index.html`.
+        """
+        index_path = self.feed_path.parent / "index.html"
+        dir_url = self.feed_url.rsplit("/", 1)[0] + "/"
+        self.assertEqual(
+            self.archive.path_to_url(index_path),
+            dir_url,
+            "Wrong directory URL for index path",
+        )
+        self.assertEqual(
+            self.archive.url_to_path(dir_url),
+            index_path,
+            "Wrong index path for directory URL",
+        )

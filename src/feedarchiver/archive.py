@@ -19,6 +19,8 @@ class Archive:
     An archive of RSS/Atom syndication feeds.
     """
 
+    INDEX_BASENAME = "index.html"
+
     FEED_CONFIGS_BASENAME = ".feed-archiver.csv"
     FEED_URL_FIELD = "Feed URL"
 
@@ -39,12 +41,15 @@ class Archive:
         Escape the URL to a safe file-system path within the archive.
         """
         split_url = urllib.parse.urlsplit(url)
+        # Want a relative path, strip the leading, root slash
+        relative_url_path = split_url.path.lstrip("/")
+        if relative_url_path.endswith("/"):
+            relative_url_path += self.INDEX_BASENAME
         split_path = split_url._replace(
             # Only want the path, empty scheme and host
             scheme="",
             netloc="",
-            # Want a relative path, strip the leading, root slash
-            path=split_url.path.lstrip("/"),
+            path=relative_url_path,
         )
         # Use `pathlib.PurePosixPath` to split on forward slashes in the URL regardless
         # of what the path separator is for this platform
@@ -61,15 +66,21 @@ class Archive:
         """
         # Also accept strings
         path = pathlib.Path(path)
+        basename = path.name
+        if basename == self.INDEX_BASENAME:
+            path = path.parent
         archive_path = path.relative_to(self.root_path)
+        url_path = str(
+            pathlib.PurePosixPath(
+                *[urllib.parse.unquote(part) for part in archive_path.parts[2:]]
+            )
+        )
+        if basename == self.INDEX_BASENAME:
+            url_path += "/"
         split_url = urllib.parse.SplitResult(
             scheme=urllib.parse.unquote(archive_path.parts[0]),
             netloc=urllib.parse.unquote(archive_path.parts[1]),
-            path=str(
-                pathlib.PurePosixPath(
-                    *[urllib.parse.unquote(part) for part in archive_path.parts[2:]]
-                )
-            ),
+            path=url_path,
             query="",
             fragment="",
         )
