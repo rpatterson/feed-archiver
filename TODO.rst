@@ -52,3 +52,11 @@ Nice to Have
    file.
 
 #. Order new items based on which siblings they're next to in the previous feed version.
+
+#. Extension point (setuptools entry points?) for selecting specialized download
+   handlers based on MIME type (e.g. HTML page assets/resources below).
+
+#. Playlist creation for media enclosures.
+
+#. Also download all assets/resources for HTML downloads, possibly with `pywebcopy
+   <https://stackoverflow.com/a/51544575/624787>`_.
