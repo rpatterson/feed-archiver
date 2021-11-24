@@ -25,8 +25,6 @@ High Priority
    Also requires generalized element value handling (e.g. ``value`` attribute vs an
    element's child text nodes).
 
-#. Order new items based on which siblings they're next to in the previous feed version.
-
 #. Parallelize both the processing of whole feeds and the downloading of enclosures and
    assets within each feed using a shared pool.  Maybe using httpx/async:
 
@@ -52,3 +50,5 @@ Nice to Have
 
 #. Add ``prune`` sub-command to remove all downloads not referenced in any archive feed
    file.
+
+#. Order new items based on which siblings they're next to in the previous feed version.

@@ -84,7 +84,18 @@ class ArchiveFeed:
             self.url,
             str(feed_archive_path),
         )
-        for remote_item_elem in feed_format.iter_items(remote_root):
+        # What is the lowest child index for the first item, used to insert new items at
+        # the top
+        first_item_idx = 0
+        for first_item_idx, item_sibling in enumerate(
+            archived_items_parent.iterchildren(),
+        ):
+            if etree.QName(item_sibling.tag).localname.lower() == feed_format.ITEM_TAG:
+                break
+        remote_items = list(feed_format.iter_items(remote_root))
+        # Ensure that the order of new feed items is preserved
+        remote_items.reverse()
+        for remote_item_elem in remote_items:
             remote_item_id = feed_format.get_item_id(remote_item_elem)
             if remote_item_id in archived_item_ids:
                 # This item was already seen in the archived feed, we don't need to
@@ -106,7 +117,7 @@ class ArchiveFeed:
                     str(feed_archive_path),
                 )
                 updated_items.append(remote_item_id)
-                archived_items_parent.insert(0, remote_item_elem)
+                archived_items_parent.insert(first_item_idx, remote_item_elem)
 
         if updated_items:
             # Update the archived feed file

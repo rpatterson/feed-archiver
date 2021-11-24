@@ -30,6 +30,7 @@ class FeedFormat:
     """
 
     ROOT_TAG = ""
+    ITEM_TAG = ""
 
     ITEMS_PARENT_XPATH = ""
     ITEMS_XPATH = ""
@@ -65,9 +66,10 @@ class RssFeedFormat(FeedFormat):
     """
 
     ROOT_TAG = "rss"
+    ITEM_TAG = "item"
 
     ITEMS_PARENT_XPATH = f"/*[local-name() = '{ROOT_TAG}']/*[local-name() = 'channel']"
-    ITEMS_XPATH = "./*[local-name() = 'item']"
+    ITEMS_XPATH = f"./*[local-name() = '{ITEM_TAG}']"
     ITEM_ID_XPATH = "./*[local-name() = 'guid']/text()"
 
 
@@ -77,7 +79,8 @@ class AtomFeedFormat(FeedFormat):
     """
 
     ROOT_TAG = "feed"
+    ITEM_TAG = "entry"
 
     ITEMS_PARENT_XPATH = "."
-    ITEMS_XPATH = "./*[local-name() = 'entry']"
+    ITEMS_XPATH = f"./*[local-name() = '{ITEM_TAG}']"
     ITEM_ID_XPATH = "./*[local-name() = 'id']/text()"

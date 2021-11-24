@@ -190,6 +190,59 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             "Wrong number of items in archived feed after an item was removed",
         )
 
+    def test_feed_reordered_item(self):
+        """
+        Items are reordered to the archive feed XML as the remote feed XML changes.
+        """
+        # Populate with a feed containing multiple items
+        added_item_request_mocks, _ = self.update_feed(
+            archive_feed=self.archive_feed,
+            remote_mock="added-item",
+        )
+        # Update the archive after the remote feed is updated with item order changed
+        reordered_item_request_mocks, _ = self.update_feed(
+            archive_feed=self.archive_feed,
+            remote_mock="reordered-item",
+        )
+        reordered_item_feed_path, _ = reordered_item_request_mocks[self.feed_url]
+
+        remote_tree = etree.parse(reordered_item_feed_path.open())
+        remote_items = remote_tree.find("channel").findall("item")
+        archive_tree = etree.parse(self.feed_path.open())
+        archive_items = archive_tree.find("channel").findall("item")
+        self.assertEqual(
+            archive_items[0].find("guid").text,
+            remote_items[2].find("guid").text,
+            "Item added at end of remote feed not at beginning of archive feed",
+        )
+        self.assertEqual(
+            archive_items[1].find("guid").text,
+            remote_items[1].find("guid").text,
+            "Item original position in remote feed not preserved",
+        )
+        self.assertEqual(
+            archive_items[2].find("guid").text,
+            remote_items[0].find("guid").text,
+            "Item original position in remote feed not preserved",
+        )
+
+    def test_feed_empty(self):
+        """
+        Updating an empty feed works without any errors
+        """
+        # Populate with a feed containing multiple items
+        empty_request_mocks, _ = self.update_feed(
+            archive_feed=self.archive_feed,
+            remote_mock="empty",
+        )
+        archive_tree = etree.parse(self.feed_path.open())
+        archive_items = archive_tree.find("channel").findall("item")
+        self.assertEqual(
+            archive_items,
+            [],
+            "Archive contains items for an empty feed",
+        )
+
     def test_feed_formats(self):
         """
         Both RSS and Atom XML feed formats are supported.
