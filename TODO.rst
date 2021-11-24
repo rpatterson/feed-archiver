@@ -6,9 +6,6 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
-#. Download assets and enclosures.  Use XPaths to identify URLs to
-   download and then update to archive URLs.
-
 #. File modification dates match response ``Last-Modified`` header.
 
 #. Add CLI options and subcommand.

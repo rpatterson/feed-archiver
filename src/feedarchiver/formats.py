@@ -29,10 +29,15 @@ class FeedFormat:
     An abstract feed XML format, such as RSS or Atom.
     """
 
+    # Constants that define the structural specifics that differ between the formats,
+    # mostly tag and attribute names.
     ROOT_TAG = ""
     ITEM_TAG = ""
     ITEM_ID_TAG = ""
+    DOWNLOAD_TEXT_TAGS = ["link"]
+    DOWNLOAD_ATTR_NAMES = ["href", "url", "src"]
 
+    # XPaths that differ between formats but can't be generalized from the above
     ITEMS_PARENT_XPATH = ""
 
     def __init_subclass__(cls, /, **kwargs):
@@ -48,6 +53,20 @@ class FeedFormat:
         cls.ITEMS_XPATH = f"./*[local-name() = '{cls.ITEM_TAG}']"
         cls.ITEM_ID_XPATH = f"./*[local-name() = '{cls.ITEM_ID_TAG}']/text()"
 
+        download_text_expr = cls.assemble_download_text_expr()
+        download_attr_step = cls.assemble_download_attr_step()
+        download_feed_prefix = (
+            f"{cls.ITEMS_PARENT_XPATH}/*[not(local-name() = '{cls.ITEM_TAG}')"
+        )
+        cls.DOWNLOAD_FEED_URLS_XPATHS = [
+            f"{download_feed_prefix} and {download_text_expr}]/text()",
+            f"{download_feed_prefix}]//{download_attr_step}",
+        ]
+        cls.DOWNLOAD_ITEM_URLS_XPATHS = [
+            f".//*[{download_text_expr}]/text()",
+            f".//{download_attr_step}",
+        ]
+
         logger.debug(
             "%s XPaths:\n%s",
             cls.__name__,
@@ -57,6 +76,34 @@ class FeedFormat:
                 if attr_name.endswith("_XPATH")
             ),
         )
+
+    @classmethod
+    def assemble_download_text_expr(cls):
+        """
+        Construct the Path predicate expression for text nodes containing URLs.
+
+        Used to combine with other expressions inside different predicates for
+        feed-level vs item-level queries.
+        """
+        elem_expr = " or ".join(
+            f"local-name() = '{download_text_tag}'"
+            for download_text_tag in cls.DOWNLOAD_TEXT_TAGS
+        )
+        attr_expr = " or ".join(
+            f"@{download_attr_name}" for download_attr_name in cls.DOWNLOAD_ATTR_NAMES
+        )
+        return f"({elem_expr}) and not({attr_expr})"
+
+    @classmethod
+    def assemble_download_attr_step(cls):
+        """
+        Construct the XPath location step for element attributes containing URLs.
+        """
+        attr_expr = " or ".join(
+            f"local-name()='{download_attr_name}'"
+            for download_attr_name in cls.DOWNLOAD_ATTR_NAMES
+        )
+        return f"@*[{attr_expr}]"
 
     def get_items_parent(self, feed_root):
         """
@@ -80,6 +127,18 @@ class FeedFormat:
         elif not item_id.strip():  # pragma: no cover
             raise ValueError(f"Empty feed item ID: {self.ITEM_ID_XPATH!r}")
         return item_id.strip()
+
+    def iter_feed_download_urls(self, feed_root):
+        """
+        Return the URLs for all downloads at the feed-level, not in feed items.
+        """
+        return feed_root.xpath(" | ".join(self.DOWNLOAD_FEED_URLS_XPATHS))
+
+    def iter_item_download_urls(self, item_elem):
+        """
+        Return the URLs for all downloads at the feed-level, not in feed items.
+        """
+        return item_elem.xpath(" | ".join(self.DOWNLOAD_ITEM_URLS_XPATHS))
 
 
 class RssFeedFormat(FeedFormat):

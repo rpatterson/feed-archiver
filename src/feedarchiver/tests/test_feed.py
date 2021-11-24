@@ -4,7 +4,6 @@ Test the feed-archiver CSV listing of feed URLs.
 
 from lxml import etree
 
-from .. import feed
 from .. import formats
 from .. import tests
 
@@ -47,18 +46,6 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         ),
     ]
 
-    def setUp(self):
-        """
-        Set up an example archive feed from test data.
-        """
-        super().setUp()
-
-        self.archive_feed = feed.ArchiveFeed(
-            archive=self.archive,
-            config=self.feed_configs_rows[0],
-            url=self.feed_url,
-        )
-
     def test_feed_configs_requested(self):
         """
         Requests are sent for each feed URL in the archive CSV file.
@@ -78,11 +65,21 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             self.feed_path.is_file(),
             "Archive of feed XML does not exist after updating",
         )
-        remote_tree = etree.parse(feed_path.open())
-        etree.indent(remote_tree)
+        with feed_path.open() as remote_opened:
+            remote_tree = etree.parse(remote_opened)
+        remote_items = remote_tree.find("channel").iterchildren("item")
+        remote_item_ids = [
+            remote_item.find("guid").text for remote_item in remote_items
+        ]
+        with self.feed_path.open() as archive_opened:
+            archive_tree = etree.parse(archive_opened)
+        archive_items = archive_tree.find("channel").iterchildren("item")
+        archive_item_ids = [
+            archive_item.find("guid").text for archive_item in archive_items
+        ]
         self.assertEqual(
-            self.feed_path.read_text(),
-            etree.tostring(remote_tree).decode(),
+            archive_item_ids,
+            remote_item_ids,
             "Archive of feed XML is different from remote",
         )
 
@@ -107,11 +104,21 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             2,
             "Wrong number of original feed URL requests",
         )
-        remote_tree = etree.parse(feed_path.open())
-        etree.indent(remote_tree)
+        with feed_path.open() as remote_opened:
+            remote_tree = etree.parse(remote_opened)
+        remote_items = remote_tree.find("channel").iterchildren("item")
+        remote_item_ids = [
+            remote_item.find("guid").text for remote_item in remote_items
+        ]
+        with self.feed_path.open() as archive_opened:
+            archive_tree = etree.parse(archive_opened)
+        archive_items = archive_tree.find("channel").iterchildren("item")
+        archive_item_ids = [
+            archive_item.find("guid").text for archive_item in archive_items
+        ]
         self.assertEqual(
-            self.feed_path.read_text(),
-            etree.tostring(remote_tree).decode(),
+            archive_item_ids,
+            remote_item_ids,
             "Archive of feed XML is different from remote",
         )
 

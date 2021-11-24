@@ -14,6 +14,7 @@ from lxml import etree
 import requests_mock
 
 from .. import archive
+from .. import feed
 
 
 class FeedarchiverTestCase(unittest.TestCase):
@@ -84,6 +85,11 @@ class FeedarchiverTestCase(unittest.TestCase):
             dirs_exist_ok=True,
         )
         self.archive = archive.Archive(self.tmp_dir.name)
+        self.archive_feed = feed.ArchiveFeed(
+            archive=self.archive,
+            config=self.feed_configs_rows[0],
+            url=self.feed_url,
+        )
         self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE
 
     def update_feed(self, archive_feed, remote_mock=None):
@@ -98,7 +104,7 @@ class FeedarchiverTestCase(unittest.TestCase):
 
         request_mocks = {}
         remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / remote_mock
-        for root, dirs, files in os.walk(remote_mock_path):
+        for root, dirs, files in os.walk(remote_mock_path, followlinks=True):
             for mock_basename in files:
                 if mock_basename.endswith("~"):
                     continue
@@ -111,7 +117,7 @@ class FeedarchiverTestCase(unittest.TestCase):
                     mock_path,
                     self.requests_mock.get(
                         mock_url,
-                        text=mock_path.read_text(),
+                        content=mock_path.read_bytes(),
                     ),
                 )
 
