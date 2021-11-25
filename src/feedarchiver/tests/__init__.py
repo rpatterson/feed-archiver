@@ -106,7 +106,7 @@ class FeedarchiverTestCase(unittest.TestCase):
         remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / remote_mock
         for root, dirs, files in os.walk(remote_mock_path, followlinks=True):
             for mock_basename in files:
-                if mock_basename.endswith("~"):
+                if mock_basename.endswith("~"):  # pragma: no cover
                     continue
                 mock_path = pathlib.Path(root, mock_basename)
                 mock_relative = mock_path.relative_to(remote_mock_path)
