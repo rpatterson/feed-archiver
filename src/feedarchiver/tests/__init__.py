@@ -21,6 +21,8 @@ class FeedarchiverTestCase(unittest.TestCase):
     Constants and set-up used in all feed-archiver tests.
     """
 
+    maxDiff = None
+
     # The relative path to the example/sample test data this test will use.
     # Default examples are copied from the Wikipedia page of each RSS/Atom syndication
     # XML format to represent the cleanest, simplest form of feeds.
