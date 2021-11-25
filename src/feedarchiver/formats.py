@@ -31,10 +31,32 @@ class FeedFormat:
 
     ROOT_TAG = ""
     ITEM_TAG = ""
+    ITEM_ID_TAG = ""
 
     ITEMS_PARENT_XPATH = ""
-    ITEMS_XPATH = ""
-    ITEM_ID_XPATH = ""
+
+    def __init_subclass__(cls, /, **kwargs):
+        """Assemble the XPath components from the format constants.
+
+        Done here so that the resulting XPaths are import-time constants that can be
+        overridden by power users, either in their own subclasses or in some future
+        configuration option.  The assembled paths can also be printed in logs or CLI
+        help so that such power users can use them as a basis for modification.
+        """
+        super().__init_subclass__(**kwargs)
+
+        cls.ITEMS_XPATH = f"./*[local-name() = '{cls.ITEM_TAG}']"
+        cls.ITEM_ID_XPATH = f"./*[local-name() = '{cls.ITEM_ID_TAG}']/text()"
+
+        logger.debug(
+            "%s XPaths:\n%s",
+            cls.__name__,
+            "\n".join(
+                f"{attr_name}={xpath}"
+                for attr_name, xpath in vars(cls).items()
+                if attr_name.endswith("_XPATH")
+            ),
+        )
 
     def get_items_parent(self, feed_root):
         """
@@ -67,10 +89,9 @@ class RssFeedFormat(FeedFormat):
 
     ROOT_TAG = "rss"
     ITEM_TAG = "item"
+    ITEM_ID_TAG = "guid"
 
     ITEMS_PARENT_XPATH = f"/*[local-name() = '{ROOT_TAG}']/*[local-name() = 'channel']"
-    ITEMS_XPATH = f"./*[local-name() = '{ITEM_TAG}']"
-    ITEM_ID_XPATH = "./*[local-name() = 'guid']/text()"
 
 
 class AtomFeedFormat(FeedFormat):
@@ -80,7 +101,6 @@ class AtomFeedFormat(FeedFormat):
 
     ROOT_TAG = "feed"
     ITEM_TAG = "entry"
+    ITEM_ID_TAG = "id"
 
     ITEMS_PARENT_XPATH = "."
-    ITEMS_XPATH = f"./*[local-name() = '{ITEM_TAG}']"
-    ITEM_ID_XPATH = "./*[local-name() = 'id']/text()"
