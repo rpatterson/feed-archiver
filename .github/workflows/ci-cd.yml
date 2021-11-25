@@ -26,7 +26,7 @@ jobs:
         if: github.ref != 'refs/heads/master'
         uses: actions/cache@master
         env:
-          cache-name: cache-pip-installs
+          cache-name: cache-pip-installs-v2
         with:
           path: ~/.local
           # Never get a cache hit to force always caching the upgraded dependencies
@@ -52,7 +52,7 @@ jobs:
         if: github.ref != 'refs/heads/master'
         uses: actions/cache@master
         env:
-          cache-name: cache-tox-envs
+          cache-name: cache-tox-envs-v2
         with:
           path: ./.tox
           # Never get a cache hit to force always caching the upgraded dependencies
