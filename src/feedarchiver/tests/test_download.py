@@ -110,7 +110,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
         # This test is written from the perspective of the archive for completeness.
         # Walk the whole archive so we can make assertions on everything within,
         # including things that shouldn't be there.
-        for root, dirs, files in os.walk(self.archive.root_path):
+        for root, _, files in os.walk(self.archive.root_path):
             for archive_basename in files:
                 if (
                     archive_basename.endswith("~")
@@ -131,7 +131,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
                         uncalled_request_mocks,
                         "No mock registered for download request",
                     )
-                    download_path, download_request_mock = uncalled_request_mocks.pop(
+                    _, download_request_mock = uncalled_request_mocks.pop(
                         download_url,
                     )
                     self.assertEqual(
@@ -217,7 +217,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
 
         # Assert existing downloads not re-downloaded
         self.archive_feed.update()
-        for root, dirs, files in os.walk(self.archive.root_path):
+        for root, _, files in os.walk(self.archive.root_path):
             for archive_basename in files:
                 if (
                     archive_basename.endswith("~")
@@ -238,9 +238,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
                         orig_request_mocks,
                         "No mock registered for download request",
                     )
-                    download_path, download_request_mock = orig_request_mocks[
-                        download_url
-                    ]
+                    _, download_request_mock = orig_request_mocks[download_url]
                     if archive_path != self.archive_feed.path:
                         self.assertEqual(
                             download_request_mock.call_count,
