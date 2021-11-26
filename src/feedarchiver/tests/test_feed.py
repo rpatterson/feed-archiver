@@ -2,6 +2,9 @@
 Test the feed-archiver CSV listing of feed URLs.
 """
 
+import os
+import datetime
+
 from lxml import etree
 
 from .. import formats
@@ -13,17 +16,15 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
     Test the feed-archiver CSV listing of feed URLs.
     """
 
+    FEED_MOCK_RELATIVE = (
+        tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
+        / tests.FeedarchiverTestCase.REMOTE_MOCK
+        / tests.FeedarchiverTestCase.FEED_ARCHIVE_RELATIVE
+    )
     FEED_FORMAT_PARAMS = [
         dict(
             feed_format_class=formats.RssFeedFormat,
-            relative_path=(
-                tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
-                / tests.FeedarchiverTestCase.REMOTE_MOCK
-                / "https"
-                / "foo-username%3Asecret%40grault.example.com"
-                / "feeds"
-                / "garply.rss%3Fbar%3Dqux%252Fbaz%23corge"
-            ),
+            relative_path=FEED_MOCK_RELATIVE,
             items_parent_tag="channel",
             item_tag="item",
             item_id="7bd204c6-1655-4c27-aeee-53f933c5395f",
@@ -295,3 +296,52 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
                     feed_format_params["item_id"],
                     "Wrong feed item unique identifier",
                 )
+
+    def test_feed_file_metadata(self):
+        """
+        Feed file metadata in the archive reflects remote response headers.
+
+        All metadata that can be extracted from the remote response is reflected in the
+        file metadata in the archive.
+        """
+        feed_mock_path = self.REMOTES_PATH / self.FEED_MOCK_RELATIVE
+        # Set the mock file path modification date which is used by the test fixture to
+        # set the header on the request mock.
+        feed_mock_stat = feed_mock_path.stat()
+        os.utime(
+            feed_mock_path,
+            (feed_mock_stat.st_atime, self.OLD_DATETIME.timestamp()),
+        )
+
+        # Feed the feed into the archive
+        self.update_feed(self.archive_feed)
+
+        # The archive file's modification time matches.
+        self.assertEqual(
+            datetime.datetime.fromtimestamp(self.feed_path.stat().st_mtime),
+            self.OLD_DATETIME,
+            "Archive feed modification date doesn't match `Last-Modified` header",
+        )
+
+        # Test in the absence of the response headers
+        no_header_feed_mock_path = (
+            self.REMOTES_PATH
+            / self.EXAMPLE_RELATIVE
+            / "added-item"
+            / tests.FeedarchiverTestCase.FEED_ARCHIVE_RELATIVE
+        )
+        no_header_request_mock = self.requests_mock.get(
+            self.feed_url,
+            content=no_header_feed_mock_path.read_bytes(),
+        )
+        self.archive_feed.update()
+        self.assertEqual(
+            no_header_request_mock.call_count,
+            1,
+            "Wrong number of feed URL requests without metadata headers",
+        )
+        self.assertNotEqual(
+            datetime.datetime.fromtimestamp(self.feed_path.stat().st_mtime),
+            self.OLD_DATETIME,
+            "Archive feed modification date not current",
+        )

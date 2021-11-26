@@ -3,10 +3,12 @@ Tests for this feed archiver foundation or template.
 """
 
 import os
+import datetime
 import pathlib
 import csv
 import tempfile
 import shutil
+import email
 import unittest
 
 from lxml import etree
@@ -24,6 +26,9 @@ class FeedarchiverTestCase(unittest.TestCase):
 
     maxDiff = None
 
+    # A date and time in the past all but guaranteed not to exist naturally in the
+    # checkout.
+    OLD_DATETIME = datetime.datetime(year=1980, month=11, day=25, hour=8, minute=31)
     # The relative path to the example/sample test data this test will use.
     # Default examples are copied from the Wikipedia page of each RSS/Atom syndication
     # XML format to represent the cleanest, simplest form of feeds.
@@ -109,6 +114,7 @@ class FeedarchiverTestCase(unittest.TestCase):
                 if mock_basename.endswith("~"):  # pragma: no cover
                     continue
                 mock_path = pathlib.Path(root, mock_basename)
+                mock_stat = mock_path.stat()
                 mock_relative = mock_path.relative_to(remote_mock_path)
                 mock_url = archive_feed.archive.path_to_url(
                     archive_feed.archive.root_path / mock_relative
@@ -117,6 +123,13 @@ class FeedarchiverTestCase(unittest.TestCase):
                     mock_path,
                     self.requests_mock.get(
                         mock_url,
+                        # Ensure the download response includes `Last-Modified`
+                        headers={
+                            "Last-Modified": email.utils.formatdate(
+                                timeval=mock_stat.st_mtime,
+                                usegmt=True,
+                            ),
+                        },
                         content=mock_path.read_bytes(),
                     ),
                 )

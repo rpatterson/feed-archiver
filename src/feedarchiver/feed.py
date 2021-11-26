@@ -3,6 +3,7 @@ An RSS/Atom syndication feed in an archive.
 """
 
 import os
+import email
 import logging
 
 from lxml import etree
@@ -148,6 +149,15 @@ class ArchiveFeed:
             etree.indent(archive_tree)
             # Update the archived feed file
             archive_tree.write(str(self.path))
+        if "Last-Modified" in feed_response.headers:
+            last_modified = email.utils.parsedate_to_datetime(
+                feed_response.headers["Last-Modified"],
+            )
+            feed_stat = self.path.stat()
+            os.utime(
+                self.path,
+                (feed_stat.st_atime, last_modified.timestamp()),
+            )
 
         return list(updated_items.keys()), download_paths
 
@@ -175,10 +185,19 @@ class ArchiveFeed:
                 with self.archive.requests.get(
                     url_result,
                     stream=True,
-                ) as download_request:
+                ) as download_response:
                     with download_path.open("wb") as download_opened:
-                        for chunk in download_request.iter_content(chunk_size=None):
+                        for chunk in download_response.iter_content(chunk_size=None):
                             download_opened.write(chunk)
+                    if "Last-Modified" in download_response.headers:
+                        last_modified = email.utils.parsedate_to_datetime(
+                            download_response.headers["Last-Modified"],
+                        )
+                        download_stat = download_path.stat()
+                        os.utime(
+                            download_path,
+                            (download_stat.st_atime, last_modified.timestamp()),
+                        )
                 downloaded_paths.append(
                     download_path.relative_to(self.archive.root_path),
                 )

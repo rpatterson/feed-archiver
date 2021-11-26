@@ -3,6 +3,7 @@ Test the feed-archiver downloading of enclosures, assets, etc..
 """
 
 import os
+import datetime
 import pathlib
 
 from lxml import etree
@@ -18,6 +19,19 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
 
     EXAMPLE_RELATIVE = pathlib.Path("downloads")
 
+    # Constants specific to this test suite
+    ENCLOSURE_HOST_PATH = (
+        "foo.example.com/podcast/episodes/waldo-episode-title/waldo.mp3"
+    )
+    ENCLOSURE_URL = f"https://{ENCLOSURE_HOST_PATH}"
+    ENCLOSURE_RELATIVE = pathlib.Path(f"https/{ENCLOSURE_HOST_PATH}")
+    ENCLOSURE_MOCK_PATH = (
+        tests.FeedarchiverTestCase.REMOTES_PATH
+        / EXAMPLE_RELATIVE
+        / tests.FeedarchiverTestCase.REMOTE_MOCK
+        / ENCLOSURE_RELATIVE
+    )
+
     def test_real_requests_disabled(self):
         """
         Confirm that tests will fail if real/external requests are attempted.
@@ -27,9 +41,60 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
         with self.assertRaises(requests_mock.exceptions.NoMockAddress):
             self.archive.requests.get("http://example.com")
 
-    def test_downloads(self):
+    def test_download_file_metadata(self):
         """
-        A feed's enclosures, images and other assets are downloaded on update.
+        Download file metadata in the archive reflects remote response headers.
+
+        All metadata that can be extracted from the remote response is reflected in the
+        file metadata in the archive.
+        """
+        # Constants specific to this test
+        enclosure_archive_path = self.archive.root_path / self.ENCLOSURE_RELATIVE
+
+        # Set the mock file path modification date which is used by the test fixture to
+        # set the header on the request mock.
+        enclosure_mock_stat = self.ENCLOSURE_MOCK_PATH.stat()
+        os.utime(
+            self.ENCLOSURE_MOCK_PATH,
+            (enclosure_mock_stat.st_atime, self.OLD_DATETIME.timestamp()),
+        )
+
+        # Download the enclosure into the archive
+        self.update_feed(self.archive_feed)
+
+        # The archive file's modification time matches.
+        self.assertEqual(
+            datetime.datetime.fromtimestamp(enclosure_archive_path.stat().st_mtime),
+            self.OLD_DATETIME,
+            "Archive download modification date doesn't match `Last-Modified` header",
+        )
+
+        # Test in the absence of the response headers
+        self.archive_feed.path.unlink()
+        enclosure_archive_path.unlink()
+        no_header_request_mock = self.requests_mock.get(
+            self.ENCLOSURE_URL,
+            content=self.ENCLOSURE_MOCK_PATH.read_bytes(),
+        )
+        self.archive_feed.update()
+        self.assertEqual(
+            no_header_request_mock.call_count,
+            1,
+            "Wrong number of feed URL requests without metadata headers",
+        )
+        self.assertNotEqual(
+            datetime.datetime.fromtimestamp(enclosure_archive_path.stat().st_mtime),
+            self.OLD_DATETIME,
+            "Archive feed modification date not current",
+        )
+
+    def test_downloads(self):  # pylint: disable=too-many-locals
+        """
+        All files in the archive after update correspond to the fixture.
+
+        This tests for completeness, that nothing in the archive doesn't correspond to a
+        request mock in the test fixture and that none of the request mocks in the
+        fixture weren't called.
         """
         # Download all feed enclosures and assets
         orig_request_mocks, _ = self.update_feed(self.archive_feed)
