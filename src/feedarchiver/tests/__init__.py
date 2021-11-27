@@ -19,7 +19,9 @@ from .. import archive
 from .. import feed
 
 
-class FeedarchiverTestCase(unittest.TestCase):
+class FeedarchiverTestCase(
+    unittest.TestCase,
+):  # pylint: disable=too-many-instance-attributes
     """
     Constants and set-up used in all feed-archiver tests.
     """
@@ -109,7 +111,7 @@ class FeedarchiverTestCase(unittest.TestCase):
 
         request_mocks = {}
         remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / remote_mock
-        for root, dirs, files in os.walk(remote_mock_path, followlinks=True):
+        for root, _, files in os.walk(remote_mock_path, followlinks=True):
             for mock_basename in files:
                 if mock_basename.endswith("~"):  # pragma: no cover
                     continue
@@ -119,6 +121,7 @@ class FeedarchiverTestCase(unittest.TestCase):
                 mock_url = archive_feed.archive.path_to_url(
                     archive_feed.archive.root_path / mock_relative
                 )
+                mock_bytes = mock_path.read_bytes()
                 request_mocks[mock_url] = (
                     mock_path,
                     self.requests_mock.get(
@@ -129,8 +132,9 @@ class FeedarchiverTestCase(unittest.TestCase):
                                 timeval=mock_stat.st_mtime,
                                 usegmt=True,
                             ),
+                            "Content-Length": str(len(mock_bytes)),
                         },
-                        content=mock_path.read_bytes(),
+                        content=mock_bytes,
                     ),
                 )
 

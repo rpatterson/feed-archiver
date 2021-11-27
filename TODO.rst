@@ -6,8 +6,9 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
-#. Handle interrupted downloads such that archived feed accurately represents as far as
-   we've gotten.
+#. Symlink various filenames for each request/response in the redirect chain:
+   - URL path basename without URL query or params
+   - Content-Disposition header
 
 High Priority
 =============

@@ -28,7 +28,7 @@ class ArchiveFeed:
         self.url = url
         self.path = archive.url_to_path(url)
 
-    def update(self):
+    def update(self):  # pylint: disable=too-many-locals
         """
         Request the URL of one feed in the archive and update contents accordingly.
         """
@@ -92,12 +92,19 @@ class ArchiveFeed:
                     remote_item_id,
                     str(self.path),
                 )
-                # Download enclosures and assets only for this item.
-                download_paths.extend(
-                    self.download_urls(
-                        remote_format.iter_item_download_urls(remote_item_elem),
-                    ),
+                item_download_urls = remote_format.iter_item_download_urls(
+                    remote_item_elem,
                 )
+                try:
+                    # Download enclosures and assets only for this item.
+                    item_download_paths = self.download_urls(item_download_urls)
+                except Exception:  # pragma: no cover, pylint: disable=broad-except
+                    logger.exception(
+                        "Problem item downloading URLs, continuing to next: %r",
+                        remote_item_id,
+                    )
+                    continue
+                download_paths.extend(item_download_paths)
                 updated_items[remote_item_id] = remote_item_elem
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
 
@@ -204,27 +211,29 @@ class ArchiveFeed:
             # Download the URL to the escaped local path in the archive
             if not download_path.exists() and url_result != self.url:
                 download_path.parent.mkdir(parents=True, exist_ok=True)
-                logger.info(
-                    "Downloading URL into archive: %r -> %r",
-                    url_result,
-                    str(download_relative),
-                )
-                with self.archive.requests.get(
-                    url_result,
-                    stream=True,
-                ) as download_response:
-                    with download_path.open("wb") as download_opened:
-                        for chunk in download_response.iter_content(chunk_size=None):
-                            download_opened.write(chunk)
-                    if "Last-Modified" in download_response.headers:
-                        last_modified = email.utils.parsedate_to_datetime(
-                            download_response.headers["Last-Modified"],
-                        )
-                        download_stat = download_path.stat()
-                        os.utime(
-                            download_path,
-                            (download_stat.st_atime, last_modified.timestamp()),
-                        )
+                try:
+                    download_response = self.download_url(
+                        url_result,
+                        download_relative,
+                        download_path,
+                    )
+                except Exception:  # pragma: no cover, pylint: disable=broad-except
+                    logger.exception(
+                        "Problem downloading URL, removing from archive: %r -> %r",
+                        url_result,
+                        str(download_path),
+                    )
+                    download_path.unlink()
+                    continue
+                if "Last-Modified" in download_response.headers:
+                    last_modified = email.utils.parsedate_to_datetime(
+                        download_response.headers["Last-Modified"],
+                    )
+                    download_stat = download_path.stat()
+                    os.utime(
+                        download_path,
+                        (download_stat.st_atime, last_modified.timestamp()),
+                    )
                 downloaded_paths.append(
                     download_path.relative_to(self.archive.root_path),
                 )
@@ -258,3 +267,40 @@ class ArchiveFeed:
                 )
 
         return downloaded_paths
+
+    def download_url(self, url, download_relative, download_path):
+        """
+        Request a URL and stream the response to the file.
+        """
+        logger.info(
+            "Downloading URL into archive: %r -> %r",
+            url,
+            str(download_relative),
+        )
+
+        content_length = 0
+        with self.archive.requests.get(
+            url,
+            stream=True,
+        ) as download_response:
+            with download_path.open("wb") as download_opened:
+                for chunk in download_response.iter_content(chunk_size=None):
+                    download_opened.write(chunk)
+                    content_length += len(chunk)
+
+        if "Content-Length" in download_response.headers:
+            try:
+                remote_content_length = int(
+                    download_response.headers["Content-Length"].strip(),
+                )
+            except ValueError:  # pragma: no cover
+                pass
+            else:
+                if content_length != remote_content_length:  # pragma: no cover
+                    logger.error(
+                        "Downloaded content size different from remote: %r -> %r",
+                        content_length,
+                        remote_content_length,
+                    )
+
+        return download_response
