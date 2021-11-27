@@ -6,8 +6,6 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
-#. Add CLI options and subcommand.
-
 High Priority
 =============
 

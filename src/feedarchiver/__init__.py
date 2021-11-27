@@ -1,10 +1,13 @@
 """
-feed archiver foundation or template, top-level package.
+Archive RSS/Atom syndication feeds and their enclosures and assets.
 """
 
 import os
+import pathlib
 import logging
 import argparse
+
+from . import archive
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,17 @@ parser = argparse.ArgumentParser(
     description=__doc__.strip(),
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
+parser.add_argument(
+    "--archive-dir",
+    "-a",
+    help=(
+        "the archive root directory into which all feeds, their enclosures and assets "
+        "will be downloaded"
+    ),
+    nargs="?",
+    type=pathlib.Path,
+    default=pathlib.Path(),
+)
 # Define CLI sub-commands
 subparsers = parser.add_subparsers(
     dest="command",
@@ -30,26 +44,25 @@ subparsers = parser.add_subparsers(
 )
 
 
-def foo():
-    """
-    Run the foo sub-command from the command line.
-    """
-    return
+def update(archive_dir):  # pragma: no cover, pylint: disable=missing-function-docstring
+    feed_archive = archive.Archive(archive_dir)
+    return feed_archive.update()
 
 
-parser_foo = subparsers.add_parser(
-    "foo",
-    help=foo.__doc__.strip(),
-    description=foo.__doc__.strip(),
+update.__doc__ = archive.Archive.update.__doc__
+parser_update = subparsers.add_parser(
+    "update",
+    help=update.__doc__.strip(),
+    description=update.__doc__.strip(),
 )
 # Make the function for the sub-command specified in the CLI argument available in the
 # argument parser for delegation below.
-parser_foo.set_defaults(command=foo)
+parser_update.set_defaults(command=update)
 
 
 def config_cli_logging(
     root_level=logging.INFO, **kwargs
-):  # pylint: disable=unused-argument
+):  # pragma: no cover, pylint: disable=unused-argument
     """
     Configure logging CLI usage first, but also appropriate for writing to log files.
     """
@@ -65,10 +78,13 @@ def config_cli_logging(
     else:
         level = logging.INFO
     logger.setLevel(level)
+    # Finer control of external loggers to reduce logger noise or expose information
+    # that may be useful to users.
+    logging.getLogger("charset_normalizer").setLevel(logging.WARNING)
     return level
 
 
-def main(args=None):  # pylint: disable=missing-function-docstring
+def main(args=None):  # pragma: no cover, pylint: disable=missing-function-docstring
     # Parse CLI options and positional arguments
     parsed_args = parser.parse_args(args=args)
     # Avoid noisy boilerplate, functions meant to handle CLI usage should accept kwargs
@@ -84,7 +100,7 @@ def main(args=None):  # pylint: disable=missing-function-docstring
     config_cli_logging(**cli_kwargs)
 
     # Delegate to the function for the sub-command CLI argument
-    logger.info("Running %r sub-command", parsed_args.command.__name__)
+    logger.debug("Running %r sub-command", parsed_args.command.__name__)
     return parsed_args.command(**cli_kwargs)
 
 

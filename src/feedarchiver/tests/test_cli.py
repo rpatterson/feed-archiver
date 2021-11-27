@@ -56,21 +56,11 @@ class FeedarchiverCLITests(unittest.TestCase):
             "The console script name missing from --help output",
         )
 
-    def test_cli_options(self):
-        """
-        The command line script accepts options controlling behavior.
-        """
-        result = feedarchiver.main(args=["foo"])
-        self.assertIsNone(
-            result,
-            "Wrong console script options return value",
-        )
-
     def test_cli_option_errors(self):
         """
         The command line script displays useful messages for invalid option values.
         """
-        stderr = self.getCliErrorMessages(args=["foo", "--non-existent-option"])
+        stderr = self.getCliErrorMessages(args=["update", "--non-existent-option"])
         self.assertIn(
             "error: unrecognized arguments: --non-existent-option",
             stderr,
