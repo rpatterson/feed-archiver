@@ -6,6 +6,9 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
+#. Handle interrupted downloads such that archived feed accurately represents as far as
+   we've gotten.
+
 High Priority
 =============
 
