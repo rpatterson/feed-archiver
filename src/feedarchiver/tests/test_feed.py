@@ -269,7 +269,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
                 with (self.REMOTES_PATH / relative_path).open() as feed_opened:
                     feed_tree = etree.parse(feed_opened)
                 feed_root = feed_tree.getroot()
-                feed_format = feed_format_class()
+                feed_format = feed_format_class(self.archive_feed)
 
                 items_parent = feed_format.get_items_parent(feed_root)
                 self.assertEqual(

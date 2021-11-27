@@ -4,6 +4,8 @@ Handle different feed XML formats.
 
 import logging
 
+from lxml import etree
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,10 @@ class FeedFormat:
     # XPaths that differ between formats but can't be generalized from the above
     ITEMS_PARENT_XPATH = ""
 
+    # Map format-specific sub-classes to their corresponding root tag name.
+    # Used to match a parsed feed XML tree to the corresponding format.
+    FEED_FORMATS = {}
+
     def __init_subclass__(cls, /, **kwargs):
         """Assemble the XPath components from the format constants.
 
@@ -67,6 +73,9 @@ class FeedFormat:
             f".//{download_attr_step}",
         ]
 
+        # Register this specific feed format by it's root element tag name
+        cls.FEED_FORMATS[cls.ROOT_TAG] = cls
+
         logger.debug(
             "%s XPaths:\n%s",
             cls.__name__,
@@ -76,6 +85,12 @@ class FeedFormat:
                 if attr_name.endswith("_XPATH")
             ),
         )
+
+    def __init__(self, archive_feed):
+        """
+        Capture a reference to the ArchiveFeed using this feed format.
+        """
+        self.archive_feed = archive_feed
 
     @classmethod
     def assemble_download_text_expr(cls):
@@ -139,6 +154,23 @@ class FeedFormat:
         Return the URLs for all downloads at the feed-level, not in feed items.
         """
         return item_elem.xpath(" | ".join(self.DOWNLOAD_ITEM_URLS_XPATHS))
+
+    @classmethod
+    def from_tree(cls, archive_feed, feed_tree):
+        """
+        Identify feed format from parsed ElementTree, return corresponding format.
+
+        Be as permissive as possible in identifying the feed format to tolerate poorly
+        behaved feeds (e.g. wrong `Content-Type` header, XML namespace, etc.).  Identify
+        feeds by the top-level XML tag name (e.g. `<rss>` or `<feed>`).
+        """
+        feed_root = feed_tree.getroot()
+        feed_root_tag = etree.QName(feed_root.tag).localname.lower()
+        if feed_root_tag not in cls.FEED_FORMATS:  # pragma: no cover
+            raise NotImplementedError(
+                f"No feed format handler for {feed_root.tag!r} root element"
+            )
+        return cls.FEED_FORMATS[feed_root_tag](archive_feed)
 
 
 class RssFeedFormat(FeedFormat):

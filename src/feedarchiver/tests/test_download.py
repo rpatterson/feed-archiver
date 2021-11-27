@@ -137,7 +137,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
                     self.assertEqual(
                         download_request_mock.call_count,
                         1,
-                        "No request made for download",
+                        f"Wrong number of requests: {download_url!r}",
                     )
 
                     # Assert that the downloaded file in the archive is correct

@@ -3,6 +3,7 @@ An RSS/Atom syndication feed in an archive.
 """
 
 import os
+import copy
 import email
 import logging
 
@@ -18,12 +19,6 @@ class ArchiveFeed:
     An RSS/Atom syndication feed in an archive.
     """
 
-    FEED_FORMATS = {
-        feed_format.ROOT_TAG: feed_format
-        for feed_format in vars(formats).values()
-        if isinstance(feed_format, type) and issubclass(feed_format, formats.FeedFormat)
-    }
-
     def __init__(self, archive, config, url):
         """
         Instantiate a representation of an archive from a file-system path.
@@ -37,50 +32,21 @@ class ArchiveFeed:
         """
         Request the URL of one feed in the archive and update contents accordingly.
         """
-        updated_items = {}
         logger.info("Requesting feed: %r", self.url)
-        feed_response = self.archive.requests.get(self.url)
-        logger.debug("Parsing remote XML: %r", self.url)
+        remote_response = self.archive.requests.get(self.url)
+        remote_tree = self.load_remote_tree(remote_response)
+        remote_root = remote_tree.getroot()
+        remote_format = formats.FeedFormat.from_tree(self, remote_tree)
 
-        remote_root = etree.fromstring(feed_response.content)
-
-        # Be as permissive as possible in identifying the feed format to tolerate poorly
-        # behaved feeds (e.g. wrong `Content-Type` header, XML namespace, etc.).
-        # Identify feeds by the top-level XML tag name (e.g. `<rss>` or `<feed>`).
-        remote_root_tag = etree.QName(remote_root.tag).localname.lower()
-        if remote_root_tag not in self.FEED_FORMATS:  # pragma: no cover
-            raise NotImplementedError(
-                f"No feed format handler for {remote_root.tag!r} root element"
-            )
-        feed_format = self.FEED_FORMATS[remote_root_tag]()
-
-        is_feed_initialized = self.path.exists()
-        if not is_feed_initialized:
-            # First time requesting this feed, simply copy the remote feed to the
-            # archive
-            logger.info(
-                "Initializing feed in archive: %r -> %r",
-                self.url,
-                str(self.path),
-            )
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            with self.path.open("w") as feed_archive_opened:
-                feed_archive_opened.write(feed_response.text)
-
-        logger.debug("Parsing archive XML: %r", self.url)
-        with self.path.open() as feed_archive_opened:
-            archive_tree = etree.parse(feed_archive_opened)
+        download_paths = []
+        archive_tree = self.load_archive_tree(
+            remote_format,
+            remote_tree,
+            download_paths,
+        )
         archive_root = archive_tree.getroot()
-        archived_items_parent = feed_format.get_items_parent(archive_root)
-        if not is_feed_initialized:
-            # Re-use remote item processing logic below, clear archived children when
-            # initializing the feed.
-            for archive_item_elem in feed_format.iter_items(archive_root):
-                archived_items_parent.remove(archive_item_elem)
-            archived_items = []
-        else:
-            archived_items = list(feed_format.iter_items(archive_root))
-        archived_item_ids = set()
+        archived_items_parent = remote_format.get_items_parent(archive_root)
+        archived_items = list(remote_format.iter_items(archive_root))
 
         # Iterate through the remote feed to make updates to the archived feed as
         # appropriate.
@@ -89,27 +55,30 @@ class ArchiveFeed:
             self.url,
             str(self.path),
         )
+        archived_item_ids = set()
+        updated_items = {}
         # What is the lowest child index for the first item, used to insert new items at
         # the top
         first_item_idx = 0
         for first_item_idx, item_sibling in enumerate(
             archived_items_parent.iterchildren(),
         ):
-            if etree.QName(item_sibling.tag).localname.lower() == feed_format.ITEM_TAG:
+            item_sibling_tag = etree.QName(item_sibling.tag).localname
+            if item_sibling_tag.lower() == remote_format.ITEM_TAG:
                 break
         else:
             first_item_idx += 1
-        remote_items = list(feed_format.iter_items(remote_root))
+        remote_items = list(remote_format.iter_items(remote_root))
         # Ensure that the order of new feed items is preserved
         remote_items.reverse()
         for remote_item_elem in remote_items:
-            remote_item_id = feed_format.get_item_id(remote_item_elem)
+            remote_item_id = remote_format.get_item_id(remote_item_elem)
             if remote_item_id in archived_item_ids:
                 # This item was already seen in the archived feed, we don't need to
                 # update the archive or search further in the archived feed.
                 continue
             for archived_item_elem in archived_items:
-                archived_item_ids.add(feed_format.get_item_id(archived_item_elem))
+                archived_item_ids.add(remote_format.get_item_id(archived_item_elem))
                 if remote_item_id in archived_item_ids:
                     # Found this item in the archived feed, we don't need to
                     # update the archive and we can stop searching the archived feed for
@@ -123,36 +92,23 @@ class ArchiveFeed:
                     remote_item_id,
                     str(self.path),
                 )
+                # Download enclosures and assets only for this item.
+                download_paths.extend(
+                    self.download_urls(
+                        remote_format.iter_item_download_urls(remote_item_elem),
+                    ),
+                )
                 updated_items[remote_item_id] = remote_item_elem
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
 
-        # Download enclosures and assets as appropriate
-        download_paths = []
-        if not is_feed_initialized:
-            # Consistent with initial download of the feed, only download assets for the
-            # initial version of the feed.
-            download_paths.extend(
-                self.download_urls(
-                    feed_format.iter_feed_download_urls(archive_root),
-                ),
-            )
-        # Download enclosures and assets only for the items that are new to this version
-        # of the feed.
-        for _, item_elem in updated_items.items():
-            download_paths.extend(
-                self.download_urls(
-                    feed_format.iter_item_download_urls(item_elem),
-                ),
-            )
-
-        if updated_items or not is_feed_initialized:
+        if updated_items or download_paths:
             # Pretty format the feed for readability
             etree.indent(archive_tree)
             # Update the archived feed file
             archive_tree.write(str(self.path))
-        if "Last-Modified" in feed_response.headers:
+        if "Last-Modified" in remote_response.headers:
             last_modified = email.utils.parsedate_to_datetime(
-                feed_response.headers["Last-Modified"],
+                remote_response.headers["Last-Modified"],
             )
             feed_stat = self.path.stat()
             os.utime(
@@ -161,6 +117,76 @@ class ArchiveFeed:
             )
 
         return list(updated_items.keys()), download_paths
+
+    def load_remote_tree(self, remote_response):
+        """
+        Request the feed from the remote URL, parse the XML, and return the tree.
+
+        Also do any pre-processing needed to start updating the archive.
+        """
+        logger.debug("Parsing remote XML: %r", self.url)
+        remote_root = etree.fromstring(
+            remote_response.content,
+            base_url=remote_response.url,
+        )
+        return etree.ElementTree(remote_root)
+
+    def load_archive_tree(self, remote_format, remote_tree, download_paths):
+        """
+        Parse the local feed XML in the archive and return the tree.
+
+        If there is no local feed XML in the archive, such as the first time the feed is
+        updated, then initialize the archive tree from the remote tree.
+
+        Also do any pre-processing needed to start updating the archive.
+        """
+        if self.path.exists():
+            logger.info("Parsing archive XML: %r", self.url)
+            with self.path.open() as feed_archive_opened:
+                archive_tree = etree.parse(feed_archive_opened)
+            archive_format = formats.FeedFormat.from_tree(self, remote_tree)
+            if not isinstance(archive_format, type(remote_format)):  # pragma: no cover
+                raise NotImplementedError(
+                    f"Remote feed format, {type(remote_format).__name__!r}, is "
+                    f"different from archive format, {type(archive_format).__name__!r}."
+                )
+        else:
+            # First time requesting this feed, copy the remote feed, minus the items to
+            # the archive and download the feed-level assets.
+            logger.info(
+                "Initializing feed in archive: %r -> %r",
+                self.url,
+                str(self.path),
+            )
+            # Duplicate the remote tree entirely so we can modify the archive's version
+            # separately without changing the remote tree and affecting the rest of the
+            # update logic.
+            archive_tree = copy.deepcopy(remote_tree)
+            archive_root = archive_tree.getroot()
+            archived_items_parent = remote_format.get_items_parent(archive_root)
+            # Remove all feed items from the copied tree.  As items are updated, the
+            # modified versions of he items will be added back in during the rest of the
+            # update logic.
+            for archive_item_elem in remote_format.iter_items(archive_root):
+                archived_items_parent.remove(archive_item_elem)
+
+            # Consistent with initial download of the feed, only download assets for the
+            # initial version of the feed.
+            download_paths.extend(
+                self.download_urls(
+                    remote_format.iter_feed_download_urls(archive_root),
+                ),
+            )
+
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            logger.debug(
+                "Writing initialized feed: %r",
+                str(self.path),
+            )
+            etree.indent(archive_tree)
+            archive_tree.write(str(self.path))
+
+        return archive_tree
 
     def download_urls(self, url_results):
         """
@@ -176,7 +202,7 @@ class ArchiveFeed:
             download_relative = os.path.relpath(download_relative, self.path.parent)
 
             # Download the URL to the escaped local path in the archive
-            if not download_path.exists():
+            if not download_path.exists() and url_result != self.url:
                 download_path.parent.mkdir(parents=True, exist_ok=True)
                 logger.info(
                     "Downloading URL into archive: %r -> %r",
