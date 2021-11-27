@@ -137,7 +137,7 @@ class ArchiveFeed:
             )
         # Download enclosures and assets only for the items that are new to this version
         # of the feed.
-        for item_id, item_elem in updated_items.items():
+        for _, item_elem in updated_items.items():
             download_paths.extend(
                 self.download_urls(
                     feed_format.iter_item_download_urls(item_elem),
