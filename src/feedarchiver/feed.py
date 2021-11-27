@@ -40,7 +40,8 @@ class ArchiveFeed:
         updated_items = {}
         logger.info("Requesting feed: %r", self.url)
         feed_response = self.archive.requests.get(self.url)
-        logger.debug("Parsing feed XML: %r", self.url)
+        logger.debug("Parsing remote XML: %r", self.url)
+
         remote_root = etree.fromstring(feed_response.content)
 
         # Be as permissive as possible in identifying the feed format to tolerate poorly
