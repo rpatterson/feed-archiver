@@ -20,11 +20,11 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
     EXAMPLE_RELATIVE = pathlib.Path("downloads")
 
     # Constants specific to this test suite
-    ENCLOSURE_HOST_PATH = (
-        "foo.example.com/podcast/episodes/waldo-episode-title/waldo.mp3"
+    ENCLOSURE_HOST_PATH = pathlib.PurePosixPath(
+        "foo.example.com/podcast/episodes/waldo-episode-title/waldo.mp3",
     )
     ENCLOSURE_URL = f"https://{ENCLOSURE_HOST_PATH}"
-    ENCLOSURE_RELATIVE = pathlib.Path(f"https/{ENCLOSURE_HOST_PATH}")
+    ENCLOSURE_RELATIVE = pathlib.Path("https", ENCLOSURE_HOST_PATH)
     ENCLOSURE_MOCK_PATH = (
         tests.FeedarchiverTestCase.REMOTES_PATH
         / EXAMPLE_RELATIVE
