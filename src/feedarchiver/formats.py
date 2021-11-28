@@ -16,7 +16,7 @@ def query_xpath(elem, xpath):
     xpath_results = elem.xpath(xpath)
     if not xpath_results:  # pragma: no cover
         raise ValueError(f"Matched nothing for {elem.tag!r}: {xpath!r}")
-    elif len(xpath_results) != 1:  # pragma: no cover
+    if len(xpath_results) != 1:  # pragma: no cover
         logger.error(
             "Matched %s results for %r: %r",
             len(xpath_results),
@@ -139,7 +139,7 @@ class FeedFormat:
         item_id = query_xpath(item_elem, self.ITEM_ID_XPATH)
         if not isinstance(item_id, str):  # pragma: no cover
             raise ValueError(f"Item ID is not a string: {self.ITEM_ID_XPATH!r}")
-        elif not item_id.strip():  # pragma: no cover
+        if not item_id.strip():  # pragma: no cover
             raise ValueError(f"Empty feed item ID: {self.ITEM_ID_XPATH!r}")
         return item_id.strip()
 

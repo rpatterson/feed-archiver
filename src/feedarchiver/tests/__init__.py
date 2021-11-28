@@ -141,6 +141,22 @@ class FeedarchiverTestCase(
         updated_feeds = archive_feed.update()
         return request_mocks, updated_feeds
 
+    def assert_no_header_download_mtime(self, no_header_request_mock, download_path):
+        """
+        Assert that download responses without headers are handled gracefully.
+        """
+        self.archive_feed.update()
+        self.assertEqual(
+            no_header_request_mock.call_count,
+            1,
+            "Wrong number of feed URL requests without metadata headers",
+        )
+        self.assertNotEqual(
+            datetime.datetime.fromtimestamp(download_path.stat().st_mtime),
+            self.OLD_DATETIME,
+            "Archive feed modification date not current",
+        )
+
 
 def get_feed_items(feed_path):
     """

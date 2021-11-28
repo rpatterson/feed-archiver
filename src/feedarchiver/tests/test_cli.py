@@ -31,7 +31,7 @@ class FeedarchiverCLITests(unittest.TestCase):
             "The Python package not importable",
         )
 
-    def getCliErrorMessages(self, args):
+    def get_cli_error_messages(self, args):
         """
         Run the CLI script and return any error messages.
         """
@@ -60,7 +60,7 @@ class FeedarchiverCLITests(unittest.TestCase):
         """
         The command line script displays useful messages for invalid option values.
         """
-        stderr = self.getCliErrorMessages(args=["update", "--non-existent-option"])
+        stderr = self.get_cli_error_messages(args=["update", "--non-existent-option"])
         self.assertIn(
             "error: unrecognized arguments: --non-existent-option",
             stderr,

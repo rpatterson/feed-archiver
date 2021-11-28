@@ -207,7 +207,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         Items are reordered to the archive feed XML as the remote feed XML changes.
         """
         # Populate with a feed containing multiple items
-        added_item_request_mocks, _ = self.update_feed(
+        self.update_feed(
             archive_feed=self.archive_feed,
             remote_mock="added-item",
         )
@@ -243,7 +243,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         Updating an empty feed works without any errors
         """
         # Populate with a feed containing multiple items
-        empty_request_mocks, _ = self.update_feed(
+        self.update_feed(
             archive_feed=self.archive_feed,
             remote_mock="empty",
         )
@@ -334,14 +334,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             self.feed_url,
             content=no_header_feed_mock_path.read_bytes(),
         )
-        self.archive_feed.update()
-        self.assertEqual(
-            no_header_request_mock.call_count,
-            1,
-            "Wrong number of feed URL requests without metadata headers",
-        )
-        self.assertNotEqual(
-            datetime.datetime.fromtimestamp(self.feed_path.stat().st_mtime),
-            self.OLD_DATETIME,
-            "Archive feed modification date not current",
+        self.assert_no_header_download_mtime(
+            no_header_request_mock,
+            self.feed_path,
         )

@@ -2,9 +2,11 @@
 An archive of RSS/Atom syndication feeds.
 """
 
+import os
 import pathlib
 import urllib.parse
 import csv
+import email
 import logging
 
 import requests
@@ -128,3 +130,18 @@ class Archive:
                 if updated_items:
                     updated_feeds[feed_url] = updated_items
         return updated_feeds
+
+
+def update_download_metadata(download_response, download_path):
+    """
+    Reflect any metdata that can be extracted from the respons in the download file.
+    """
+    if "Last-Modified" in download_response.headers:
+        last_modified = email.utils.parsedate_to_datetime(
+            download_response.headers["Last-Modified"],
+        )
+        feed_stat = download_path.stat()
+        os.utime(
+            download_path,
+            (feed_stat.st_atime, last_modified.timestamp()),
+        )

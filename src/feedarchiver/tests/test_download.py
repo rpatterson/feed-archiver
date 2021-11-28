@@ -76,16 +76,9 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
             self.ENCLOSURE_URL,
             content=self.ENCLOSURE_MOCK_PATH.read_bytes(),
         )
-        self.archive_feed.update()
-        self.assertEqual(
-            no_header_request_mock.call_count,
-            1,
-            "Wrong number of feed URL requests without metadata headers",
-        )
-        self.assertNotEqual(
-            datetime.datetime.fromtimestamp(enclosure_archive_path.stat().st_mtime),
-            self.OLD_DATETIME,
-            "Archive feed modification date not current",
+        self.assert_no_header_download_mtime(
+            no_header_request_mock,
+            enclosure_archive_path,
         )
 
     def test_downloads(self):  # pylint: disable=too-many-locals
