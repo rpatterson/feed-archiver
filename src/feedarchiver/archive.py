@@ -4,9 +4,11 @@ An archive of RSS/Atom syndication feeds.
 
 import os
 import pathlib
+import mimetypes
 import urllib.parse
 import csv
 import email
+import cgi
 import logging
 
 import requests
@@ -131,17 +133,72 @@ class Archive:
                     updated_feeds[feed_url] = updated_items
         return updated_feeds
 
+    def update_download_metadata(self, download_response, download_path):
+        """
+        Reflect any metdata that can be extracted from the respons in the download file.
+        """
+        # Set the filesystem modification datetime if the header is provided
+        if "Last-Modified" in download_response.headers:
+            last_modified = email.utils.parsedate_to_datetime(
+                download_response.headers["Last-Modified"],
+            )
+            feed_stat = download_path.stat()
+            os.utime(
+                download_path,
+                (feed_stat.st_atime, last_modified.timestamp()),
+            )
 
-def update_download_metadata(download_response, download_path):
-    """
-    Reflect any metdata that can be extracted from the respons in the download file.
-    """
-    if "Last-Modified" in download_response.headers:
-        last_modified = email.utils.parsedate_to_datetime(
-            download_response.headers["Last-Modified"],
-        )
-        feed_stat = download_path.stat()
-        os.utime(
-            download_path,
-            (feed_stat.st_atime, last_modified.timestamp()),
-        )
+        # Create a symlink with the most appropriate basename from the redirect chain
+        redirect_chain = [download_response]
+        redirect_chain.extend(reversed(download_response.history))
+        for history_response in redirect_chain:
+            history_response_path = self.url_to_path(history_response.request.url)
+
+            # Always use an explicit filename from the headers if available
+            if "Content-Disposition" in history_response.headers:
+                _, disposition_params = cgi.parse_header(
+                    history_response.headers["Content-Disposition"],
+                )
+                if "filename" in disposition_params:
+                    basename = disposition_params["filename"]
+                    break
+
+            # If there's no explicit filename, then see if the basename of he request
+            # path matches the MIME type from the response headers if present.
+            if "Content-Type" in history_response.headers:
+                mime_type, _ = cgi.parse_header(
+                    history_response.headers["Content-Type"],
+                )
+                suffixs = mimetypes.guess_all_extensions(mime_type, strict=False)
+                history_response_path = self.url_to_path(history_response.request.url)
+                if history_response_path.suffix in suffixs:
+                    basename = history_response_path.name
+                    break
+
+        else:
+            # Fallback to the basename of the most recent request, adding an extension
+            # if a MIME type is provided.  Note that this is easily confused if the
+            # basename of the URL contains a dot.
+            history_response = download_response
+            history_response_path = self.url_to_path(history_response.request.url)
+            basename = history_response_path.name
+            if (
+                not history_response_path.suffix
+                and "Content-Type" in history_response.headers
+            ):
+                mime_type, _ = cgi.parse_header(
+                    history_response.headers["Content-Type"],
+                )
+                suffix = mimetypes.guess_extension(mime_type, strict=False)
+                if suffix:
+                    basename += suffix
+
+        symlink_path = history_response_path.with_name(basename)
+        if not symlink_path.exists() and symlink_path != download_path:
+            logger.info(
+                "Symlinking download to basename: %r -> %r",
+                str(download_path),
+                str(symlink_path),
+            )
+            symlink_path.parent.mkdir(parents=True, exist_ok=True)
+            symlink_path.symlink_to(download_path)

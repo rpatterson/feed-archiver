@@ -50,7 +50,7 @@
 		 episode, Waldo.</p>]]>
       </description>
       <enclosure
-	  url="https://foo.example.com/podcast/episodes/waldo-episode-title/waldo.mp3"
+	  url="https://foo.example.com/podcast/episodes/waldo-episode-title/download"
 	  type="audio/mpeg" length="52079"/>
       <itunes:subtitle>Waldo episode subtitle.</itunes:subtitle>
       <itunes:episodeType>full</itunes:episodeType>
@@ -64,7 +64,7 @@
       <itunes:image href="https://foo.example.com/podcast/episodes/waldo-episode-title/waldo.png"/>
       <media:content
 	  fileSize="52079" type="audio/mpeg"
-	  url="https://foo.example.com/podcast/episodes/waldo-episode-title/waldo.mp3"
+	  url="https://foo.example.com/podcast/episodes/waldo-episode-title/download"
 	  />
       <content:encoded>
         <![CDATA[<p class="episode-description">A description of <b>this specific</b>

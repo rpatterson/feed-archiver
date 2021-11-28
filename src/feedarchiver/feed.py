@@ -8,7 +8,6 @@ import logging
 
 from lxml import etree
 
-import feedarchiver.archive
 from . import formats
 
 logger = logging.getLogger(__name__)
@@ -113,7 +112,7 @@ class ArchiveFeed:
             etree.indent(archive_tree)
             # Update the archived feed file
             archive_tree.write(str(self.path))
-        feedarchiver.archive.update_download_metadata(remote_response, self.path)
+        self.archive.update_download_metadata(remote_response, self.path)
 
         return list(updated_items.keys()), download_paths
 
@@ -217,7 +216,7 @@ class ArchiveFeed:
                     )
                     download_path.unlink()
                     continue
-                feedarchiver.archive.update_download_metadata(
+                self.archive.update_download_metadata(
                     download_response,
                     download_path,
                 )

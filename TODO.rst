@@ -6,9 +6,11 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ========
 
-#. Symlink various filenames for each request/response in the redirect chain:
-   - URL path basename without URL query or params
-   - Content-Disposition header
+#. Symlink enclosures to ``./Feed Title/Item Title.basename_ext`` where the
+   titles are escaped (preserving spaces).
+
+#. Per-feed config options containing a regex pattern and template to form the item
+   title symlink relative path, including the feed title path part.
 
 High Priority
 =============

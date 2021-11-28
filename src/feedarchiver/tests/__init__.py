@@ -99,9 +99,9 @@ class FeedarchiverTestCase(
         )
         self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE
 
-    def update_feed(self, archive_feed, remote_mock=None):
+    def mock_remote(self, archive_feed, remote_mock=None):
         """
-        Mock the request responses with the mock dir and update the archive.
+        Mock the request responses with the mock dir.
 
         The relative paths in the mock dir are un-escaped to URLs and used to create the
         request mocks for those URLs.
@@ -144,7 +144,13 @@ class FeedarchiverTestCase(
                         content=mock_bytes,
                     ),
                 )
+        return request_mocks
 
+    def update_feed(self, archive_feed, remote_mock=None):
+        """
+        Mock the request responses with the mock dir and update the archive.
+        """
+        request_mocks = self.mock_remote(archive_feed, remote_mock)
         updated_feeds = archive_feed.update()
         return request_mocks, updated_feeds
 
