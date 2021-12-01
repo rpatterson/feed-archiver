@@ -12,7 +12,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
     Test the feed-archiver representation of an archive of syndication feeeds.
     """
 
-    # From `./feeds/simple/feeds/garply-orig.rss`
+    # From `./remotes/simple/orig/.../garply%3Fbar%3Dqux%252Fbaz%23corge.rss`
     UPDATE_RETURN_VALUE = {
         "7bd204c6-1655-4c27-aeee-53f933c5395f": dict(title="Example entry"),
     }

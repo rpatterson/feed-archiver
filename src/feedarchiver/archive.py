@@ -46,22 +46,29 @@ class Archive:
         """
         split_url = urllib.parse.urlsplit(url)
         # Want a relative path, strip the leading, root slash
-        relative_url_path = split_url.path.lstrip("/")
-        if relative_url_path.endswith("/"):
-            relative_url_path += self.INDEX_BASENAME
-        split_path = split_url._replace(
-            # Only want the path, empty scheme and host
-            scheme="",
-            netloc="",
-            path=relative_url_path,
-        )
+        url_relative = split_url.path.lstrip("/")
+        # Add explicit index page basename if the URL points to a directory
+        if url_relative.endswith("/"):
+            url_relative += self.INDEX_BASENAME
         # Use `pathlib.PurePosixPath` to split on forward slashes in the URL regardless
-        # of what the path separator is for this platform
+        # of what the path separator is for this platform.
+        url_path = pathlib.PurePosixPath(url_relative)
         archive_path = pathlib.PurePosixPath(
             urllib.parse.quote(split_url.scheme),
             urllib.parse.quote(split_url.netloc),
-            urllib.parse.quote(split_path.geturl()),
+            # Place the query and fragment from the URL before the extension/suffix in
+            # the path
+            url_path.with_stem(
+                urllib.parse.quote(
+                    split_url._replace(
+                        scheme="",
+                        netloc="",
+                        path=url_path.stem,
+                    ).geturl(),
+                )
+            ),
         )
+        # Translate back to platform-native filesystem path separators/slashes
         return self.root_path / archive_path
 
     def path_to_url(self, path):
@@ -70,23 +77,31 @@ class Archive:
         """
         # Also accept strings
         path = pathlib.Path(path)
+        # Strip explicit index page basename if the URL should point to a directory
         basename = path.name
         if basename == self.INDEX_BASENAME:
             path = path.parent
+        # Strip the archive's path
         archive_path = path.relative_to(self.root_path)
-        url_path = str(
-            pathlib.PurePosixPath(
-                *[urllib.parse.unquote(part) for part in archive_path.parts[2:]]
-            )
+        # Extract any URL query and/or fragment from before the suffix/extension
+        stem_split = urllib.parse.urlsplit(urllib.parse.unquote(archive_path.stem))
+        # Use `pathlib.PurePosixPath` to split on forward slashes in the URL regardless
+        # of what the path separator is for this platform.
+        url_parent_path = pathlib.PurePosixPath(
+            *[urllib.parse.unquote(part) for part in archive_path.parts[2:-1]]
         )
+        # Re-assemble the URL path without the query or fragment from the stem
+        url_path = url_parent_path / f"{stem_split.path}{archive_path.suffix}"
+        # Make explicit that the URL points to a directory if the path is index HTML
+        url_relative = str(url_path)
         if basename == self.INDEX_BASENAME:
-            url_path += "/"
-        split_url = urllib.parse.SplitResult(
+            url_relative += "/"
+        # Re-assemble the rest of the archive path elements, preserving the query and
+        # fragment extracted from the stem.
+        split_url = stem_split._replace(
             scheme=urllib.parse.unquote(archive_path.parts[0]),
             netloc=urllib.parse.unquote(archive_path.parts[1]),
-            path=url_path,
-            query="",
-            fragment="",
+            path=url_relative,
         )
         return split_url.geturl()
 

@@ -5,6 +5,7 @@ Tests for this feed archiver foundation or template.
 import os
 import datetime
 import pathlib
+import urllib
 import csv
 import tempfile
 import shutil
@@ -39,11 +40,15 @@ class FeedarchiverTestCase(
     # responses to requests for the remote feed URL.
     REMOTE_MOCK = pathlib.Path("orig")
     # Relative path that corresponds to the remote feed URL within the archive.
+    FEED_ARCHIVE_STEM = "garply"
+    FEED_ARCHIVE_SUFFIX = ".rss"
+    FEED_ARCHIVE_QUERY = "?bar=qux%2Fbaz#corge"
     FEED_ARCHIVE_RELATIVE = pathlib.Path(
         "https",
         "foo-username%3Asecret%40grault.example.com",
         "feeds",
-        "garply.rss%3Fbar%3Dqux%252Fbaz%23corge",
+        f"{FEED_ARCHIVE_STEM}{urllib.parse.quote(FEED_ARCHIVE_QUERY)}"
+        f"{FEED_ARCHIVE_SUFFIX}",
     )
 
     # Test data in the checkout that represents remote feed data
