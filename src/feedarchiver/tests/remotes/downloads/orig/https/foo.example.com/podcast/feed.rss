@@ -71,5 +71,15 @@
 		 episode, Waldo.</p>]]>
       </content:encoded>
     </item>
+    <item>
+      <guid isPermaLink="false">foo_9a8e04a4-9e94-462f-919a-f0419dd6318c</guid>
+      <title>Fred Episode Title</title>
+      <description>
+	A feed item with an unknown enclosure type.
+      </description>
+      <enclosure
+	  url="https://foo.example.com/podcast/episodes/fred-episode-title/download"
+	  type="application/x-no-extension" length="52079"/>
+    </item>
   </channel>
 </rss>

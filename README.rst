@@ -55,13 +55,16 @@ Usage
 =====
 
 Create a ``./.feed-archiver.csv`` CSV file in a directory to serve as the root directory
-for all feeds to be archived.  The CSV file should have a header row and the first cell
-of each row after that should contain the URL of a feed to archive in this directory.
-In the simplest form, this can just be a file with one header line and one feed URL per
-line from there::
+for all feeds to be archived.  The CSV file should have a header row, a row defining
+default or global options.  The second column of the defaults row should define the
+external base URL for the archive and is used to assemble absolute URLs where relative
+aURLs can't be used.  The first cell of each row after that should contain the URL of a
+feed to archive in this directory.  In the simplest form, this can just be a file with
+one header line and one feed URL per line from there::
 
-  Feed URL
-  https://foo-username:secret@grault.example.com/feeds/garply.rss
+  Feed Remote URL,Feed Archive URL
+  ,https://feeds.example.com
+  https://foo-username:secret@grault.example.com/feeds/garply.rss,
   ...
 
 Then simple run the ``$ feed-archiver`` command in that directory to update the archive

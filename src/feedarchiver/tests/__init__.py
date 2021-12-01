@@ -5,11 +5,12 @@ Tests for this feed archiver foundation or template.
 import os
 import datetime
 import pathlib
-import urllib
+import mimetypes
+import urllib.parse
 import csv
 import tempfile
 import shutil
-import email
+import email.utils
 import unittest
 
 from lxml import etree
@@ -88,7 +89,7 @@ class FeedarchiverTestCase(
         )
         with open(self.feed_configs_path, encoding="utf-8") as feed_configs_opened:
             self.feed_configs_rows = list(csv.DictReader(feed_configs_opened))
-        self.feed_url = self.feed_configs_rows[0]["Feed URL"]
+        self.feed_url = self.feed_configs_rows[1]["Feed Remote URL"]
 
         # Copy the testing example feeds archive
         shutil.copytree(
@@ -97,9 +98,10 @@ class FeedarchiverTestCase(
             dirs_exist_ok=True,
         )
         self.archive = archive.Archive(self.tmp_dir.name)
+        self.archive.load_feed_configs()
         self.archive_feed = feed.ArchiveFeed(
             archive=self.archive,
-            config=self.feed_configs_rows[0],
+            config=self.feed_configs_rows[1],
             url=self.feed_url,
         )
         self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE
@@ -117,35 +119,38 @@ class FeedarchiverTestCase(
         request_mocks = {}
         remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / remote_mock
         for root, _, files in os.walk(remote_mock_path, followlinks=True):
-            mock_root_path = pathlib.Path(root)
             if {
                 mock_root_part
-                for mock_root_part in mock_root_path.parts
+                for mock_root_part in pathlib.Path(root).parts
                 if mock_root_part.endswith("~")
             }:  # pragma: no cover
                 continue
             for mock_basename in files:
                 if mock_basename.endswith("~"):  # pragma: no cover
                     continue
-                mock_path = mock_root_path / mock_basename
+                mock_path = pathlib.Path(root) / mock_basename
                 mock_stat = mock_path.stat()
-                mock_relative = mock_path.relative_to(remote_mock_path)
-                mock_url = archive_feed.archive.path_to_url(
-                    archive_feed.archive.root_path / mock_relative
-                )
                 mock_bytes = mock_path.read_bytes()
+                mock_headers = {
+                    "Last-Modified": email.utils.formatdate(
+                        timeval=mock_stat.st_mtime,
+                        usegmt=True,
+                    ),
+                    "Content-Length": str(len(mock_bytes)),
+                }
+                mock_type, _ = mimetypes.guess_type(mock_path.name)
+                if mock_type:
+                    mock_headers["Content-Type"] = mock_type
+                mock_url = archive_feed.archive.path_to_url(
+                    archive_feed.archive.root_path
+                    / mock_path.relative_to(remote_mock_path)
+                )
                 request_mocks[mock_url] = (
                     mock_path,
                     self.requests_mock.get(
                         mock_url,
                         # Ensure the download response includes `Last-Modified`
-                        headers={
-                            "Last-Modified": email.utils.formatdate(
-                                timeval=mock_stat.st_mtime,
-                                usegmt=True,
-                            ),
-                            "Content-Length": str(len(mock_bytes)),
-                        },
+                        headers=mock_headers,
                         content=mock_bytes,
                     ),
                 )

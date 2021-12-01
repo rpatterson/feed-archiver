@@ -4,6 +4,9 @@ An RSS/Atom syndication feed in an archive.
 
 import os
 import copy
+import urllib
+import email.utils
+import pathlib
 import logging
 
 from lxml import etree
@@ -18,6 +21,12 @@ class ArchiveFeed:
     An RSS/Atom syndication feed in an archive.
     """
 
+    NAMESPACE = "https://github.com/rpatterson/feed-archiver"
+
+    # Initialized on update from the response to the request for the URL from the feed
+    # config in order to use response headers to derrive the best path.
+    path = None
+
     def __init__(self, archive, config, url):
         """
         Instantiate a representation of an archive from a file-system path.
@@ -25,7 +34,6 @@ class ArchiveFeed:
         self.archive = archive
         self.config = config
         self.url = url
-        self.path = archive.url_to_path(url)
 
     def update(self):  # pylint: disable=too-many-locals
         """
@@ -33,10 +41,13 @@ class ArchiveFeed:
         """
         logger.info("Requesting feed: %r", self.url)
         remote_response = self.archive.requests.get(self.url)
+        # Maybe update the extension based on the headers
+        self.path = self.archive.response_to_path(remote_response)
         remote_tree = self.load_remote_tree(remote_response)
         remote_root = remote_tree.getroot()
         remote_format = formats.FeedFormat.from_tree(self, remote_tree)
 
+        # Assemble the archive version of the feed XML
         download_paths = []
         archive_tree = self.load_archive_tree(
             remote_format,
@@ -47,13 +58,30 @@ class ArchiveFeed:
         archived_items_parent = remote_format.get_items_parent(archive_root)
         archived_items = list(remote_format.iter_items(archive_root))
 
-        # Iterate through the remote feed to make updates to the archived feed as
-        # appropriate.
         logger.info(
             "Updating feed in archive: %r -> %r",
             self.url,
             str(self.path),
         )
+        # Update the `self` link URL to the relative, local archived URL
+        archive_url_field = self.archive.feed_config_fields[
+            self.archive.FEED_ARCHIVE_URL_FIELD
+        ]
+        archive_base_url_split = urllib.parse.urlsplit(
+            self.config.get(archive_url_field)
+            or self.archive.global_config[archive_url_field]
+        )
+        archive_url_path = pathlib.PurePosixPath(
+            archive_base_url_split.path
+        ) / os.path.relpath(self.path, self.archive.root_path)
+        archive_url_split = archive_base_url_split._replace(path=str(archive_url_path))
+        for self_link_elem in remote_format.get_items_parent(archive_root).xpath(
+            remote_format.SELF_LINK_XPATH
+        ):
+            self_link_elem.attrib["href"] = archive_url_split.geturl()
+
+        # Iterate through the remote feed to make updates to the archived feed as
+        # appropriate.
         archived_item_ids = set()
         updated_items = {}
         # What is the lowest child index for the first item, used to insert new items at
@@ -112,7 +140,7 @@ class ArchiveFeed:
             etree.indent(archive_tree)
             # Update the archived feed file
             archive_tree.write(str(self.path))
-        self.archive.update_download_metadata(remote_response, self.path)
+        update_download_metadata(remote_response, self.path)
 
         return list(updated_items.keys()), download_paths
 
@@ -190,24 +218,19 @@ class ArchiveFeed:
         """
         Escape URLs to archive paths, download if new, and update URLs.
         """
-        downloaded_paths = []
+        downloaded_paths = {}
         for url_result in url_results:
-            download_path = self.archive.url_to_path(url_result)
-            if download_path.name == self.archive.INDEX_BASENAME:
-                download_relative = download_path.parent
+            if url_result == self.url:
+                # The feed itself is handled in `self.update()`
+                continue
+            if url_result in downloaded_paths:
+                logger.debug("Duplicate URL, skipping download: %r", url_result)
+                # Proceed below to update the URLs in the duplicate XML element
+                download_path = self.archive.root_path / downloaded_paths[url_result]
             else:
-                download_relative = download_path
-            download_relative = os.path.relpath(download_relative, self.path.parent)
-
-            # Download the URL to the escaped local path in the archive
-            if not download_path.exists() and url_result != self.url:
-                download_path.parent.mkdir(parents=True, exist_ok=True)
+                # Download the URL to the escaped local path in the archive
                 try:
-                    download_response = self.download_url(
-                        url_result,
-                        download_relative,
-                        download_path,
-                    )
+                    download_path = self.download_url(url_result)
                 except Exception:  # pragma: no cover, pylint: disable=broad-except
                     logger.exception(
                         "Problem downloading URL, removing from archive: %r -> %r",
@@ -216,36 +239,56 @@ class ArchiveFeed:
                     )
                     download_path.unlink()
                     continue
-                self.archive.update_download_metadata(
-                    download_response,
-                    download_path,
-                )
-                downloaded_paths.append(
-                    download_path.relative_to(self.archive.root_path),
+                downloaded_paths[url_result] = download_path.relative_to(
+                    self.archive.root_path,
                 )
 
             # Update the URL in the feed XML to the relative archive path.
             # Update only after successful download to minimize inconsistent state on
             # errors.
             if hasattr(url_result, "getparent") and hasattr(url_result, "attrname"):
+                url_parent = url_result.getparent()
+                if download_path.name == self.archive.INDEX_BASENAME:
+                    download_relative = download_path.parent
+                else:
+                    download_relative = download_path
+                download_url_path = pathlib.PurePosixPath(
+                    os.path.relpath(download_relative, self.path.parent),
+                )
+                download_url_split = urllib.parse.SplitResult(
+                    # Make fully relative to the feed
+                    scheme="",
+                    netloc="",
+                    # Let pathlib normalize the relative path
+                    path=str(download_url_path),
+                    # Archive paths should have not query or fragment
+                    query="",
+                    fragment="",
+                )
                 if url_result.attrname:
                     logger.info(
                         'Updating feed URL: <%s %s="%s"...>',
                         url_result.getparent().tag,
                         url_result.attrname,
-                        str(download_relative),
+                        download_url_split.geturl(),
                     )
-                    url_result.getparent().attrib[url_result.attrname] = str(
-                        download_relative
-                    )
+                    # Store the original remote URL in a namespace attribute
+                    url_parent.attrib[
+                        f"{{{self.NAMESPACE}}}attribute-url_result.attrname"
+                    ] = url_result
+                    # Update the archived URL to the local, relative URL
+                    url_parent.attrib[url_result.attrname] = download_url_split.geturl()
                 else:
                     logger.info(
                         "Updating feed URL: <%s>%s</%s>",
                         url_result.getparent().tag,
-                        str(download_relative),
+                        download_url_split.geturl(),
                         url_result.getparent().tag,
                     )
-                    url_result.getparent().text = str(download_relative)
+                    # Store the original remote URL in a namespace attribute
+                    url_parent.attrib[f"{{{self.NAMESPACE}}}text"] = url_result
+                    # Update the URL in the archive XML to the local, relative URL
+                    url_parent.text = download_url_split.geturl()
             else:  # pragma: no coverx
                 raise NotImplementedError(
                     f"Escaping URLs in {type(url_result)!r} text nodes"
@@ -254,25 +297,32 @@ class ArchiveFeed:
 
         return downloaded_paths
 
-    def download_url(self, url, download_relative, download_path):
+    def download_url(self, url_result):
         """
         Request a URL and stream the response to the file.
         """
-        logger.info(
-            "Downloading URL into archive: %r -> %r",
-            url,
-            str(download_relative),
-        )
-
         content_length = 0
+        logger.info("Downloading URL into archive: %r", url_result)
         with self.archive.requests.get(
-            url,
+            url_result,
             stream=True,
         ) as download_response:
+            download_path = self.archive.response_to_path(download_response, url_result)
+            download_relative = download_path.relative_to(self.archive.root_path)
+            if download_path.exists():
+                logger.warning(
+                    "Skipping download already in archive: %r",
+                    str(download_relative),
+                )
+                return download_path
+            logger.info("Writing download into archive: %r", str(download_relative))
+            download_path.parent.mkdir(parents=True, exist_ok=True)
             with download_path.open("wb") as download_opened:
                 for chunk in download_response.iter_content(chunk_size=None):
                     download_opened.write(chunk)
                     content_length += len(chunk)
+
+        update_download_metadata(download_response, download_path)
 
         if "Content-Length" in download_response.headers:
             try:
@@ -289,4 +339,23 @@ class ArchiveFeed:
                         remote_content_length,
                     )
 
-        return download_response
+        return download_path
+
+
+def update_download_metadata(download_response, download_path):
+    """
+    Reflect any metdata that can be extracted from the respons in the download file.
+    """
+    # Set the filesystem modification datetime if the header is provided
+    if "Last-Modified" in download_response.headers:
+        last_modified = email.utils.parsedate_to_datetime(
+            download_response.headers["Last-Modified"],
+        )
+        feed_stat = download_path.stat()
+        os.utime(
+            download_path,
+            (feed_stat.st_atime, last_modified.timestamp()),
+        )
+        return last_modified
+
+    return None

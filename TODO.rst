@@ -15,6 +15,15 @@ Required
 High Priority
 =============
 
+#. Can all podcatcher apps handle relative URLs in feed XML?  How about other
+   feed syndication clients/subscribers?
+
+#. Initialize Python's ``mimetypes`` module with same ``mime.types`` file as is used by
+   the static site server::
+
+       $ docker run -it --entrypoint find nginx -name "mime.types"
+       ./etc/nginx/mime.types
+
 #. Docker image published to a registry automatically in CI/CD
 
 #. Example ``./docker-compose.yml`` file with Traefik for HTTPS/TLS and nginx for static
@@ -59,3 +68,7 @@ Nice to Have
 
 #. Also download all assets/resources for HTML downloads, possibly with `pywebcopy
    <https://stackoverflow.com/a/51544575/624787>`_.
+
+#. Consider a different format for feeds config.
+
+#. Improve XML namespace map/prefix for custom attributes.

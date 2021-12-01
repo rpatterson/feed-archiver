@@ -1,3 +1,4 @@
-Feed URL
-https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge
-https://waldo.example.com/feeds/waldo/
+Feed Remote URL,Feed Archive URL
+,https://feeds.example.com
+https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge,
+https://waldo.example.com/feeds/waldo/,

@@ -2,12 +2,10 @@
 An archive of RSS/Atom syndication feeds.
 """
 
-import os
 import pathlib
 import mimetypes
 import urllib.parse
 import csv
-import email
 import cgi
 import logging
 
@@ -26,7 +24,16 @@ class Archive:
     INDEX_BASENAME = "index.html"
 
     FEED_CONFIGS_BASENAME = ".feed-archiver.csv"
-    FEED_URL_FIELD = "Feed URL"
+    FEED_REMOTE_URL_FIELD = "Feed Remote URL"
+    FEED_ARCHIVE_URL_FIELD = "Feed Archive URL"
+    FEED_CONFIG_FIELDNAMES = [FEED_REMOTE_URL_FIELD, FEED_ARCHIVE_URL_FIELD]
+
+    # Feed config values initialized on update.
+    feed_config_fields = None
+    # The first row after the header row of the feeds configs CSV.
+    global_config = None
+    # The default base URL for assembling absolute URLs
+    url = None
 
     def __init__(self, root_dir):
         """
@@ -39,6 +46,87 @@ class Archive:
         ), f"Feeds definition path is not a file: {self.config_path}"
         self.archive_feeds = {}
         self.requests = requests.Session()
+
+    def load_feed_configs(self):
+        """
+        Read and deserialize the archive feed configs and do necessary pre-processing.
+
+        We use CSV for the definition of archive feeds because many podcast addicts may
+        have hundreds of feed "subscriptions" so there may be real value to using a
+        format that users can open in very common tools such as spreadsheet
+        applications.  That said, in real world usage there may come to be use cases
+        that are more important to support that require a different format, so open an
+        issue and make your case if you have one.
+        """
+        logger.info(
+            "Retrieving feed configurations: %r",
+            str(self.config_path),
+        )
+        with self.config_path.open() as feeds_opened:
+            feed_reader = csv.DictReader(feeds_opened)
+            feed_configs = list(feed_reader)
+            if len(feed_configs) < 2:  # pragma: no cover
+                raise ValueError(
+                    f"Feeds config must have at least 2 rows after the header: "
+                    f"{str(self.config_path)!r}"
+                )
+            # Use columns with the same labels as the docs if present, otherwise use
+            # the column order to map field/header names.
+            self.feed_config_fields = {
+                fieldname: fieldname
+                if fieldname in feed_reader.fieldnames
+                else feed_reader.fieldnames[field_idx]
+                for field_idx, fieldname in enumerate(self.FEED_CONFIG_FIELDNAMES)
+            }
+            # The first row after the header defines defaults and/or global options
+            self.global_config = feed_configs[0]
+            self.url = self.global_config[
+                self.feed_config_fields[self.FEED_ARCHIVE_URL_FIELD]
+            ]
+        return feed_configs
+
+    def response_to_path(self, url_response, url_result=None):
+        """
+        Derive the best archive path to represent the given remote URL request response.
+
+        The goals in order of importance are:
+        1. Ensure a unique filesystem path for each URL in order to avoid clashes such
+           that one download doesn't overwrite another.
+        2. Ensure that responses for the archived path from a static site server are as
+           correct and well formed as possible, primarily that the extension matches the
+           `Content-Type`.
+        3. Ensure that derived paths are compatible with most common filesystems.
+        4. Try to derive paths that are as human readable as possible given the above.
+
+        Currently this just involves adding or correcting the suffix/extension if it
+        doesn't match a `Content-Type` header.
+        """
+        url_path = self.url_to_path(url_response.request.url)
+        mime_type = None
+
+        # First try to get the MIME type from the response headers
+        if url_response.headers.get("Content-Type"):
+            mime_type, _ = cgi.parse_header(url_response.headers["Content-Type"])
+
+        # If there's no MIME type in the the response headers, fallback to the element's
+        # attribute if available
+        if (
+            not mime_type
+            and hasattr(url_result, "getparent")
+            and url_result.getparent().attrib.get("type")
+        ):
+            mime_type, _ = cgi.parse_header(url_result.getparent().attrib["type"])
+
+        # Fix the suffix/extension if the MIME type doesn't match
+        if mime_type and (
+            not url_path.suffix or mimetypes.guess_type(url_path.suffix) != mime_type
+        ):
+            # Header doesn't match the extension, guess the most correct extension
+            suffix = mimetypes.guess_extension(mime_type, strict=False)
+            if suffix:
+                url_path = url_path.with_suffix(suffix)
+
+        return url_path
 
     def url_to_path(self, url):
         """
@@ -109,111 +197,27 @@ class Archive:
         """
         Request the URL of each feed in the archive and update contents accordingly.
         """
+        feed_configs = self.load_feed_configs()
         updated_feeds = {}
-        logger.info(
-            "Retrieving feed configurations: %r",
-            str(self.config_path),
-        )
-        with self.config_path.open() as feeds_opened:
-            # We use CSV for the definition of archive feeds because many podcast
-            # addicts may have hundreds of feed "subscriptions" so there may be real
-            # value to using a format that users can open in very common tools such as
-            # spreadsheet applications.  That said, in real world usage there may come
-            # to be use cases that are more important to support that require a
-            # different format, so open an issue and make your case if you have one.
-            feed_reader = csv.DictReader(feeds_opened)
-            # Use the column with the same label as the docs if present, otherwise use
-            # the first field.
-            feed_url_field = self.FEED_URL_FIELD
-            if feed_url_field not in feed_reader.fieldnames:  # pragma: no cover
-                feed_url_field = feed_reader.fieldnames[0]
-            for feed_config in feed_reader:
-                # Try to encapsulate all CSV implementation details here, avoid putting
-                # anywhere else such as the `feed.ArchiveFeed` class.
-                feed_url = feed_config[feed_url_field]
-                archive_feed = self.archive_feeds[feed_url] = feed.ArchiveFeed(
-                    archive=self,
-                    config=feed_config,
-                    url=feed_url,
+        for feed_config in feed_configs[1:]:
+            # The archive needs some sort of an identifier for each feed, so it needs to
+            # know at least that field/column/header from the feed configs.
+            feed_url_field = self.feed_config_fields[self.FEED_REMOTE_URL_FIELD]
+            feed_url = feed_config[feed_url_field]
+            # Delegate to the feed for the rest
+            archive_feed = self.archive_feeds[feed_url] = feed.ArchiveFeed(
+                archive=self,
+                config=feed_config,
+                url=feed_url,
+            )
+            try:
+                updated_items = archive_feed.update()
+            except Exception:  # pragma: no cover, pylint: disable=broad-except
+                logger.exception(
+                    "Unhandled exception updating feed: %r",
+                    feed_url,
                 )
-                try:
-                    updated_items = archive_feed.update()
-                except Exception:  # pragma: no cover, pylint: disable=broad-except
-                    logger.exception(
-                        "Unhandled exception updating feed: %r",
-                        feed_url,
-                    )
-                    continue
-                if updated_items:
-                    updated_feeds[feed_url] = updated_items
+                continue
+            if updated_items:
+                updated_feeds[feed_url] = updated_items
         return updated_feeds
-
-    def update_download_metadata(self, download_response, download_path):
-        """
-        Reflect any metdata that can be extracted from the respons in the download file.
-        """
-        # Set the filesystem modification datetime if the header is provided
-        if "Last-Modified" in download_response.headers:
-            last_modified = email.utils.parsedate_to_datetime(
-                download_response.headers["Last-Modified"],
-            )
-            feed_stat = download_path.stat()
-            os.utime(
-                download_path,
-                (feed_stat.st_atime, last_modified.timestamp()),
-            )
-
-        # Create a symlink with the most appropriate basename from the redirect chain
-        redirect_chain = [download_response]
-        redirect_chain.extend(reversed(download_response.history))
-        for history_response in redirect_chain:
-            history_response_path = self.url_to_path(history_response.request.url)
-
-            # Always use an explicit filename from the headers if available
-            if "Content-Disposition" in history_response.headers:
-                _, disposition_params = cgi.parse_header(
-                    history_response.headers["Content-Disposition"],
-                )
-                if "filename" in disposition_params:
-                    basename = disposition_params["filename"]
-                    break
-
-            # If there's no explicit filename, then see if the basename of he request
-            # path matches the MIME type from the response headers if present.
-            if "Content-Type" in history_response.headers:
-                mime_type, _ = cgi.parse_header(
-                    history_response.headers["Content-Type"],
-                )
-                suffixs = mimetypes.guess_all_extensions(mime_type, strict=False)
-                history_response_path = self.url_to_path(history_response.request.url)
-                if history_response_path.suffix in suffixs:
-                    basename = history_response_path.name
-                    break
-
-        else:
-            # Fallback to the basename of the most recent request, adding an extension
-            # if a MIME type is provided.  Note that this is easily confused if the
-            # basename of the URL contains a dot.
-            history_response = download_response
-            history_response_path = self.url_to_path(history_response.request.url)
-            basename = history_response_path.name
-            if (
-                not history_response_path.suffix
-                and "Content-Type" in history_response.headers
-            ):
-                mime_type, _ = cgi.parse_header(
-                    history_response.headers["Content-Type"],
-                )
-                suffix = mimetypes.guess_extension(mime_type, strict=False)
-                if suffix:
-                    basename += suffix
-
-        symlink_path = history_response_path.with_name(basename)
-        if not symlink_path.exists() and symlink_path != download_path:
-            logger.info(
-                "Symlinking download to basename: %r -> %r",
-                str(download_path),
-                str(symlink_path),
-            )
-            symlink_path.parent.mkdir(parents=True, exist_ok=True)
-            symlink_path.symlink_to(download_path)

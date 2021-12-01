@@ -30,7 +30,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         mock_feed_class.assert_any_call(
             archive=self.archive,
             url=self.feed_url,
-            config={"Feed URL": self.feed_url},
+            config={"Feed Remote URL": self.feed_url, "Feed Archive URL": ""},
         )
         self.assertEqual(
             mock_feed_class.call_count,

@@ -5,6 +5,7 @@ Test the feed-archiver downloading of enclosures, assets, etc..
 import os
 import datetime
 import pathlib
+import urllib
 
 from lxml import etree
 import requests_mock
@@ -37,6 +38,19 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
     ENCLOSURE_BASENAME_RELATIVE = pathlib.Path("https", ENCLOSURE_BASENAME_HOST_PATH)
     ENCLOSURE_REDIRECT_URL = f"https://{ENCLOSURE_BASENAME_HOST_PATH}"
 
+    def archive_relative_to_remote_url(self, archive_relative, remote_mock_path):
+        """
+        Return the remote URL for the archive path adjusted for the mocks.
+        """
+        mock_path = remote_mock_path / archive_relative
+        remote_url_path = self.archive.root_path / archive_relative
+        if archive_relative == self.ENCLOSURE_RELATIVE.with_suffix(".mp3"):
+            # Adjust for the case where the remote URL is missing the
+            # suffix/extension
+            remote_url_path = remote_url_path.with_suffix("")
+            mock_path = mock_path.with_suffix("")
+        return self.archive.path_to_url(remote_url_path), mock_path
+
     def test_real_requests_disabled(self):
         """
         Confirm that tests will fail if real/external requests are attempted.
@@ -54,7 +68,9 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
         file metadata in the archive.
         """
         # Constants specific to this test
-        enclosure_archive_path = self.archive.root_path / self.ENCLOSURE_RELATIVE
+        enclosure_archive_path = (
+            self.archive.root_path / self.ENCLOSURE_BASENAME_RELATIVE
+        )
 
         # Set the mock file path modification date which is used by the test fixture to
         # set the header on the request mock.
@@ -98,18 +114,6 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
             1,
             "Wrong number of redirect redirect target mock request calls",
         )
-        download_basename_symmlink = (
-            self.archive.root_path / self.ENCLOSURE_BASENAME_RELATIVE
-        )
-        self.assertTrue(
-            download_basename_symmlink.is_symlink(),
-            "Download basename path is not a symlink",
-        )
-        self.assertEqual(
-            download_basename_symmlink.readlink(),
-            enclosure_archive_path,
-            "Wrong download basename symlink target",
-        )
 
         # Test in the absence of the response headers
         self.archive_feed.path.unlink()
@@ -120,210 +124,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
         )
         self.assert_no_header_download_mtime(
             no_header_request_mock,
-            enclosure_archive_path,
-        )
-
-    def test_download_disposition_symlink(self):
-        """
-        Symlink for download headers with `Content-Disposition` with a filename.
-        """
-        enclosure_archive_path = self.archive.root_path / self.ENCLOSURE_RELATIVE
-        disposition_symlink_path = enclosure_archive_path.parent / "waldo.mp3"
-        disposition_header = f'attachment; filename="{disposition_symlink_path.name}"'
-
-        disposition_request_mock = self.requests_mock.get(
-            self.ENCLOSURE_URL,
-            headers={"Content-Disposition": disposition_header},
-        )
-        disposition_response = self.archive.requests.get(self.ENCLOSURE_URL)
-        self.assertEqual(
-            disposition_request_mock.call_count,
-            1,
-            "Wrong number of download disposition header mock request calls",
-        )
-        self.assertFalse(
-            disposition_symlink_path.exists(),
-            "Disposition symlink path exists before updating metadata",
-        )
-        self.archive.update_download_metadata(
-            disposition_response,
-            enclosure_archive_path,
-        )
-        self.assertTrue(
-            disposition_symlink_path.is_symlink(),
-            "Disposition symlink path is not a symlink after updating metadata",
-        )
-        self.assertEqual(
-            disposition_symlink_path.readlink(),
-            enclosure_archive_path,
-            "Wrong download basename disposition symlink target",
-        )
-
-    def test_download_type_symlink(self):
-        """
-        Symlink for download headers with `Content-Type`.
-        """
-        enclosure_archive_path = self.archive.root_path / self.ENCLOSURE_RELATIVE
-        type_symlink_path = self.archive.root_path / self.ENCLOSURE_BASENAME_RELATIVE
-        disposition_header = "attachment"
-        type_header = "audio/mpeg; type_param=qux"
-
-        type_request_mock = self.requests_mock.get(
-            self.ENCLOSURE_REDIRECT_URL,
-            status_code=302,
-            reason="Found",
-            headers={
-                "Location": self.ENCLOSURE_URL,
-                "Content-Type": type_header,
-            },
-        )
-        target_request_mock = self.requests_mock.get(
-            self.ENCLOSURE_URL,
-            headers={
-                # Also cover the condition of disposition w/o `filename` parameter
-                "Content-Disposition": disposition_header,
-            },
-        )
-        type_response = self.archive.requests.get(self.ENCLOSURE_REDIRECT_URL)
-        self.assertEqual(
-            type_request_mock.call_count,
-            1,
-            "Wrong number of download type header mock request calls",
-        )
-        self.assertEqual(
-            target_request_mock.call_count,
-            1,
-            "Wrong number of download redirect target mock request calls",
-        )
-        self.assertFalse(
-            type_symlink_path.exists(),
-            "Type symlink path exists before updating metadata",
-        )
-        self.archive.update_download_metadata(
-            type_response,
-            enclosure_archive_path,
-        )
-        self.assertTrue(
-            type_symlink_path.is_symlink(),
-            "Type symlink path is not a symlink after updating metadata",
-        )
-        self.assertEqual(
-            type_symlink_path.readlink(),
-            enclosure_archive_path,
-            "Wrong download basename type symlink target",
-        )
-
-    def test_download_suffix_mismatch(self):
-        """
-        Download suffixes/extensions are preserved even if the don't match the type.
-        """
-        enclosure_archive_path = (
-            self.archive.root_path / self.ENCLOSURE_RELATIVE
-        ).with_suffix(".mpeg3")
-        enclosure_url = f"{self.ENCLOSURE_URL}.mpeg3"
-        type_symlink_path = enclosure_archive_path.with_suffix(".mp3")
-        disposition_header = "attachment"
-        type_header = "audio/mpeg; type_param=qux"
-
-        type_request_mock = self.requests_mock.get(
-            enclosure_url,
-            headers={
-                "Content-Type": type_header,
-                # Also cover the condition of disposition w/o `filename` parameter
-                "Content-Disposition": disposition_header,
-            },
-        )
-        type_response = self.archive.requests.get(enclosure_url)
-        self.assertEqual(
-            type_request_mock.call_count,
-            1,
-            "Wrong number of download type header mock request calls",
-        )
-        self.archive.update_download_metadata(
-            type_response,
-            enclosure_archive_path,
-        )
-        self.assertFalse(
-            type_symlink_path.is_symlink(),
-            "Symlink created without preserving URL suffix/extension",
-        )
-        double_ext_path = enclosure_archive_path.with_name(
-            f"{enclosure_archive_path.name}.mp3",
-        )
-        self.assertFalse(
-            double_ext_path.is_symlink(),
-            "Symlink created without preserving URL suffix/extension",
-        )
-
-    def test_download_suffix_symlink(self):
-        """
-        Symlink for download with `Content-Type` header suffix added.
-        """
-        enclosure_archive_path = self.archive.root_path / self.ENCLOSURE_RELATIVE
-        disposition_symlink_path = enclosure_archive_path.with_suffix(".mp3")
-        type_header = "audio/mpeg"
-        disposition_header = "attachment"
-
-        disposition_request_mock = self.requests_mock.get(
-            self.ENCLOSURE_URL,
-            headers={
-                "Content-Type": type_header,
-                "Content-Disposition": disposition_header,
-            },
-        )
-        disposition_response = self.archive.requests.get(self.ENCLOSURE_URL)
-        self.assertEqual(
-            disposition_request_mock.call_count,
-            1,
-            "Wrong number of download disposition header mock request calls",
-        )
-        self.assertFalse(
-            disposition_symlink_path.exists(),
-            "Disposition symlink path exists before updating metadata",
-        )
-        self.archive.update_download_metadata(
-            disposition_response,
-            enclosure_archive_path,
-        )
-        self.assertTrue(
-            disposition_symlink_path.is_symlink(),
-            "Disposition symlink path is not a symlink after updating metadata",
-        )
-        self.assertEqual(
-            disposition_symlink_path.readlink(),
-            enclosure_archive_path,
-            "Wrong download basename disposition symlink target",
-        )
-
-    def test_download_suffix_unknown_type(self):
-        """
-        No download symlink if the type extension is unknown.
-        """
-        enclosure_archive_path = self.archive.root_path / self.ENCLOSURE_RELATIVE
-        disposition_symlink_path = enclosure_archive_path.with_suffix(".mp3")
-        type_header = "application/unknown"
-        disposition_header = "attachment"
-
-        disposition_request_mock = self.requests_mock.get(
-            self.ENCLOSURE_URL,
-            headers={
-                "Content-Type": type_header,
-                "Content-Disposition": disposition_header,
-            },
-        )
-        disposition_response = self.archive.requests.get(self.ENCLOSURE_URL)
-        self.assertEqual(
-            disposition_request_mock.call_count,
-            1,
-            "Wrong number of download disposition header mock request calls",
-        )
-        self.archive.update_download_metadata(
-            disposition_response,
-            enclosure_archive_path,
-        )
-        self.assertFalse(
-            disposition_symlink_path.exists(),
-            "Symlink path created for unknown type extension",
+            self.archive.root_path / self.ENCLOSURE_RELATIVE.with_suffix(".mp3"),
         )
 
     def test_downloads(self):  # pylint: disable=too-many-locals
@@ -361,9 +162,11 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
                     msg="Test one feed download",
                     archive_relative=str(archive_relative),
                 ):
-
                     # Assert that the request mock was called correctly
-                    download_url = self.archive.path_to_url(archive_path)
+                    download_url, mock_path = self.archive_relative_to_remote_url(
+                        archive_relative,
+                        remote_mock_path,
+                    )
                     self.assertIn(
                         download_url,
                         uncalled_request_mocks,
@@ -379,7 +182,6 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
                     )
 
                     # Assert that the downloaded file in the archive is correct
-                    mock_path = remote_mock_path / archive_relative
                     self.assertTrue(
                         archive_path.is_file(), "Download is not a file in the archive"
                     )
@@ -407,13 +209,14 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
             (self.archive_feed.path.parent / feed_link_path).is_file(),
             "Wrong feed link index HTML relative URL in feed",
         )
-        feed_href_path = pathlib.Path(
+        feed_href_split = urllib.parse.urlsplit(
             archive_tree.find("channel")
             .find("{http://www.w3.org/2005/Atom}link")
             .attrib["href"]
         )
+        feed_href_path = pathlib.PurePosixPath(feed_href_split.path.lstrip("/"))
         self.assertTrue(
-            (self.archive_feed.path.parent / feed_href_path).is_file(),
+            (self.archive_feed.archive.root_path / feed_href_path).is_file(),
             "Wrong feed XML href relative URL in feed",
         )
         feed_image_path = pathlib.Path(
@@ -471,7 +274,10 @@ class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
                 ):
 
                     # Assert that the request mock was called correctly
-                    download_url = self.archive.path_to_url(archive_path)
+                    download_url, mock_path = self.archive_relative_to_remote_url(
+                        archive_relative,
+                        remote_mock_path,
+                    )
                     self.assertIn(
                         download_url,
                         orig_request_mocks,

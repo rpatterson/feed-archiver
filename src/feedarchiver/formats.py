@@ -41,6 +41,7 @@ class FeedFormat:
 
     # XPaths that differ between formats but can't be generalized from the above
     ITEMS_PARENT_XPATH = ""
+    SELF_LINK_XPATH = "./*[local-name() = 'link' and @rel = 'self']"
 
     # Map format-specific sub-classes to their corresponding root tag name.
     # Used to match a parsed feed XML tree to the corresponding format.
