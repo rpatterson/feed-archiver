@@ -72,3 +72,9 @@ Nice to Have
 #. Consider a different format for feeds config.
 
 #. Improve XML namespace map/prefix for custom attributes.
+
+#. Re-evaluate escaping.  Is ``urllib.parse.quote(...)`` too conservative for our use
+   cases?  Do most filesystems support Unicode, for instance?  How do static file
+   servers handle Unicode in filesystem paths?
+
+#. Option to use hard links instead of symlinks.

@@ -26,6 +26,8 @@ class ArchiveFeed:
     # Initialized on update from the response to the request for the URL from the feed
     # config in order to use response headers to derrive the best path.
     path = None
+    # Initialized on update when the archive tree has been loaded
+    feed_content_path = None
 
     def __init__(self, archive, config, url):
         """
@@ -103,21 +105,38 @@ class ArchiveFeed:
                     remote_item_id,
                     str(self.path),
                 )
-                item_download_urls = remote_format.iter_item_download_urls(
+                item_download_asset_urls = formats.all_xpaths_results(
                     remote_item_elem,
+                    remote_format.DOWNLOAD_ITEM_ASSET_URLS_XPATHS,
+                )
+                item_download_content_urls = formats.all_xpaths_results(
+                    remote_item_elem,
+                    remote_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
                 )
                 try:
                     # Download enclosures and assets only for this item.
-                    item_download_paths = self.download_urls(item_download_urls)
+                    item_download_asset_paths = self.download_urls(
+                        item_download_asset_urls,
+                    )
+                    item_download_content_paths = self.download_urls(
+                        item_download_content_urls,
+                    )
                 except Exception:  # pragma: no cover, pylint: disable=broad-except
                     logger.exception(
                         "Problem item downloading URLs, continuing to next: %r",
                         remote_item_id,
                     )
                     continue
-                download_paths.update(item_download_paths)
+                download_paths.update(item_download_asset_paths)
+                download_paths.update(item_download_content_paths)
                 updated_items[remote_item_id] = remote_item_elem
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
+
+                self.symlink_item_content(
+                    remote_item_elem,
+                    remote_item_id,
+                    item_download_content_paths,
+                )
 
         if updated_items or download_paths:
             # Pretty format the feed for readability
@@ -183,6 +202,8 @@ class ArchiveFeed:
                     f"Remote feed format, {type(remote_format).__name__!r}, is "
                     f"different from archive format, {type(archive_format).__name__!r}."
                 )
+            archive_root = archive_tree.getroot()
+            archived_items_parent = remote_format.get_items_parent(archive_root)
         else:
             # First time requesting this feed, copy the remote feed, minus the items to
             # the archive and download the feed-level assets.
@@ -207,7 +228,10 @@ class ArchiveFeed:
             # initial version of the feed.
             download_paths.update(
                 self.download_urls(
-                    remote_format.iter_feed_download_urls(archive_root),
+                    formats.all_xpaths_results(
+                        archive_root,
+                        remote_format.DOWNLOAD_FEED_URLS_XPATHS,
+                    ),
                 ),
             )
 
@@ -218,6 +242,20 @@ class ArchiveFeed:
             )
             etree.indent(archive_tree)
             archive_tree.write(str(self.path))
+
+        # Assemble feed-wide data needed for the content/enclosure symlinks
+        feed_title_elem = archived_items_parent.find("title")
+        if feed_title_elem is None:
+            feed_content_link_basename = self.path.name
+        else:
+            feed_content_link_basename = urllib.parse.quote(
+                feed_title_elem.text,
+                # Allow spaces
+                safe="/ ",
+            )
+        self.feed_content_path = (
+            self.archive.root_path / "Feeds" / feed_content_link_basename
+        )
 
         return archive_tree
 
@@ -347,6 +385,61 @@ class ArchiveFeed:
                     )
 
         return download_path
+
+    def symlink_item_content(self, item_elem, item_id, item_content_paths):
+        """
+        Symlink item content/enclosures into a feed/item hierarchy.
+        """
+        item_title_elem = item_elem.find("title")
+        if item_title_elem is None:
+            item_content_link_basename = item_id
+        else:
+            item_content_link_basename = urllib.parse.quote(
+                item_title_elem.text,
+                safe="/ ",
+            )
+        item_content_link_path = self.feed_content_path / item_content_link_basename
+        for (
+            content_url_result,
+            content_archive_relative,
+        ) in item_content_paths.items():
+            # Match the type/extension/suffix of the archive download
+            content_link_path = item_content_link_path.with_suffix(
+                content_archive_relative.suffix,
+            )
+            # Make the symlink relative
+            content_link_target = pathlib.Path(
+                os.path.relpath(
+                    self.archive.root_path / content_archive_relative,
+                    content_link_path.parent,
+                ),
+            )
+            # Append numerical index if there are multiple content downloads for
+            # this item.
+            content_index = 0
+            while os.path.lexists(content_link_path):
+                if content_link_path.readlink() == content_link_target:
+                    logger.debug(
+                        "Duplicate item URL, skip content symlink: %r -> %r",
+                        content_link_path,
+                        content_link_target,
+                    )
+                    break
+                content_index += 1
+                content_link_path = item_content_link_path.with_suffix(
+                    content_link_target.suffix
+                ).with_stem(f"{item_content_link_path.stem}-{content_index}")
+            else:
+                logger.info(
+                    "Linking item content: %r -> %r",
+                    content_link_path,
+                    content_link_target,
+                )
+                content_link_path.parent.mkdir(parents=True, exist_ok=True)
+                content_link_path.symlink_to(content_link_target)
+                content_url_result.getparent().attrib[
+                    f"{{{self.NAMESPACE}}}content-link"
+                ] = str(content_link_path)
 
 
 def update_download_metadata(download_response, download_path):

@@ -26,6 +26,13 @@ def query_xpath(elem, xpath):
     return xpath_results[0]
 
 
+def all_xpaths_results(elem, xpaths):
+    """
+    Return the results of all xpaths combined, IOW `OR`.
+    """
+    return elem.xpath(" | ".join(xpaths))
+
+
 class FeedFormat:
     """
     An abstract feed XML format, such as RSS or Atom.
@@ -37,6 +44,8 @@ class FeedFormat:
     ITEM_TAG = ""
     ITEM_ID_TAG = ""
     DOWNLOAD_TEXT_TAGS = ["link"]
+    DOWNLOAD_CONTENT_TAGS = ["enclosure", "content"]
+    DOWNLOAD_CONTENT_EXPR = "@rel='enclosure'"
     DOWNLOAD_ATTR_NAMES = ["href", "url", "src"]
 
     # XPaths that differ between formats but can't be generalized from the above
@@ -69,9 +78,19 @@ class FeedFormat:
             f"{download_feed_prefix} and {download_text_expr}]/text()",
             f"{download_feed_prefix}]//{download_attr_step}",
         ]
-        cls.DOWNLOAD_ITEM_URLS_XPATHS = [
+        download_content_tags_expr = " or ".join(
+            f"local-name()='{download_content_tag}'"
+            for download_content_tag in cls.DOWNLOAD_CONTENT_TAGS
+        )
+        download_content_expr = (
+            f"{download_content_tags_expr} or {cls.DOWNLOAD_CONTENT_EXPR}"
+        )
+        cls.DOWNLOAD_ITEM_ASSET_URLS_XPATHS = [
             f".//*[{download_text_expr}]/text()",
-            f".//{download_attr_step}",
+            f".//*[not({download_content_expr})]/{download_attr_step}",
+        ]
+        cls.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS = [
+            f".//*[{download_content_expr}]/{download_attr_step}",
         ]
 
         # Register this specific feed format by it's root element tag name
@@ -143,18 +162,6 @@ class FeedFormat:
         if not item_id.strip():  # pragma: no cover
             raise ValueError(f"Empty feed item ID: {self.ITEM_ID_XPATH!r}")
         return item_id.strip()
-
-    def iter_feed_download_urls(self, feed_root):
-        """
-        Return the URLs for all downloads at the feed-level, not in feed items.
-        """
-        return feed_root.xpath(" | ".join(self.DOWNLOAD_FEED_URLS_XPATHS))
-
-    def iter_item_download_urls(self, item_elem):
-        """
-        Return the URLs for all downloads at the feed-level, not in feed items.
-        """
-        return item_elem.xpath(" | ".join(self.DOWNLOAD_ITEM_URLS_XPATHS))
 
     @classmethod
     def from_tree(cls, archive_feed, feed_tree):

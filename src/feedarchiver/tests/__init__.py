@@ -132,8 +132,7 @@ class FeedarchiverTestCase(
             if mock_type:
                 mock_headers["Content-Type"] = mock_type
             mock_url = archive_feed.archive.path_to_url(
-                archive_feed.archive.root_path
-                / mock_path.relative_to(remote_mock_path)
+                archive_feed.archive.root_path / mock_path.relative_to(remote_mock_path)
             )
             request_mocks[mock_url] = (
                 mock_path,
@@ -229,7 +228,9 @@ def walk_archive(archive_root_path):
             archive_root_part
             for archive_root_part in pathlib.Path(root).parts
             if archive_root_part.endswith("~")
-        }:  # pragma: no cover
+        } or (
+            root_relative.parts and root_relative.parents[0].name == "Feeds"
+        ):  # pragma: no cover
             continue
         for archive_basename in files:
             if (
