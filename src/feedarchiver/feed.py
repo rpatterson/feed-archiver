@@ -48,7 +48,7 @@ class ArchiveFeed:
         remote_format = formats.FeedFormat.from_tree(self, remote_tree)
 
         # Assemble the archive version of the feed XML
-        download_paths = []
+        download_paths = {}
         archive_tree = self.load_archive_tree(
             remote_format,
             remote_tree,
@@ -131,7 +131,7 @@ class ArchiveFeed:
                         remote_item_id,
                     )
                     continue
-                download_paths.extend(item_download_paths)
+                download_paths.update(item_download_paths)
                 updated_items[remote_item_id] = remote_item_elem
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
 
@@ -198,7 +198,7 @@ class ArchiveFeed:
 
             # Consistent with initial download of the feed, only download assets for the
             # initial version of the feed.
-            download_paths.extend(
+            download_paths.update(
                 self.download_urls(
                     remote_format.iter_feed_download_urls(archive_root),
                 ),
