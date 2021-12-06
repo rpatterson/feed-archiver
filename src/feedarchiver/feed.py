@@ -274,7 +274,7 @@ class ArchiveFeed:
                     )
                     # Store the original remote URL in a namespace attribute
                     url_parent.attrib[
-                        f"{{{self.NAMESPACE}}}attribute-url_result.attrname"
+                        f"{{{self.NAMESPACE}}}attribute-{url_result.attrname}"
                     ] = url_result
                     # Update the archived URL to the local, relative URL
                     url_parent.attrib[url_result.attrname] = download_url_split.geturl()
