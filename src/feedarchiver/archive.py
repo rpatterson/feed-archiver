@@ -141,20 +141,23 @@ class Archive:
         # Use `pathlib.PurePosixPath` to split on forward slashes in the URL regardless
         # of what the path separator is for this platform.
         url_path = pathlib.PurePosixPath(url_relative)
-        archive_path = pathlib.PurePosixPath(
-            urllib.parse.quote(split_url.scheme),
-            urllib.parse.quote(split_url.netloc),
-            # Place the query and fragment from the URL before the extension/suffix in
-            # the path
-            url_path.with_stem(
+        archive_path = (
+            pathlib.Path(
+                urllib.parse.quote(split_url.scheme),
+                urllib.parse.quote(split_url.netloc),
+            )
+            / pathlib.Path(
+                *(urllib.parse.quote(part) for part in url_path.parent.parts)
+            )
+            / url_path.with_stem(
+                # Place the query and fragment from the URL before the extension/suffix
+                # in the path
                 urllib.parse.quote(
                     split_url._replace(
-                        scheme="",
-                        netloc="",
-                        path=url_path.stem,
+                        scheme="", netloc="", path=url_path.stem
                     ).geturl(),
                 )
-            ),
+            ).name
         )
         # Translate back to platform-native filesystem path separators/slashes
         return self.root_path / archive_path

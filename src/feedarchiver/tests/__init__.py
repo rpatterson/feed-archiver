@@ -189,22 +189,30 @@ class FeedarchiverDownloadsTestCase(FeedarchiverTestCase):
     EXAMPLE_RELATIVE = pathlib.Path("downloads")
 
     # Constants specific to this test suite
-    ENCLOSURE_HOST_PATH = pathlib.PurePosixPath(
-        "foo.example.com/podcast/episodes/waldo-episode-title/download",
+    ITEM_SLUG_PREFIX = "el-ni%C3%B1o"
+    ITEM_SLUG = f"{ITEM_SLUG_PREFIX}-episode-title"
+    ENCLOSURE_URL = f"https://foo.example.com/podcast/episodes/{ITEM_SLUG}/download"
+    ENCLOSURE_RELATIVE = pathlib.Path(
+        "https",
+        "foo.example.com",
+        "podcast",
+        "episodes",
+        urllib.parse.quote(ITEM_SLUG),
+        "download",
     )
-    ENCLOSURE_URL = f"https://{ENCLOSURE_HOST_PATH}"
-    ENCLOSURE_RELATIVE = pathlib.Path("https", ENCLOSURE_HOST_PATH)
     ENCLOSURE_MOCK_PATH = (
         FeedarchiverTestCase.REMOTES_PATH
         / EXAMPLE_RELATIVE
         / FeedarchiverTestCase.REMOTE_MOCK
         / ENCLOSURE_RELATIVE
     )
-    ENCLOSURE_BASENAME_HOST_PATH = pathlib.PurePosixPath(
-        "bar.example.com/media/waldo.mp3",
+    ENCLOSURE_BASENAME_RELATIVE = pathlib.Path(
+        "https",
+        "bar.example.com",
+        "media",
+        f"{urllib.parse.quote(ITEM_SLUG_PREFIX)}.mp3",
     )
-    ENCLOSURE_BASENAME_RELATIVE = pathlib.Path("https", ENCLOSURE_BASENAME_HOST_PATH)
-    ENCLOSURE_REDIRECT_URL = f"https://{ENCLOSURE_BASENAME_HOST_PATH}"
+    ENCLOSURE_REDIRECT_URL = f"https://bar.example.com/media/{ITEM_SLUG_PREFIX}.mp3"
 
 
 def get_feed_items(feed_path):

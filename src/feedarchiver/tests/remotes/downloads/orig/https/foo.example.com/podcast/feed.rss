@@ -42,33 +42,33 @@
     </media:category>
     <item>
       <guid isPermaLink="false">foo_376d9037-bf85-4e05-913c-be5e7724c4a6</guid>
-      <title>Waldo Episode Title</title>
+      <title>El Niño Episode Title</title>
       <pubDate>Tue, 23 Nov 2021 13:53:22 -0000</pubDate>
-      <link>https://foo.example.com/podcast/episodes/waldo-episode-title/</link>
+      <link>https://foo.example.com/podcast/episodes/el-ni%C3%B1o-episode-title/</link>
       <description>
         <![CDATA[<p class="episode-description">A description of <b>this specific</b>
-		 episode, Waldo.</p>]]>
+		 episode, El Niño.</p>]]>
       </description>
       <enclosure
-	  url="https://foo.example.com/podcast/episodes/waldo-episode-title/download"
+	  url="https://foo.example.com/podcast/episodes/el-ni%C3%B1o-episode-title/download"
 	  type="audio/mpeg" length="52079"/>
-      <itunes:subtitle>Waldo episode subtitle.</itunes:subtitle>
+      <itunes:subtitle>El Niño episode subtitle.</itunes:subtitle>
       <itunes:episodeType>full</itunes:episodeType>
       <itunes:duration>00:00:03.24</itunes:duration>
       <author>plugh@foo.example.com (Plugh Xyzzy)</author>
       <itunes:author>Plugh Xyzzy</itunes:author>
       <itunes:summary>
-        <![CDATA[A description of *this specific* episode, Waldo, which is long enough
+        <![CDATA[A description of *this specific* episode, El Niño, which is long enough
 		 to contain line breaks.</p>]]>
       </itunes:summary>
-      <itunes:image href="https://foo.example.com/podcast/episodes/waldo-episode-title/waldo.png"/>
+      <itunes:image href="https://foo.example.com/podcast/episodes/el-ni%C3%B1o-episode-title/el-ni%C3%B1o.png"/>
       <media:content
 	  fileSize="52079" type="audio/mpeg"
-	  url="https://foo.example.com/podcast/episodes/waldo-episode-title/download"
+	  url="https://foo.example.com/podcast/episodes/el-ni%C3%B1o-episode-title/download"
 	  />
       <content:encoded>
         <![CDATA[<p class="episode-description">A description of <b>this specific</b>
-		 episode, Waldo.</p>]]>
+		 episode, El Niño.</p>]]>
       </content:encoded>
     </item>
     <item>
