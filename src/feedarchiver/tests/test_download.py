@@ -13,30 +13,10 @@ import requests_mock
 from .. import tests
 
 
-class FeedarchiverDownloadTests(tests.FeedarchiverTestCase):
+class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
     """
     Test the feed-archiver downloading of enclosures, assets, etc..
     """
-
-    EXAMPLE_RELATIVE = pathlib.Path("downloads")
-
-    # Constants specific to this test suite
-    ENCLOSURE_HOST_PATH = pathlib.PurePosixPath(
-        "foo.example.com/podcast/episodes/waldo-episode-title/download",
-    )
-    ENCLOSURE_URL = f"https://{ENCLOSURE_HOST_PATH}"
-    ENCLOSURE_RELATIVE = pathlib.Path("https", ENCLOSURE_HOST_PATH)
-    ENCLOSURE_MOCK_PATH = (
-        tests.FeedarchiverTestCase.REMOTES_PATH
-        / EXAMPLE_RELATIVE
-        / tests.FeedarchiverTestCase.REMOTE_MOCK
-        / ENCLOSURE_RELATIVE
-    )
-    ENCLOSURE_BASENAME_HOST_PATH = pathlib.PurePosixPath(
-        "bar.example.com/media/waldo.mp3",
-    )
-    ENCLOSURE_BASENAME_RELATIVE = pathlib.Path("https", ENCLOSURE_BASENAME_HOST_PATH)
-    ENCLOSURE_REDIRECT_URL = f"https://{ENCLOSURE_BASENAME_HOST_PATH}"
 
     def archive_relative_to_remote_url(self, archive_relative, remote_mock_path):
         """

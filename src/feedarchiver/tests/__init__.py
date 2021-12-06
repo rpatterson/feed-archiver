@@ -181,6 +181,32 @@ class FeedarchiverTestCase(
         )
 
 
+class FeedarchiverDownloadsTestCase(FeedarchiverTestCase):
+    """
+    Test against a rich, full-featured feed including enclosures.
+    """
+
+    EXAMPLE_RELATIVE = pathlib.Path("downloads")
+
+    # Constants specific to this test suite
+    ENCLOSURE_HOST_PATH = pathlib.PurePosixPath(
+        "foo.example.com/podcast/episodes/waldo-episode-title/download",
+    )
+    ENCLOSURE_URL = f"https://{ENCLOSURE_HOST_PATH}"
+    ENCLOSURE_RELATIVE = pathlib.Path("https", ENCLOSURE_HOST_PATH)
+    ENCLOSURE_MOCK_PATH = (
+        FeedarchiverTestCase.REMOTES_PATH
+        / EXAMPLE_RELATIVE
+        / FeedarchiverTestCase.REMOTE_MOCK
+        / ENCLOSURE_RELATIVE
+    )
+    ENCLOSURE_BASENAME_HOST_PATH = pathlib.PurePosixPath(
+        "bar.example.com/media/waldo.mp3",
+    )
+    ENCLOSURE_BASENAME_RELATIVE = pathlib.Path("https", ENCLOSURE_BASENAME_HOST_PATH)
+    ENCLOSURE_REDIRECT_URL = f"https://{ENCLOSURE_BASENAME_HOST_PATH}"
+
+
 def get_feed_items(feed_path):
     """
     Map item ID to item element for all the items in the given feed XML.
