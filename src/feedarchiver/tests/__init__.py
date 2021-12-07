@@ -118,42 +118,32 @@ class FeedarchiverTestCase(
 
         request_mocks = {}
         remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / remote_mock
-        for root, _, files in os.walk(remote_mock_path, followlinks=True):
-            if {
-                mock_root_part
-                for mock_root_part in pathlib.Path(root).parts
-                if mock_root_part.endswith("~")
-            }:  # pragma: no cover
-                continue
-            for mock_basename in files:
-                if mock_basename.endswith("~"):  # pragma: no cover
-                    continue
-                mock_path = pathlib.Path(root) / mock_basename
-                mock_stat = mock_path.stat()
-                mock_bytes = mock_path.read_bytes()
-                mock_headers = {
-                    "Last-Modified": email.utils.formatdate(
-                        timeval=mock_stat.st_mtime,
-                        usegmt=True,
-                    ),
-                    "Content-Length": str(len(mock_bytes)),
-                }
-                mock_type, _ = mimetypes.guess_type(mock_path.name)
-                if mock_type:
-                    mock_headers["Content-Type"] = mock_type
-                mock_url = archive_feed.archive.path_to_url(
-                    archive_feed.archive.root_path
-                    / mock_path.relative_to(remote_mock_path)
-                )
-                request_mocks[mock_url] = (
-                    mock_path,
-                    self.requests_mock.get(
-                        mock_url,
-                        # Ensure the download response includes `Last-Modified`
-                        headers=mock_headers,
-                        content=mock_bytes,
-                    ),
-                )
+        for mock_path, _ in walk_archive(remote_mock_path):
+            mock_stat = mock_path.stat()
+            mock_bytes = mock_path.read_bytes()
+            mock_headers = {
+                "Last-Modified": email.utils.formatdate(
+                    timeval=mock_stat.st_mtime,
+                    usegmt=True,
+                ),
+                "Content-Length": str(len(mock_bytes)),
+            }
+            mock_type, _ = mimetypes.guess_type(mock_path.name)
+            if mock_type:
+                mock_headers["Content-Type"] = mock_type
+            mock_url = archive_feed.archive.path_to_url(
+                archive_feed.archive.root_path
+                / mock_path.relative_to(remote_mock_path)
+            )
+            request_mocks[mock_url] = (
+                mock_path,
+                self.requests_mock.get(
+                    mock_url,
+                    # Ensure the download response includes `Last-Modified`
+                    headers=mock_headers,
+                    content=mock_bytes,
+                ),
+            )
         return request_mocks
 
     def update_feed(self, archive_feed, remote_mock=None):
@@ -225,3 +215,28 @@ def get_feed_items(feed_path):
     return {
         item_elem.find("guid").text: item_elem for item_elem in channel.iter("item")
     }
+
+
+def walk_archive(archive_root_path):
+    """
+    Walk the given path like `os.path` but excluding what we want to ignore for tests.
+    """
+    for root, _, files in os.walk(archive_root_path, followlinks=True):
+        root_path = pathlib.Path(root)
+        root_relative = root_path.relative_to(archive_root_path)
+        # Directories we don't want to "descend" into
+        if {
+            archive_root_part
+            for archive_root_part in pathlib.Path(root).parts
+            if archive_root_part.endswith("~")
+        }:  # pragma: no cover
+            continue
+        for archive_basename in files:
+            if (
+                archive_basename.endswith("~")
+                or archive_basename == archive.Archive.FEED_CONFIGS_BASENAME
+            ):  # pragma: no cover
+                continue
+            archive_path = root_path / archive_basename
+            archive_relative = archive_path.relative_to(archive_root_path)
+            yield archive_path, archive_relative

@@ -129,48 +129,42 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         # This test is written from the perspective of the archive for completeness.
         # Walk the whole archive so we can make assertions on everything within,
         # including things that shouldn't be there.
-        for root, _, files in os.walk(self.archive.root_path):
-            for archive_basename in files:
-                if (
-                    archive_basename.endswith("~")
-                    or archive_basename == self.archive.FEED_CONFIGS_BASENAME
-                ):
-                    continue
-                archive_path = pathlib.Path(root, archive_basename)
-                archive_relative = archive_path.relative_to(self.archive.root_path)
-                with self.subTest(
-                    msg="Test one feed download",
-                    archive_relative=str(archive_relative),
-                ):
-                    # Assert that the request mock was called correctly
-                    download_url, mock_path = self.archive_relative_to_remote_url(
-                        archive_relative,
-                        remote_mock_path,
-                    )
-                    self.assertIn(
-                        download_url,
-                        uncalled_request_mocks,
-                        "No mock registered for download request",
-                    )
-                    _, download_request_mock = uncalled_request_mocks.pop(
-                        download_url,
-                    )
-                    self.assertEqual(
-                        download_request_mock.call_count,
-                        1,
-                        f"Wrong number of requests: {download_url!r}",
-                    )
+        for archive_path, archive_relative in tests.walk_archive(
+            self.archive.root_path,
+        ):
+            with self.subTest(
+                msg="Test one feed download",
+                archive_relative=str(archive_relative),
+            ):
+                # Assert that the request mock was called correctly
+                download_url, mock_path = self.archive_relative_to_remote_url(
+                    archive_relative,
+                    remote_mock_path,
+                )
+                self.assertIn(
+                    download_url,
+                    uncalled_request_mocks,
+                    "No mock registered for download request",
+                )
+                _, download_request_mock = uncalled_request_mocks.pop(
+                    download_url,
+                )
+                self.assertEqual(
+                    download_request_mock.call_count,
+                    1,
+                    f"Wrong number of requests: {download_url!r}",
+                )
 
-                    # Assert that the downloaded file in the archive is correct
-                    self.assertTrue(
-                        archive_path.is_file(), "Download is not a file in the archive"
+                # Assert that the downloaded file in the archive is correct
+                self.assertTrue(
+                    archive_path.is_file(), "Download is not a file in the archive"
+                )
+                if archive_path != self.archive_feed.path:
+                    self.assertEqual(
+                        archive_path.read_bytes(),
+                        mock_path.read_bytes(),
+                        "Different archived download content from remote",
                     )
-                    if archive_path != self.archive_feed.path:
-                        self.assertEqual(
-                            archive_path.read_bytes(),
-                            mock_path.read_bytes(),
-                            "Different archived download content from remote",
-                        )
 
         del uncalled_request_mocks[self.ENCLOSURE_REDIRECT_URL]
         self.assertEqual(
@@ -239,34 +233,28 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
 
         # Assert existing downloads not re-downloaded
         self.archive_feed.update()
-        for root, _, files in os.walk(self.archive.root_path):
-            for archive_basename in files:
-                if (
-                    archive_basename.endswith("~")
-                    or archive_basename == self.archive.FEED_CONFIGS_BASENAME
-                ):
-                    continue
-                archive_path = pathlib.Path(root, archive_basename)
-                archive_relative = archive_path.relative_to(self.archive.root_path)
-                with self.subTest(
-                    msg="Test one feed download",
-                    archive_relative=str(archive_relative),
-                ):
+        for archive_path, archive_relative in tests.walk_archive(
+            self.archive.root_path,
+        ):
+            with self.subTest(
+                msg="Test one feed download",
+                archive_relative=str(archive_relative),
+            ):
 
-                    # Assert that the request mock was called correctly
-                    download_url, mock_path = self.archive_relative_to_remote_url(
-                        archive_relative,
-                        remote_mock_path,
+                # Assert that the request mock was called correctly
+                download_url, mock_path = self.archive_relative_to_remote_url(
+                    archive_relative,
+                    remote_mock_path,
+                )
+                self.assertIn(
+                    download_url,
+                    orig_request_mocks,
+                    "No mock registered for download request",
+                )
+                _, download_request_mock = orig_request_mocks[download_url]
+                if archive_path != self.archive_feed.path:
+                    self.assertEqual(
+                        download_request_mock.call_count,
+                        1,
+                        "Request made for already archived download",
                     )
-                    self.assertIn(
-                        download_url,
-                        orig_request_mocks,
-                        "No mock registered for download request",
-                    )
-                    _, download_request_mock = orig_request_mocks[download_url]
-                    if archive_path != self.archive_feed.path:
-                        self.assertEqual(
-                            download_request_mock.call_count,
-                            1,
-                            "Request made for already archived download",
-                        )
