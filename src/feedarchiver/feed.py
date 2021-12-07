@@ -63,23 +63,7 @@ class ArchiveFeed:
             self.url,
             str(self.path),
         )
-        # Update the `self` link URL to the relative, local archived URL
-        archive_url_field = self.archive.feed_config_fields[
-            self.archive.FEED_ARCHIVE_URL_FIELD
-        ]
-        archive_base_url_split = urllib.parse.urlsplit(
-            self.config.get(archive_url_field)
-            or self.archive.global_config[archive_url_field]
-        )
-        archive_url_path = pathlib.PurePosixPath(
-            archive_base_url_split.path
-        ) / os.path.relpath(self.path, self.archive.root_path)
-        archive_url_split = archive_base_url_split._replace(path=str(archive_url_path))
-        for self_link_elem in remote_format.get_items_parent(archive_root).xpath(
-            remote_format.SELF_LINK_XPATH
-        ):
-            self_link_elem.attrib["href"] = archive_url_split.geturl()
-
+        self.update_self(remote_format, archive_root)
         # Iterate through the remote feed to make updates to the archived feed as
         # appropriate.
         archived_item_ids = set()
@@ -143,6 +127,29 @@ class ArchiveFeed:
         update_download_metadata(remote_response, self.path)
 
         return list(updated_items.keys()), download_paths
+
+    def update_self(self, feed_format, archive_root):
+        """
+        Update the `<link rel="self" href="..." ...` URL in the archived feed.
+
+        Use the absolute URL so that it can be used as a base URL for other URLs in the
+        feed XML.
+        """
+        archive_url_field = self.archive.feed_config_fields[
+            self.archive.FEED_ARCHIVE_URL_FIELD
+        ]
+        archive_base_url_split = urllib.parse.urlsplit(
+            self.config.get(archive_url_field)
+            or self.archive.global_config[archive_url_field]
+        )
+        archive_url_path = pathlib.PurePosixPath(
+            archive_base_url_split.path
+        ) / os.path.relpath(self.path, self.archive.root_path)
+        archive_url_split = archive_base_url_split._replace(path=str(archive_url_path))
+        for self_link_elem in feed_format.get_items_parent(archive_root).xpath(
+            feed_format.SELF_LINK_XPATH
+        ):
+            self_link_elem.attrib["href"] = archive_url_split.geturl()
 
     def load_remote_tree(self, remote_response):
         """
