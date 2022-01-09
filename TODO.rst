@@ -1,10 +1,11 @@
-===========================================================================
+###########################################################################
 Seeking Contributions
-===========================================================================
+###########################################################################
+
 Known bugs and desirable features for which contributions are most welcome.
 
 Required
-========
+********
 
 #. Symlink enclosures to ``./Feed Title/Item Title.basename_ext`` where the
    titles are escaped (preserving spaces).
@@ -13,7 +14,7 @@ Required
    title symlink relative path, including the feed title path part.
 
 High Priority
-=============
+*************
 
 #. Can all podcatcher apps handle relative URLs in feed XML?  How about other
    feed syndication clients/subscribers?
@@ -41,7 +42,7 @@ High Priority
    https://docs.python.org/3/library/asyncio-queue.html#examples
 
 Nice to Have
-============
+************
 
 #. Feed config option to override downloads XPath expression.
 

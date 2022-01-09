@@ -1,8 +1,8 @@
-========================================================================================
+########################################################################################
 feed-archiver
-========================================================================================
+########################################################################################
 Archive the full contents of RSS/Atom syndication feeds including enclosures and assets.
-----------------------------------------------------------------------------------------
+****************************************************************************************
 
 .. image:: https://github.com/rpatterson/feed-archiver/workflows/Run%20linter,%20tests%20and,%20and%20release/badge.svg
 
@@ -43,16 +43,18 @@ specifically, items will be ignored on subsequent retrievals of the same feed if
 have the same ``guid``/``id`` as items that have previously been archived for that feed.
 
 
+************
 Installation
-============
+************
 
 Install using any tool for installing standard Python 3 distributions such as `pip`_::
 
   $ sudo pip3 install feed-archiver
 
 
+*****
 Usage
-=====
+*****
 
 Create a ``./.feed-archiver.yml`` YAML file in a directory to serve as the root
 directory for all feeds to be archived.  The YAML file must have a top-level
