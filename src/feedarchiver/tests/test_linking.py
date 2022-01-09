@@ -14,13 +14,14 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
     """
 
     FEED_BASENAME = "Foo Podcast Title"
-    ITEM_BASENAME = "El Ni%C3%B1o Episode Title.mp3"
+    ITEM_BASENAME = "El Ni%C3%B1o Episode Title"
+    DOWNLOAD_BASENAME = "download.mp3"
 
     def test_basic_feed_item_linking(self):
         """
         By default, enclosures are symlinked to `.../Feed Title/Item Title.ext`.
         """
-        feeds_content_path = self.archive_feed.archive.root_path / "Feeds"
+        feeds_content_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
         self.assertFalse(
             feeds_content_path.is_dir(),
             "Feed item enclosure symlinks hierarchy exists before updating",
@@ -39,17 +40,22 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         )
         item_content_path = feed_content_path / self.ITEM_BASENAME
         self.assertTrue(
-            item_content_path.is_symlink(),
+            item_content_path.is_dir(),
+            "Item missing from symlinks hierarchy",
+        )
+        download_content_path = item_content_path / self.DOWNLOAD_BASENAME
+        self.assertTrue(
+            download_content_path.is_symlink(),
             "Item enclosure missing from symlinks hierarchy",
         )
         enclosure_archive_path = (
             self.archive.root_path / self.ENCLOSURE_RELATIVE
         ).with_suffix(".mp3")
         item_content_target = pathlib.Path(
-            os.path.relpath(enclosure_archive_path, item_content_path.parent),
+            os.path.relpath(enclosure_archive_path, download_content_path.parent),
         )
         self.assertEqual(
-            item_content_path.readlink(),
+            download_content_path.readlink(),
             item_content_target,
             "Item enclosure symlink to wrong target",
         )

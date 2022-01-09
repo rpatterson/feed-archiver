@@ -12,6 +12,7 @@ import logging
 from lxml import etree
 
 from . import formats
+from . import linkpaths
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +26,10 @@ class ArchiveFeed:
 
     # Initialized when the configuration is loaded prior to update
     url = None
+    link_path_plugins = None
     # Initialized on update from the response to the request for the URL from the feed
     # config in order to use response headers to derrive the best path.
     path = None
-    # Initialized on update when the archive tree has been loaded
-    feed_content_path = None
 
     def __init__(self, archive, config):
         """
@@ -43,6 +43,9 @@ class ArchiveFeed:
         Pre-process and validate the feed config prior to running the actual update.
         """
         self.url = self.config["remote-url"]
+        self.link_path_plugins = self.archive.link_path_plugins + list(
+            linkpaths.load_plugins(self, self.config),
+        )
 
     def update(self):  # pylint: disable=too-many-locals
         """
@@ -139,10 +142,10 @@ class ArchiveFeed:
                 updated_items[remote_item_id] = remote_item_elem
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
 
-                self.symlink_item_content(
-                    remote_item_elem,
-                    remote_item_id,
-                    item_download_content_paths,
+                self.link_item_content(
+                    feed_elem=archived_items_parent,
+                    item_elem=remote_item_elem,
+                    item_content_paths=item_download_content_paths,
                 )
 
         if updated_items or download_paths:
@@ -245,20 +248,6 @@ class ArchiveFeed:
             )
             etree.indent(archive_tree)
             archive_tree.write(str(self.path))
-
-        # Assemble feed-wide data needed for the content/enclosure symlinks
-        feed_title_elem = archived_items_parent.find("title")
-        if feed_title_elem is None:
-            feed_content_link_basename = self.path.name
-        else:
-            feed_content_link_basename = urllib.parse.quote(
-                feed_title_elem.text,
-                # Allow spaces
-                safe="/ ",
-            )
-        self.feed_content_path = (
-            self.archive.root_path / "Feeds" / feed_content_link_basename
-        )
 
         return archive_tree
 
@@ -389,60 +378,77 @@ class ArchiveFeed:
 
         return download_path
 
-    def symlink_item_content(self, item_elem, item_id, item_content_paths):
+    def link_item_content(self, feed_elem, item_elem, item_content_paths):
         """
-        Symlink item content/enclosures into a feed/item hierarchy.
+        Link item content/enclosures into media library hierarchies using plugins.
         """
-        item_title_elem = item_elem.find("title")
-        if item_title_elem is None:
-            item_content_link_basename = item_id
-        else:
-            item_content_link_basename = urllib.parse.quote(
-                item_title_elem.text,
-                safe="/ ",
-            )
-        item_content_link_path = self.feed_content_path / item_content_link_basename
         for (
-            content_url_result,
+            url_result,
             content_archive_relative,
         ) in item_content_paths.items():
-            # Match the type/extension/suffix of the archive download
-            content_link_path = item_content_link_path.with_suffix(
-                content_archive_relative.suffix,
-            )
-            # Make the symlink relative
-            content_link_target = pathlib.Path(
-                os.path.relpath(
-                    self.archive.root_path / content_archive_relative,
-                    content_link_path.parent,
-                ),
-            )
-            # Append numerical index if there are multiple content downloads for
-            # this item.
-            content_index = 0
-            while os.path.lexists(content_link_path):
-                if content_link_path.readlink() == content_link_target:
-                    logger.debug(
-                        "Duplicate item URL, skip content symlink: %r -> %r",
+            basename = content_archive_relative.name
+            for link_path_plugin in self.link_path_plugins:
+                logger.debug(
+                    "Linking item content with %r plugin: %s",
+                    type(link_path_plugin),
+                    content_archive_relative,
+                )
+                try:
+                    content_link_str = link_path_plugin(
+                        archive_feed=self,
+                        feed_elem=feed_elem,
+                        item_elem=item_elem,
+                        url_result=url_result,
+                        basename=basename,
+                    )
+                except Exception:  # pragma: no cover, pylint: disable=broad-except
+                    logger.exception(
+                        "Problem linking item content with %r, continuing to next: %s",
+                        type(link_path_plugin),
+                        content_archive_relative,
+                    )
+                    continue
+                if content_link_str is None:  # pragma: no cover
+                    # Plugin handled any linking itself
+                    continue
+                content_link_path = self.archive.root_path / pathlib.Path(
+                    urllib.parse.quote(content_link_str, safe="/ "),
+                )
+                # Make the link relative
+                content_link_target = pathlib.Path(
+                    os.path.relpath(
+                        self.archive.root_path / content_archive_relative,
+                        content_link_path.parent,
+                    ),
+                )
+
+                # Append numerical index if there are multiple content downloads for
+                # this item.
+                content_link_stem = content_link_path.stem
+                content_index = 0
+                while os.path.lexists(content_link_path):
+                    if content_link_path.readlink() == content_link_target:
+                        logger.debug(
+                            "Duplicate item URL, skip content link: %r -> %r",
+                            content_link_path,
+                            content_link_target,
+                        )
+                        break
+                    content_index += 1
+                    content_link_path = content_link_path.with_stem(
+                        f"{content_link_stem}-{content_index}",
+                    )
+                else:
+                    logger.info(
+                        "Linking item content: %r -> %r",
                         content_link_path,
                         content_link_target,
                     )
-                    break
-                content_index += 1
-                content_link_path = item_content_link_path.with_suffix(
-                    content_link_target.suffix
-                ).with_stem(f"{item_content_link_path.stem}-{content_index}")
-            else:
-                logger.info(
-                    "Linking item content: %r -> %r",
-                    content_link_path,
-                    content_link_target,
-                )
-                content_link_path.parent.mkdir(parents=True, exist_ok=True)
-                content_link_path.symlink_to(content_link_target)
-                content_url_result.getparent().attrib[
-                    f"{{{self.NAMESPACE}}}content-link"
-                ] = str(content_link_path)
+                    content_link_path.parent.mkdir(parents=True, exist_ok=True)
+                    content_link_path.symlink_to(content_link_target)
+                    url_result.getparent().attrib[
+                        f"{{{self.NAMESPACE}}}content-link"
+                    ] = str(content_link_path)
 
 
 def update_download_metadata(download_response, download_path):

@@ -52,6 +52,13 @@
       <enclosure
 	  url="https://foo.example.com/podcast/episodes/el-ni%C3%B1o-episode-title/download"
 	  type="audio/mpeg" length="52079"/>
+      <!-- Multiple enclosures with the same basename -->
+      <enclosure
+	  url="https://foo.example.com/podcast/common-id.mp3"
+	  type="application/x-no-extension" length="52079"/>
+      <enclosure
+	  url="https://bar.example.com/media/common-id.mp3"
+	  type="application/x-no-extension" length="52079"/>
       <itunes:subtitle>El Niño episode subtitle.</itunes:subtitle>
       <itunes:episodeType>full</itunes:episodeType>
       <itunes:duration>00:00:03.24</itunes:duration>

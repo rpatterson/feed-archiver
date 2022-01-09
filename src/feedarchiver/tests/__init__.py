@@ -216,7 +216,7 @@ def walk_archive(archive_root_path):
             for archive_root_part in pathlib.Path(root).parts
             if archive_root_part.endswith("~")
         } or (
-            root_relative.parts and root_relative.parents[0].name == "Feeds"
+            root_relative.parts and root_relative.parts[0] in {"Feeds", "Music"}
         ):  # pragma: no cover
             continue
         for archive_basename in files:

@@ -25,6 +25,8 @@ High Priority
        $ docker run -it --entrypoint find nginx -name "mime.types"
        ./etc/nginx/mime.types
 
+#. Rename to match the Servarr convention: ``feederr``.
+
 #. Docker image published to a registry automatically in CI/CD
 
 #. Example ``./docker-compose.yml`` file with Traefik for HTTPS/TLS and nginx for static
@@ -70,6 +72,9 @@ Nice to Have
 
 #. Also download all assets/resources for HTML downloads, possibly with `pywebcopy
    <https://stackoverflow.com/a/51544575/624787>`_.
+
+#. Cleanup embedded enclosure metadata (e.g. ID3 tags in MP3) based on item data.  For
+   example, add missing ID3 tag with title from the item XML.
 
 #. Improve XML namespace map/prefix for custom attributes.
 

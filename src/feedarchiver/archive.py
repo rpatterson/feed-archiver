@@ -12,6 +12,7 @@ import yaml
 import requests
 
 from . import feed
+from . import linkpaths
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,9 @@ class Archive:
 
     FEED_CONFIGS_BASENAME = ".feed-archiver.yml"
 
+    # Initialized when the configuration is loaded prior to update
     global_config = None
+    link_path_plugins = None
     # The default base URL for assembling absolute URLs
     url = None
     archive_feeds = None
@@ -55,6 +58,7 @@ class Archive:
         # The first row after the header defines defaults and/or global options
         self.global_config = archive_config["defaults"]
         self.url = self.global_config["base-url"]
+        self.link_path_plugins = list(linkpaths.load_plugins(self, self.global_config))
 
         feed_configs = archive_config["feeds"]
         if not feed_configs:  # pragma: no cover
