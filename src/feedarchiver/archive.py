@@ -5,10 +5,10 @@ An archive of RSS/Atom syndication feeds.
 import pathlib
 import mimetypes
 import urllib.parse
-import csv
 import cgi
 import logging
 
+import yaml
 import requests
 
 from . import feed
@@ -23,14 +23,8 @@ class Archive:
 
     INDEX_BASENAME = "index.html"
 
-    FEED_CONFIGS_BASENAME = ".feed-archiver.csv"
-    FEED_REMOTE_URL_FIELD = "Feed Remote URL"
-    FEED_ARCHIVE_URL_FIELD = "Feed Archive URL"
-    FEED_CONFIG_FIELDNAMES = [FEED_REMOTE_URL_FIELD, FEED_ARCHIVE_URL_FIELD]
+    FEED_CONFIGS_BASENAME = ".feed-archiver.yml"
 
-    # Feed config values initialized on update.
-    feed_config_fields = None
-    # The first row after the header row of the feeds configs CSV.
     global_config = None
     # The default base URL for assembling absolute URLs
     url = None
@@ -50,39 +44,19 @@ class Archive:
     def load_feed_configs(self):
         """
         Read and deserialize the archive feed configs and do necessary pre-processing.
-
-        We use CSV for the definition of archive feeds because many podcast addicts may
-        have hundreds of feed "subscriptions" so there may be real value to using a
-        format that users can open in very common tools such as spreadsheet
-        applications.  That said, in real world usage there may come to be use cases
-        that are more important to support that require a different format, so open an
-        issue and make your case if you have one.
         """
         logger.info(
             "Retrieving feed configurations: %r",
             str(self.config_path),
         )
         with self.config_path.open() as feeds_opened:
-            feed_reader = csv.DictReader(feeds_opened)
-            feed_configs = list(feed_reader)
-            if len(feed_configs) < 2:  # pragma: no cover
-                raise ValueError(
-                    f"Feeds config must have at least 2 rows after the header: "
-                    f"{str(self.config_path)!r}"
-                )
-            # Use columns with the same labels as the docs if present, otherwise use
-            # the column order to map field/header names.
-            self.feed_config_fields = {
-                fieldname: fieldname
-                if fieldname in feed_reader.fieldnames
-                else feed_reader.fieldnames[field_idx]
-                for field_idx, fieldname in enumerate(self.FEED_CONFIG_FIELDNAMES)
-            }
-            # The first row after the header defines defaults and/or global options
-            self.global_config = feed_configs[0]
-            self.url = self.global_config[
-                self.feed_config_fields[self.FEED_ARCHIVE_URL_FIELD]
-            ]
+            archive_config = yaml.safe_load(feeds_opened)
+        feed_configs = archive_config["feeds"]
+        if not feed_configs:  # pragma: no cover
+            raise ValueError(f"No feeds defined: {str(self.config_path)!r}")
+        # The first row after the header defines defaults and/or global options
+        self.global_config = archive_config["defaults"]
+        self.url = self.global_config["base-url"]
         return feed_configs
 
     def response_to_path(self, url_response, url_result=None):
@@ -202,11 +176,10 @@ class Archive:
         """
         feed_configs = self.load_feed_configs()
         updated_feeds = {}
-        for feed_config in feed_configs[1:]:
+        for feed_config in feed_configs:
             # The archive needs some sort of an identifier for each feed, so it needs to
             # know at least that field/column/header from the feed configs.
-            feed_url_field = self.feed_config_fields[self.FEED_REMOTE_URL_FIELD]
-            feed_url = feed_config[feed_url_field]
+            feed_url = feed_config["remote-url"]
             # Delegate to the feed for the rest
             archive_feed = self.archive_feeds[feed_url] = feed.ArchiveFeed(
                 archive=self,

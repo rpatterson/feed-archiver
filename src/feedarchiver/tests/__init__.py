@@ -7,7 +7,6 @@ import datetime
 import pathlib
 import mimetypes
 import urllib.parse
-import csv
 import tempfile
 import shutil
 import email.utils
@@ -83,14 +82,6 @@ class FeedarchiverTestCase(
         self.remotes_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE
         self.archive_path = self.ARCHIVES_PATH / self.EXAMPLE_RELATIVE
 
-        # Extract the feed URL from the CSV
-        self.feed_configs_path = (
-            self.archive_path / archive.Archive.FEED_CONFIGS_BASENAME
-        )
-        with open(self.feed_configs_path, encoding="utf-8") as feed_configs_opened:
-            self.feed_configs_rows = list(csv.DictReader(feed_configs_opened))
-        self.feed_url = self.feed_configs_rows[1]["Feed Remote URL"]
-
         # Copy the testing example feeds archive
         shutil.copytree(
             src=self.archive_path,
@@ -98,10 +89,11 @@ class FeedarchiverTestCase(
             dirs_exist_ok=True,
         )
         self.archive = archive.Archive(self.tmp_dir.name)
-        self.archive.load_feed_configs()
+        self.feed_configs = self.archive.load_feed_configs()
+        self.feed_url = self.feed_configs[0]["remote-url"]
         self.archive_feed = feed.ArchiveFeed(
             archive=self.archive,
-            config=self.feed_configs_rows[1],
+            config=self.feed_configs[0],
             url=self.feed_url,
         )
         self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE

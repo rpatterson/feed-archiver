@@ -1,5 +1,5 @@
 """
-Test the feed-archiver CSV listing of feed URLs.
+Test updating the archive from the feed URLs.
 """
 
 import os
@@ -13,7 +13,7 @@ from .. import tests
 
 class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
     """
-    Test the feed-archiver CSV listing of feed URLs.
+    Test updating the archive from the feed URLs.
     """
 
     FEED_MOCK_RELATIVE = (
@@ -49,7 +49,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
 
     def test_feed_configs_requested(self):
         """
-        Requests are sent for each feed URL in the archive CSV file.
+        Requests are sent for each feed URL in the archive configuration.
         """
         self.assertFalse(
             self.feed_path.exists(),

@@ -20,7 +20,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
     @mock.patch("feedarchiver.feed.ArchiveFeed")
     def test_feeds_updated(self, mock_feed_class):
         """
-        Each feed in the archive CSV file is updated.
+        Each feed in the archive configuration is updated.
         """
         mock_update_method = mock_feed_class.return_value.update
         mock_update_method.return_value = self.UPDATE_RETURN_VALUE
@@ -30,7 +30,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         mock_feed_class.assert_any_call(
             archive=self.archive,
             url=self.feed_url,
-            config={"Feed Remote URL": self.feed_url, "Feed Archive URL": ""},
+            config={"remote-url": self.feed_url},
         )
         self.assertEqual(
             mock_feed_class.call_count,

@@ -154,21 +154,17 @@ class ArchiveFeed:
         Use the absolute URL so that it can be used as a base URL for other URLs in the
         feed XML.
         """
-        archive_url_field = self.archive.feed_config_fields[
-            self.archive.FEED_ARCHIVE_URL_FIELD
-        ]
         archive_base_url_split = urllib.parse.urlsplit(
-            self.config.get(archive_url_field)
-            or self.archive.global_config[archive_url_field]
+            self.config.get("base-url") or self.archive.global_config["base-url"]
         )
-        archive_url_path = pathlib.PurePosixPath(
+        base_url_path = pathlib.PurePosixPath(
             archive_base_url_split.path
         ) / os.path.relpath(self.path, self.archive.root_path)
-        archive_url_split = archive_base_url_split._replace(path=str(archive_url_path))
+        base_url_split = archive_base_url_split._replace(path=str(base_url_path))
         for self_link_elem in feed_format.get_items_parent(archive_root).xpath(
             feed_format.SELF_LINK_XPATH
         ):
-            self_link_elem.attrib["href"] = archive_url_split.geturl()
+            self_link_elem.attrib["href"] = base_url_split.geturl()
 
     def load_remote_tree(self, remote_response):
         """

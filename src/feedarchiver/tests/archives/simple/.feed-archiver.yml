@@ -1,0 +1,7 @@
+defaults:
+  base-url: "https://feeds.example.com"
+feeds:
+  - remote-url:
+      "https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
+  - remote-url:
+      "https://waldo.example.com/feeds/waldo/"

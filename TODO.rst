@@ -52,7 +52,7 @@ Nice to Have
 
 #. Option to re-download enclosures/assets if Content-Length is different
 
-#. A 404 handler or somesuch to add feeds to ``./.feed-archiver.csv`` and run ``$
+#. A 404 handler or somesuch to add feeds to ``./.feed-archiver.yml`` and run ``$
    feed-archiver`` automatically?  IOW, transform feed URL and add to pod-catcher app
    and "it just works".
 
@@ -68,8 +68,6 @@ Nice to Have
 
 #. Also download all assets/resources for HTML downloads, possibly with `pywebcopy
    <https://stackoverflow.com/a/51544575/624787>`_.
-
-#. Consider a different format for feeds config.
 
 #. Improve XML namespace map/prefix for custom attributes.
 

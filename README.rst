@@ -54,17 +54,22 @@ Install using any tool for installing standard Python 3 distributions such as `p
 Usage
 =====
 
-Create a ``./.feed-archiver.csv`` CSV file in a directory to serve as the root directory
-for all feeds to be archived.  The CSV file should have a header row, a row defining
-default or global options.  The second column of the defaults row should define the
-external base URL for the archive and is used to assemble absolute URLs where relative
-aURLs can't be used.  The first cell of each row after that should contain the URL of a
-feed to archive in this directory.  In the simplest form, this can just be a file with
-one header line and one feed URL per line from there::
+Create a ``./.feed-archiver.yml`` YAML file in a directory to serve as the root
+directory for all feeds to be archived.  The YAML file must have a top-level
+``defaults`` key whose value is an object defining default or global options.  In
+particular, the ``base-url`` key in that section whose value must be a string which
+defines the external base URL at which the archive is served to clients and is used to
+assemble absolute URLs where relative URLs can't be used.  The file must also have a
+top-level ``feeds`` key whose value is an array or list of objects defining the remote
+feeds to archive in this directory.  Each feed object must contain a ``remote-url`` key
+whose value is a string that contains the URL of an individual feed to archive.  In the
+simplest form, this can just be a file like so::
 
-  Feed Remote URL,Feed Archive URL
-  ,https://feeds.example.com
-  https://foo-username:secret@grault.example.com/feeds/garply.rss,
+  defaults:
+    base-url: "https://feeds.example.com"
+  feeds:
+    - remote-url:
+        "https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
   ...
 
 Then simple run the ``$ feed-archiver`` command in that directory to update the archive

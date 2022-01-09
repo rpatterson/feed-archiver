@@ -1,0 +1,5 @@
+defaults:
+  base-url: "https://feeds.example.com"
+feeds:
+  - remote-url:
+      "https://foo.example.com/podcast/feed.rss"
