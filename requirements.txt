@@ -4,23 +4,21 @@
 #
 #    pip-compile --extra=dev ./pyproject.toml
 #
-astroid==2.9.0
+astroid==2.9.3
     # via pylint
-attrs==21.2.0
+attrs==21.4.0
     # via pytest
 autoflake==1.4
     # via feed-archiver (./pyproject.toml)
 autopep8==1.6.0
     # via feed-archiver (./pyproject.toml)
-backports.entry-points-selectable==1.1.1
-    # via virtualenv
-black==21.11b1
+black==21.12b0
     # via flake8-black
 certifi==2021.10.8
     # via requests
 cfgv==3.3.1
     # via pre-commit
-charset-normalizer==2.0.8
+charset-normalizer==2.0.10
     # via requests
 click==8.0.3
     # via
@@ -28,11 +26,11 @@ click==8.0.3
     #   pip-tools
 coverage==6.2
     # via feed-archiver (./pyproject.toml)
-distlib==0.3.3
+distlib==0.3.4
     # via virtualenv
 docutils==0.18.1
     # via rstcheck
-filelock==3.4.0
+filelock==3.4.2
     # via virtualenv
 flake8==4.0.1
     # via
@@ -40,7 +38,7 @@ flake8==4.0.1
     #   flake8-black
 flake8-black==0.2.3
     # via feed-archiver (./pyproject.toml)
-identify==2.4.0
+identify==2.4.2
     # via pre-commit
 idna==3.3
     # via requests
@@ -48,9 +46,9 @@ iniconfig==1.1.1
     # via pytest
 isort==5.10.1
     # via pylint
-lazy-object-proxy==1.6.0
+lazy-object-proxy==1.7.1
     # via astroid
-lxml==4.6.4
+lxml==4.7.1
     # via feed-archiver (./pyproject.toml)
 lxml-stubs==0.3.0
     # via feed-archiver (./pyproject.toml)
@@ -70,14 +68,14 @@ pep517==0.12.0
     # via pip-tools
 pip-tools==6.4.0
     # via feed-archiver (./pyproject.toml)
-platformdirs==2.4.0
+platformdirs==2.4.1
     # via
     #   black
     #   pylint
     #   virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==2.15.0
+pre-commit==2.16.0
     # via feed-archiver (./pyproject.toml)
 py==1.11.0
     # via pytest
@@ -89,7 +87,7 @@ pyflakes==2.4.0
     # via
     #   autoflake
     #   flake8
-pylint==2.12.1
+pylint==2.12.2
     # via feed-archiver (./pyproject.toml)
 pyparsing==3.0.6
     # via packaging
@@ -100,10 +98,10 @@ pytest==6.2.5
 pytest-subtests==0.5.0
     # via feed-archiver (./pyproject.toml)
 pyyaml==6.0
-    # via pre-commit
-regex==2021.11.10
-    # via black
-requests==2.26.0
+    # via
+    #   feed-archiver (./pyproject.toml)
+    #   pre-commit
+requests==2.27.1
     # via
     #   feed-archiver (./pyproject.toml)
     #   requests-mock
@@ -122,22 +120,24 @@ toml==0.10.2
     #   pre-commit
     #   pylint
     #   pytest
-tomli==1.2.2
+tomli==1.2.3
     # via
     #   black
     #   pep517
-types-requests==2.26.1
+types-requests==2.27.5
     # via feed-archiver (./pyproject.toml)
-typing-extensions==4.0.0
+types-urllib3==1.26.3
+    # via types-requests
+typing-extensions==4.0.1
     # via
     #   astroid
     #   black
     #   pylint
-urllib3==1.26.7
+urllib3==1.26.8
     # via requests
-virtualenv==20.10.0
+virtualenv==20.13.0
     # via pre-commit
-wheel==0.37.0
+wheel==0.37.1
     # via pip-tools
 wrapt==1.13.3
     # via astroid
