@@ -55,6 +55,8 @@ class FeedarchiverTestCase(
     # Test data in the checkout that represents local archived feed data.
     ARCHIVES_PATH = REMOTES_PATH.parent / "archives"
 
+    SONARR_URL = "http://localhost:8989"
+
     def setUp(self):
         """
         Set up used in all feed-archiver tests.
@@ -88,6 +90,11 @@ class FeedarchiverTestCase(
             dirs_exist_ok=True,
         )
         self.archive = archive.Archive(self.tmp_dir.name)
+        # Mock the Sonarr request that is sent when the config is loaded
+        self.requests_mock.get(
+            f"{self.SONARR_URL}/api/v3/system/status?apikey=secret",
+            json=dict(version="3.0.6.1342"),
+        )
         self.archive.load_config()
         self.archive_feed = self.archive.archive_feeds[0]
         self.feed_url = self.archive_feed.url
@@ -216,7 +223,13 @@ def walk_archive(archive_root_path):
             for archive_root_part in pathlib.Path(root).parts
             if archive_root_part.endswith("~")
         } or (
-            root_relative.parts and root_relative.parts[0] in {"Feeds", "Music"}
+            root_relative.parts
+            and root_relative.parts[0]
+            in {
+                "Feeds",
+                "Music",
+                "Videos",
+            }
         ):  # pragma: no cover
             continue
         for archive_basename in files:

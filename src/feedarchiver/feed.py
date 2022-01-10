@@ -388,6 +388,38 @@ class ArchiveFeed:
         ) in item_content_paths.items():
             basename = content_archive_relative.name
             for link_path_plugin in self.link_path_plugins:
+                # Check for a regular expression match if configured to do so
+                match = None
+                if "match-re" in link_path_plugin.config:
+                    try:
+                        match_string = eval(  # pylint: disable=eval-used
+                            f"f{link_path_plugin.config['match-string']!r}"
+                        )
+                    except Exception:  # pragma: no cover, pylint: disable=broad-except
+                        logger.exception(
+                            "Problem expanding `match-string` template for %r: %r",
+                            type(link_path_plugin),
+                            link_path_plugin.config["match-string"],
+                        )
+                        continue
+                    try:
+                        match = link_path_plugin.config["match-re"].match(match_string)
+                    except Exception:  # pragma: no cover, pylint: disable=broad-except
+                        logger.exception(
+                            "Problem matching `match-pattern` for %r: %r",
+                            type(link_path_plugin),
+                            link_path_plugin.config["match-string"],
+                        )
+                        continue
+                    if match is None:  # pragma: no cover
+                        logger.info(
+                            "The %r plugin `match-pattern` did not match: %r",
+                            type(link_path_plugin),
+                            match_string,
+                        )
+                        continue
+
+                # Delegate to the plugin
                 logger.debug(
                     "Linking item content with %r plugin: %s",
                     type(link_path_plugin),
@@ -400,6 +432,7 @@ class ArchiveFeed:
                         item_elem=item_elem,
                         url_result=url_result,
                         basename=basename,
+                        match=match,
                     )
                 except Exception:  # pragma: no cover, pylint: disable=broad-except
                     logger.exception(

@@ -145,7 +145,9 @@ To link feed items into an `alternate hierarchy`_, such as in a media library, a
 ``link-paths`` key to the feed configuration whose value is an list/array of objects
 each defining one alternative path to link to the feed item enclosure.  Any
 ``link-paths`` defined in the top-level ``defaults`` key will be used for all feeds.
-The actual linking of enclosures is delegated to `plugins`_.
+Configuration to be shared across multiple ``link-paths`` configurations may be placed
+in the corresponding ``defaults`` / ``plugins`` / ``link-paths`` / ``{plugin_name}``
+object.  The actual linking of enclosures is delegated to `plugins`_.
 
 
 *******
@@ -215,9 +217,25 @@ Here's an example ``link-paths`` definition::
 
   defaults:
     base-url: "https://feeds.example.com"
+    plugins:
+      link-paths:
+        sonarr:
+          url: "http://localhost:8989"
+          api-key: "????????????????????????????????"
     link-paths:
       # Link all feed item enclosures into the media library under the podcasts directory
       - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}"
+  feeds:
+    - remote-url:
+	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
+      link-paths:
+	# This particular feed is a podcast about a TV series/show.  Link enclosures
+	# from feed items about an individual episode next to the episode video file as
+	# an external audio track using a non-default plugin.
+	- plugin: "sonarr"
+	  match-string: "{item_elem.find('title').text.strip()}"
+	  match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_number>[0-9]+)\\)"
+	  stem-append: "-garply"
   ...
 
 Default Template Plugin
@@ -231,6 +249,26 @@ default ``template`` is::
   ./Feeds/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}
 
 The format strings may reference any of `the arguments passed into link path plugins`_.
+
+Sonarr TV Series Plugin
+=======================
+
+The ``sonarr`` plugin uses values from the link path configuration and/or the ``match``
+groups to lookup a TV series/show managed by `Sonarr`_, then lookup an episode video
+file that corresponds to the feed item enclosure/content, and link the enclosure/content
+next to that video file.  The ``link-paths`` configuration or ``match`` groups must
+contain:
+
+- ``url`` and ``api-key`` used to `connect to the Sonarr API`_
+- ``series_id`` or ``series_title`` used to `look up the TV show/series`_, note that
+  using ``series_id`` saves on Sonarr API request per update.
+- ``season_number`` used to `lookup the episode file`_
+- ``episode_number`` or ``episode_title`` used to `lookup the episode file`_
+
+They may also include:
+
+- ``stem-append`` containing a string to append to the episode file stem before the
+  enclosure/content suffix/extension.
 
 
 .. _alternate hierarchy: `Ingest Feed Enclosures Into Media Libraries`_
@@ -254,4 +292,9 @@ The format strings may reference any of `the arguments passed into link path plu
 .. _nginx server_name: https://www.nginx.com/resources/wiki/start/topics/examples/server_blocks/
 
 .. _Jellyfin: https://jellyfin.org/
-.. _external alternative audio tracks: https://jellyfin.org/docs/general/server/media/external-audio-files.html
+.. _external alternative audio tracks:
+   https://jellyfin.org/docs/general/server/media/external-audio-files.html
+.. _Sonarr: https://sonarr.tv
+.. _connect to the Sonarr API: https://github.com/Sonarr/Sonarr/wiki/API#url
+.. _look up the TV show/series: https://github.com/Sonarr/Sonarr/wiki/Series#getid
+.. _lookup the episode file: https://github.com/Sonarr/Sonarr/wiki/Episode#get

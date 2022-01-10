@@ -7,12 +7,6 @@ Known bugs and desirable features for which contributions are most welcome.
 Required
 ********
 
-#. Symlink enclosures to ``./Feed Title/Item Title.basename_ext`` where the
-   titles are escaped (preserving spaces).
-
-#. Per-feed config options containing a regex pattern and template to form the item
-   title symlink relative path, including the feed title path part.
-
 High Priority
 *************
 
@@ -48,8 +42,6 @@ Nice to Have
 ************
 
 #. Feed config option to override downloads XPath expression.
-
-#. `lxml.etree <https://lxml.de/3.2/parsing.html#iterparse-and-iterwalk>`_
 
 #. Option to re-download enclosures/assets if
    Last-Modified/If-Modified-Since/If-Unmodified-Since

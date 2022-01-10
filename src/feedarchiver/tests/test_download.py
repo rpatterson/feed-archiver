@@ -167,6 +167,9 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
                     )
 
         del uncalled_request_mocks[self.ENCLOSURE_REDIRECT_URL]
+        for mock_url in list(uncalled_request_mocks.keys()):
+            if mock_url.startswith(self.SONARR_URL):  # pragma: no cover
+                del uncalled_request_mocks[mock_url]
         self.assertEqual(
             uncalled_request_mocks,
             {},
