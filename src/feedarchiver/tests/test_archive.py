@@ -25,11 +25,9 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         mock_update_method = mock_feed_class.return_value.update
         mock_update_method.return_value = self.UPDATE_RETURN_VALUE
 
-        updated_feeds = self.archive.update()
-
+        self.archive.load_config()
         mock_feed_class.assert_any_call(
             archive=self.archive,
-            url=self.feed_url,
             config={"remote-url": self.feed_url},
         )
         self.assertEqual(
@@ -37,6 +35,9 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
             2,
             "Wrong number of archive feeds instantiated",
         )
+        self.archive.archive_feeds[0].url = self.feed_url
+
+        updated_feeds = self.archive.update()
         mock_update_method.assert_called_with()
         self.assertEqual(
             mock_update_method.call_count,

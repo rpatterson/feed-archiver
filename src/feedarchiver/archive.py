@@ -28,6 +28,7 @@ class Archive:
     global_config = None
     # The default base URL for assembling absolute URLs
     url = None
+    archive_feeds = None
 
     def __init__(self, root_dir):
         """
@@ -38,10 +39,9 @@ class Archive:
         assert (
             self.config_path.is_file()
         ), f"Feeds definition path is not a file: {self.config_path}"
-        self.archive_feeds = {}
         self.requests = requests.Session()
 
-    def load_feed_configs(self):
+    def load_config(self):
         """
         Read and deserialize the archive feed configs and do necessary pre-processing.
         """
@@ -51,13 +51,23 @@ class Archive:
         )
         with self.config_path.open() as feeds_opened:
             archive_config = yaml.safe_load(feeds_opened)
-        feed_configs = archive_config["feeds"]
-        if not feed_configs:  # pragma: no cover
-            raise ValueError(f"No feeds defined: {str(self.config_path)!r}")
+
         # The first row after the header defines defaults and/or global options
         self.global_config = archive_config["defaults"]
         self.url = self.global_config["base-url"]
-        return feed_configs
+
+        feed_configs = archive_config["feeds"]
+        if not feed_configs:  # pragma: no cover
+            raise ValueError(f"No feeds defined: {str(self.config_path)!r}")
+
+        self.archive_feeds = []
+        for feed_config in feed_configs:
+            archive_feed = feed.ArchiveFeed(
+                archive=self,
+                config=feed_config,
+            )
+            archive_feed.load_config()
+            self.archive_feeds.append(archive_feed)
 
     def response_to_path(self, url_response, url_result=None):
         """
@@ -174,26 +184,17 @@ class Archive:
         """
         Request the URL of each feed in the archive and update contents accordingly.
         """
-        feed_configs = self.load_feed_configs()
+        self.load_config()
         updated_feeds = {}
-        for feed_config in feed_configs:
-            # The archive needs some sort of an identifier for each feed, so it needs to
-            # know at least that field/column/header from the feed configs.
-            feed_url = feed_config["remote-url"]
-            # Delegate to the feed for the rest
-            archive_feed = self.archive_feeds[feed_url] = feed.ArchiveFeed(
-                archive=self,
-                config=feed_config,
-                url=feed_url,
-            )
+        for archive_feed in self.archive_feeds:
             try:
                 updated_items = archive_feed.update()
             except Exception:  # pragma: no cover, pylint: disable=broad-except
                 logger.exception(
                     "Unhandled exception updating feed: %r",
-                    feed_url,
+                    archive_feed.url,
                 )
                 continue
             if updated_items:
-                updated_feeds[feed_url] = updated_items
+                updated_feeds[archive_feed.url] = updated_items
         return updated_feeds

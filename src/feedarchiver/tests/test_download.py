@@ -120,7 +120,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         self.assertGreater(
             len(orig_request_mocks),
             # At least 2 downloads in addition to the feeds themselves
-            len(self.feed_configs) + 1,
+            len(self.archive.archive_feeds) + 1,
             "Too few request mocks registered by test fixture",
         )
 

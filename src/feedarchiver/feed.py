@@ -23,19 +23,26 @@ class ArchiveFeed:
 
     NAMESPACE = "https://github.com/rpatterson/feed-archiver"
 
+    # Initialized when the configuration is loaded prior to update
+    url = None
     # Initialized on update from the response to the request for the URL from the feed
     # config in order to use response headers to derrive the best path.
     path = None
     # Initialized on update when the archive tree has been loaded
     feed_content_path = None
 
-    def __init__(self, archive, config, url):
+    def __init__(self, archive, config):
         """
         Instantiate a representation of an archive from a file-system path.
         """
         self.archive = archive
         self.config = config
-        self.url = url
+
+    def load_config(self):
+        """
+        Pre-process and validate the feed config prior to running the actual update.
+        """
+        self.url = self.config["remote-url"]
 
     def update(self):  # pylint: disable=too-many-locals
         """

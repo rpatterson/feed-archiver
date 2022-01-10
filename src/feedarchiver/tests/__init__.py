@@ -17,7 +17,6 @@ from lxml import etree
 import requests_mock
 
 from .. import archive
-from .. import feed
 
 
 class FeedarchiverTestCase(
@@ -89,13 +88,9 @@ class FeedarchiverTestCase(
             dirs_exist_ok=True,
         )
         self.archive = archive.Archive(self.tmp_dir.name)
-        self.feed_configs = self.archive.load_feed_configs()
-        self.feed_url = self.feed_configs[0]["remote-url"]
-        self.archive_feed = feed.ArchiveFeed(
-            archive=self.archive,
-            config=self.feed_configs[0],
-            url=self.feed_url,
-        )
+        self.archive.load_config()
+        self.archive_feed = self.archive.archive_feeds[0]
+        self.feed_url = self.archive_feed.url
         self.feed_path = self.archive.root_path / self.FEED_ARCHIVE_RELATIVE
 
     def mock_remote(self, archive_feed, remote_mock=None):
