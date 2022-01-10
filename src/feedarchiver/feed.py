@@ -130,7 +130,7 @@ class ArchiveFeed:
                     )
                 except Exception:  # pragma: no cover, pylint: disable=broad-except
                     logger.exception(
-                        "Problem item downloading URLs, continuing to next: %r",
+                        "Problem downloading item URLs, continuing to next: %r",
                         remote_item_id,
                     )
                     continue
