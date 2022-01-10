@@ -71,7 +71,7 @@ simplest form, this can just be a file like so::
     base-url: "https://feeds.example.com"
   feeds:
     - remote-url:
-        "https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
+	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
   ...
 
 Then simple run the ``$ feed-archiver`` command in that directory to update the archive
