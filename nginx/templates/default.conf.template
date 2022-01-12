@@ -1,0 +1,24 @@
+server {
+    listen ${NGINX_PORT} default_server http2;
+    listen [::]:${NGINX_PORT} default_server http2;
+    server_name ${NGINX_HOST};
+
+    # Make browsing/discovery easier, serve indexes of directories:
+    # https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/#root-directory-and-index-files
+    root ${NGINX_ROOT};
+    autoindex on;
+
+    location / {
+        # First attempt to serve request as file, then as directory, then as a
+        # corresponding `*.html` file, then fall back to displaying a 404:
+        # https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/#trying-several-options
+        try_files $uri $uri/ $uri.html $uri.htm =404;
+
+	# More efficient feed media file serving:
+	# https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/#enabling-sendfile
+        sendfile           on;
+        sendfile_max_chunk 1m;
+	# https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/#enabling-tcp_nopush
+	tcp_nopush on;
+    }
+}
