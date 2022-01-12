@@ -1,0 +1,93 @@
+# Example `$ docker-compose ...` configuration to demonstrate the requirements for
+# serving a feeds archive via a static site server.
+version: "3.8"
+
+services:
+
+  # Container-native, outward-facing proxy to stitch together service in this stack,
+  # manage TLS/SSL certs, require HTTP `Basic` authentication, etc..
+  traefik:
+    # I prefer to use the latest and have things break so I keep up to date.  Override
+    # to pin a version if you prefer otherwise.
+    image: "traefik"
+    container_name: "traefik"
+    restart: "unless-stopped"
+    command:
+      # https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/#setup
+      - "--log.level=INFO"
+      # - "--log.level=DEBUG"
+      # https://doc.traefik.io/traefik/observability/access-logs/#configuration
+      - "--accesslog=true"
+      # Enables the web UI and tells Traefik to listen to docker
+      # https://doc.traefik.io/traefik/getting-started/quick-start/#launch-traefik-with-the-docker-provider
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      # Be defensive, don't accidentally expose internal services
+      - "--providers.docker.exposedbydefault=false"
+      # Serve HTTPS
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      #- "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.letsencrypt.acme.email=me@rpatterson.net"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # https://doc.traefik.io/traefik/v2.2/routing/entrypoints/#redirection
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # For HEALTHCHECK
+      # https://doc.traefik.io/traefik/v2.0/operations/ping/#configuration-examples
+      - "--ping=true"
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPs port
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    extra_hosts:
+      # https://doc.traefik.io/traefik/providers/docker/#host-networking
+      - "host.docker.internal:172.17.0.1"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      # https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/#setup
+      - "./letsencrypt:/letsencrypt"
+    healthcheck:
+      test: >-
+        traefik healthcheck --ping &&
+        wget --no-check-certificate -O "-" -S "https://traefik" 2>&1 |
+        grep "404 Not Found"
+
+  # Static site server.  Use only for serving the feed archive, handle anything else
+  # such as HTTP `Basic` authentication, TLS/SSL, etc., in a container-native proxy such
+  # as Traefik.
+  nginx:
+    image: "nginx"
+    container_name: "nginx"
+    volumes:
+      - "./nginx/templates/:/etc/nginx/templates/"
+    ports:
+     - "9080:80"
+    env_file:
+      - "./.env"
+    environment:
+      NGINX_HOST: "feeds.example.com"
+      NGINX_PORT: "80"
+    labels:
+      # https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/#setup
+      traefik.enable: true
+      traefik.http.routers.nginx.rule: "Host(`https://feeds.example.com`)"
+      traefik.http.services.nginx.loadbalancer.server.port: 80
+      traefik.http.routers.nginx.entrypoints: "websecure"
+      traefik.http.routers.nginx.tls.certresolver: "letsencrypt"
+
+  # Container-native but orchestrator independent periodic tasks
+  # https://github.com/mcuadros/ofelia#docker-labels-configurations
+  ofelia:
+    image: "mcuadros/ofelia:latest"
+    container_name: "ofelia"
+    depends_on:
+      - "feed-archiver"
+    command: "daemon --docker"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"

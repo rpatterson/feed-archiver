@@ -7,6 +7,8 @@ services:
 
   feed-archiver:
     build: "./"
+    depends_on:
+      - "sonarr"
     volumes:
       # For development, test changes without rebuilding the image
       - "./:/usr/local/src/feed-archiver/"

@@ -18,3 +18,5 @@ RUN adduser --uid "${PUID}" --gid "${PGID}" --disabled-password \
 USER $PUID:$PGID
 
 WORKDIR /home/feed-archiver/
+ENTRYPOINT  [ "feed-archiver" ]
+CMD [ "update" ]

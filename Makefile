@@ -28,7 +28,10 @@ all: build
 
 .PHONY: build
 ### Perform any currently necessary local set-up common to most operations
-build: ./var/log/init-setup.log ./var/log/recreate.log ./var/log/docker-build.log
+build: \
+		./var/log/init-setup.log ./var/log/recreate.log \
+		./var/log/docker-build.log \
+		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml
 .PHONY: build-dist
 ### Build installable Python packages, mostly to check build locally
 build-dist: build
@@ -135,6 +138,22 @@ expand-template:
 
 # Local environment variables from a template
 ./.env: ./.env.in
+	$(MAKE) "template=$(<)" "target=$(@)" expand-template
+
+# Extract the Sonarr API key
+./sonarr/config/config.xml: ./var/log/docker-build.log
+	docker-compose up -d sonarr
+	sleep 1
+	until [ -e "$(@)" ]
+	do
+	    sleep 0.1
+	done
+./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml: \
+		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
+		./sonarr/config/config.xml
+	export SONARR_API_KEY=$$(
+	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
+	)
 	$(MAKE) "template=$(<)" "target=$(@)" expand-template
 
 # Perform any one-time local checkout set up
