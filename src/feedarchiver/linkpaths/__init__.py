@@ -6,7 +6,7 @@ import sys
 import re
 import pprint
 
-if sys.version_info < (3, 10):
+if sys.version_info < (3, 10):  # pragma: no cover
     # BBB:
     # https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata
     from importlib_metadata import entry_points

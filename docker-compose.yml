@@ -1,0 +1,20 @@
+# Minimal `$ docker-compose ...` configuration to demonstrate the requirements for
+# running `$ feedarchiver ...` in containers.
+version: "3.8"
+
+services:
+
+  feed-archiver:
+    container_name: "feed-archiver"
+    image: "rpatterson/feed-archiver"
+    build: "./"
+    # Match permissions inside and outside the container
+    user: "${PUID:-1000}:${PGID:-100}"
+    environment:
+      # Find the same configuration file even when run as another user, e.g. `root`.
+      HOME: "/home/feed-archiver"
+    volumes:
+      # For development, test changes without rebuilding the image
+      - "./:/usr/local/src/feed-archiver/"
+      - "./.tox-docker/:/usr/local/src/feed-archiver/.tox/"
+    restart: "unless-stopped"
