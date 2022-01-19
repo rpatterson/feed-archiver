@@ -51,6 +51,10 @@ test: build format test-docker
 test-docker: ./var/log/docker-build.log
 	docker-compose run --rm --workdir="/usr/local/src/feed-archiver/" \
 	    --entrypoint="tox" feed-archiver
+# Ensure the dist/package has been correctly installed in the image
+	docker-compose run --rm --entrypoint="python" feed-archiver \
+	    -m feedarchiver --help
+	docker-compose run --rm --entrypoint="feed-archiver" feed-archiver --help
 
 .PHONY: test-debug
 ### Run tests in the main/default environment and invoke the debugger on errors/failures
