@@ -5,8 +5,8 @@ version: "3.8"
 services:
 
   feed-archiver:
-    container_name: "feed-archiver"
     image: "rpatterson/feed-archiver"
+    container_name: "feed-archiver"
     build: "./"
     # Match permissions inside and outside the container
     user: "${PUID:-1000}:${PGID:-100}"
