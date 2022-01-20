@@ -30,7 +30,7 @@ all: build
 ### Perform any currently necessary local set-up common to most operations
 build: \
 		./var/log/init-setup.log ./var/log/recreate.log \
-		./var/log/docker-build.log \
+		./var/log/docker-build.log ./server/.htpasswd \
 		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml
 .PHONY: build-dist
 ### Build installable Python packages, mostly to check build locally
@@ -131,6 +131,12 @@ expand-template:
 # Local environment variables from a template
 ./.env: ./.env.in
 	$(MAKE) "template=$(<)" "target=$(@)" expand-template
+
+# Static site server set up
+./server/.htpasswd: .SHELLFLAGS = -eu -o pipefail -c
+./server/.htpasswd:
+	echo "Enter a HTTP Basic authentication password for the static site server."
+	htpasswd -c "$(@)" "feed-archiver"
 
 # Extract the Sonarr API key
 ./sonarr/config/config.xml: ./var/log/docker-build.log

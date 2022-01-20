@@ -100,3 +100,4 @@ ENV/
 /src/feedarchiver/tests/archives/end-to-end/*
 !/src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in
 /sonarr
+/server/.htpasswd
