@@ -52,6 +52,8 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       # https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/#setup
       - "./letsencrypt:/letsencrypt"
+      # Make the HTTP Basic auth credentials available in the container
+      - "./server/.htpasswd:/server/.htpasswd"
     healthcheck:
       test: >-
         traefik healthcheck --ping &&
@@ -76,10 +78,12 @@ services:
     labels:
       # https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/#setup
       traefik.enable: true
-      traefik.http.routers.nginx.rule: "Host(`https://feeds.example.com`)"
+      traefik.http.routers.nginx.rule: "Host(`feeds.example.com`)"
       traefik.http.services.nginx.loadbalancer.server.port: 80
       traefik.http.routers.nginx.entrypoints: "websecure"
       traefik.http.routers.nginx.tls.certresolver: "letsencrypt"
+      traefik.http.middlewares.feeds-auth.basicauth.usersfile: "./server/.htpasswd"
+      traefik.http.routers.nginx.middlewares: "feeds-auth"
 
   # Container-native but orchestrator independent periodic tasks
   # https://github.com/mcuadros/ofelia#docker-labels-configurations
