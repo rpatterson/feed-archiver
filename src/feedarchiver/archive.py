@@ -127,7 +127,7 @@ class Archive:
         # Want a relative path, strip the leading, root slash
         url_relative = split_url.path.lstrip("/")
         # Add explicit index page basename if the URL points to a directory
-        if url_relative.endswith("/"):
+        if split_url.path.endswith("/"):
             url_relative += self.INDEX_BASENAME
         # Use `pathlib.PurePosixPath` to split on forward slashes in the URL regardless
         # of what the path separator is for this platform.
