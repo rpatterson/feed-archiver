@@ -12,6 +12,7 @@ MAKEFLAGS+=--no-builtin-rules
 PS1?=$$
 
 # Options affecting target behavior
+DEBUG=
 export PUID=1000
 export PGID=100
 REQUIREMENTS=./requirements-devel.txt
@@ -47,6 +48,11 @@ start: build
 run: build
 	docker-compose down
 	docker-compose up
+.PHONY: run-debug
+### Run the update sub-command in the container via the interactive debugger
+run-debug: build
+	docker-compose run --rm -e DEBUG="$(DEBUG)" --entrypoint="python" \
+	    "feed-archiver" -m "pdb" "/usr/local/bin/feed-archiver" "update"
 
 .PHONY: format
 ### Automatically correct code in this checkout according to linters and style checkers

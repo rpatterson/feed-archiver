@@ -21,6 +21,13 @@ except ImportError:  # pragma: no cover
 else:  # pragma: no cover
     __version__ = version.version
 
+DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
 # Define command line options and arguments
 parser = argparse.ArgumentParser(
     description=__doc__.strip(),
@@ -69,12 +76,7 @@ def config_cli_logging(
     """
     # Want just our logger's level, not others', to be controlled by options/environment
     logging.basicConfig(level=root_level)
-    if "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }:  # pragma: no cover
+    if DEBUG:  # pragma: no cover
         level = logging.DEBUG
     else:
         level = logging.INFO
