@@ -11,6 +11,7 @@ import logging
 
 from lxml import etree
 
+import feedarchiver
 from . import formats
 from . import linkpaths
 
@@ -136,6 +137,8 @@ class ArchiveFeed:
                         "Problem downloading item URLs, continuing to next: %r",
                         remote_item_id,
                     )
+                    if feedarchiver.DEBUG:
+                        raise
                     continue
                 download_paths.update(item_download_asset_paths)
                 download_paths.update(item_download_content_paths)
@@ -251,7 +254,7 @@ class ArchiveFeed:
 
         return archive_tree
 
-    def download_urls(self, url_results):
+    def download_urls(self, url_results):  # pylint: disable=too-many-branches
         """
         Escape URLs to archive paths, download if new, and update URLs.
         """
@@ -274,6 +277,8 @@ class ArchiveFeed:
                         url_result,
                         str(download_path),
                     )
+                    if feedarchiver.DEBUG:
+                        raise
                     download_path.unlink()
                     continue
                 downloaded_paths[url_result] = download_path.relative_to(
@@ -378,7 +383,9 @@ class ArchiveFeed:
 
         return download_path
 
-    def link_item_content(self, feed_elem, item_elem, item_content_paths):
+    def link_item_content(
+        self, feed_elem, item_elem, item_content_paths
+    ):  # pylint: disable=too-many-branches
         """
         Link item content/enclosures into media library hierarchies using plugins.
         """
@@ -401,6 +408,8 @@ class ArchiveFeed:
                             type(link_path_plugin),
                             link_path_plugin.config["match-string"],
                         )
+                        if feedarchiver.DEBUG:
+                            raise
                         continue
                     try:
                         match = link_path_plugin.config["match-re"].match(match_string)
@@ -410,6 +419,8 @@ class ArchiveFeed:
                             type(link_path_plugin),
                             link_path_plugin.config["match-string"],
                         )
+                        if feedarchiver.DEBUG:
+                            raise
                         continue
                     if match is None:  # pragma: no cover
                         logger.info(
@@ -440,6 +451,8 @@ class ArchiveFeed:
                         type(link_path_plugin),
                         content_archive_relative,
                     )
+                    if feedarchiver.DEBUG:
+                        raise
                     continue
                 if content_link_str is None:  # pragma: no cover
                     # Plugin handled any linking itself
