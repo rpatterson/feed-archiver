@@ -49,7 +49,7 @@ class Archive:
         """
         Read and deserialize the archive feed configs and do necessary pre-processing.
         """
-        logger.info(
+        logger.debug(
             "Retrieving feed configurations: %r",
             str(self.config_path),
         )
