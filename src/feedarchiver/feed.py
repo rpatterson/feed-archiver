@@ -435,7 +435,7 @@ class ArchiveFeed:
                 logger.debug(
                     "Linking item content with %r plugin: %s",
                     type(link_path_plugin),
-                    content_archive_relative,
+                    str(content_archive_relative),
                 )
                 try:
                     content_link_str = link_path_plugin(
@@ -450,7 +450,7 @@ class ArchiveFeed:
                     logger.exception(
                         "Problem linking item content with %r, continuing to next: %s",
                         type(link_path_plugin),
-                        content_archive_relative,
+                        str(content_archive_relative),
                     )
                     if feedarchiver.DEBUG:
                         raise
@@ -477,8 +477,8 @@ class ArchiveFeed:
                     if content_link_path.readlink() == content_link_target:
                         logger.debug(
                             "Duplicate item URL, skip content link: %r -> %r",
-                            content_link_path,
-                            content_link_target,
+                            str(content_link_path),
+                            str(content_link_target),
                         )
                         break
                     content_index += 1
@@ -488,8 +488,8 @@ class ArchiveFeed:
                 else:
                     logger.info(
                         "Linking item content: %r -> %r",
-                        content_link_path,
-                        content_link_target,
+                        str(content_link_path),
+                        str(content_link_target),
                     )
                     content_link_path.parent.mkdir(parents=True, exist_ok=True)
                     content_link_path.symlink_to(content_link_target)
