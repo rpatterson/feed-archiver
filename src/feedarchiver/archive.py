@@ -107,8 +107,10 @@ class Archive:
             mime_type, _ = cgi.parse_header(url_result.getparent().attrib["type"])
 
         # Fix the suffix/extension if the MIME type doesn't match
+        guessed_type, _ = mimetypes.guess_type(url_path.suffix)
         if mime_type and (
-            not url_path.suffix or mimetypes.guess_type(url_path.suffix) != mime_type
+            not url_path.suffix
+            or (guessed_type is not None and guessed_type != mime_type)
         ):
             # Header doesn't match the extension, guess the most correct extension
             suffix = mimetypes.guess_extension(mime_type, strict=False)
