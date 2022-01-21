@@ -202,7 +202,7 @@ class ArchiveFeed:
         Also do any pre-processing needed to start updating the archive.
         """
         if self.path.exists():
-            logger.info("Parsing archive XML: %r", self.url)
+            logger.debug("Parsing archive XML: %r", self.url)
             with self.path.open() as feed_archive_opened:
                 archive_tree = etree.parse(feed_archive_opened)
             archive_format = formats.FeedFormat.from_tree(self, remote_tree)
@@ -308,7 +308,7 @@ class ArchiveFeed:
                     fragment="",
                 )
                 if url_result.attrname:
-                    logger.info(
+                    logger.debug(
                         'Updating feed URL: <%s %s="%s"...>',
                         url_result.getparent().tag,
                         url_result.attrname,
@@ -321,7 +321,7 @@ class ArchiveFeed:
                     # Update the archived URL to the local, relative URL
                     url_parent.attrib[url_result.attrname] = download_url_split.geturl()
                 else:
-                    logger.info(
+                    logger.debug(
                         "Updating feed URL: <%s>%s</%s>",
                         url_result.getparent().tag,
                         download_url_split.geturl(),
@@ -352,12 +352,12 @@ class ArchiveFeed:
             download_path = self.archive.response_to_path(download_response, url_result)
             download_relative = download_path.relative_to(self.archive.root_path)
             if download_path.exists():
-                logger.warning(
+                logger.debug(
                     "Skipping download already in archive: %r",
                     str(download_relative),
                 )
                 return download_path
-            logger.info("Writing download into archive: %r", str(download_relative))
+            logger.debug("Writing download into archive: %r", str(download_relative))
             download_path.parent.mkdir(parents=True, exist_ok=True)
             with download_path.open("wb") as download_opened:
                 for chunk in download_response.iter_content(chunk_size=None):
