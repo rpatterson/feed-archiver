@@ -263,6 +263,7 @@ class ArchiveFeed:
             if url_result == self.url:
                 # The feed itself is handled in `self.update()`
                 continue
+            download_path = None
             if url_result in downloaded_paths:
                 logger.debug("Duplicate URL, skipping download: %r", url_result)
                 # Proceed below to update the URLs in the duplicate XML element
@@ -273,13 +274,13 @@ class ArchiveFeed:
                     download_path = self.download_url(url_result)
                 except Exception:  # pragma: no cover, pylint: disable=broad-except
                     logger.exception(
-                        "Problem downloading URL, removing from archive: %r -> %r",
+                        "Problem downloading URL, removing from archive: %r",
                         url_result,
-                        str(download_path),
                     )
                     if feedarchiver.DEBUG:
                         raise
-                    download_path.unlink()
+                    if download_path is not None:
+                        download_path.unlink()
                     continue
                 downloaded_paths[url_result] = download_path.relative_to(
                     self.archive.root_path,
