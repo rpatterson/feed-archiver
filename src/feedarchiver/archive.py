@@ -11,6 +11,7 @@ import logging
 import yaml
 import requests
 
+import feedarchiver
 from . import feed
 from . import linkpaths
 
@@ -198,6 +199,8 @@ class Archive:
                     "Unhandled exception updating feed: %r",
                     archive_feed.url,
                 )
+                if feedarchiver.DEBUG:
+                    raise
                 continue
             if updated_items:
                 updated_feeds[archive_feed.url] = updated_items
