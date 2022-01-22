@@ -261,14 +261,14 @@ contain:
 
 - ``url`` and ``api-key`` used to `connect to the Sonarr API`_
 - ``series_id`` or ``series_title`` used to `look up the TV show/series`_, note that
-  using ``series_id`` saves on Sonarr API request per update.
+  using ``series_id`` saves on Sonarr API request per update
 - ``season_number`` used to `lookup the episode file`_
 - ``episode_number`` or ``episode_title`` used to `lookup the episode file`_
 
 They may also include:
 
 - ``stem-append`` containing a string to append to the episode file stem before the
-  enclosure/content suffix/extension.
+  enclosure/content suffix/extension
 
 
 .. _alternate hierarchy: `Ingest Feed Enclosures Into Media Libraries`_
