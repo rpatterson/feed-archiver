@@ -143,7 +143,6 @@ class ArchiveFeed:
                 download_paths.update(item_download_asset_paths)
                 download_paths.update(item_download_content_paths)
                 updated_items[remote_item_id] = remote_item_elem
-                archived_items_parent.insert(first_item_idx, remote_item_elem)
 
                 self.link_item_content(
                     feed_elem=archived_items_parent,
@@ -151,11 +150,13 @@ class ArchiveFeed:
                     item_content_paths=item_download_content_paths,
                 )
 
-        if updated_items or download_paths:
-            # Pretty format the feed for readability
-            etree.indent(archive_tree)
-            # Update the archived feed file
-            archive_tree.write(str(self.path))
+                archived_items_parent.insert(first_item_idx, remote_item_elem)
+                if updated_items or download_paths:  # pragma: no cover
+                    # Pretty format the feed for readability
+                    etree.indent(archive_tree)
+                    # Update the archived feed file
+                    archive_tree.write(str(self.path))
+
         update_download_metadata(remote_response, self.path)
 
         return list(updated_items.keys()), download_paths
