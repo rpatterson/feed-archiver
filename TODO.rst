@@ -38,6 +38,9 @@ High Priority
 
    https://docs.python.org/3/library/asyncio-queue.html#examples
 
+#. Determine if HTTP/2 is a significant performance improvement for serving large media
+   files and integrate into the Traefik -> Nginx stack if yes.
+
 Nice to Have
 ************
 
