@@ -3,7 +3,6 @@ An archive of RSS/Atom syndication feeds.
 """
 
 import pathlib
-import mimetypes
 import urllib.parse
 import cgi
 import logging
@@ -14,6 +13,8 @@ import requests
 import feedarchiver
 from . import feed
 from . import linkpaths
+from .fixmimes import mimetypes
+
 
 logger = logging.getLogger(__name__)
 
