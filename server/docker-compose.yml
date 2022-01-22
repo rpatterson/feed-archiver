@@ -90,8 +90,6 @@ services:
   ofelia:
     image: "mcuadros/ofelia:latest"
     container_name: "ofelia"
-    depends_on:
-      - "feed-archiver"
     command: "daemon --docker"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"

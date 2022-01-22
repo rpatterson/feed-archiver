@@ -8,6 +8,8 @@ services:
   feed-archiver:
     build: "./"
     depends_on:
+      # Don't force service dependencies on other deployments that extend the base
+      - "ofelia"
       - "sonarr"
     volumes:
       # For development, test changes without rebuilding the image
