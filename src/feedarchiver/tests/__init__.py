@@ -5,7 +5,6 @@ Tests for this feed archiver foundation or template.
 import os
 import datetime
 import pathlib
-import mimetypes
 import urllib.parse
 import tempfile
 import shutil
@@ -17,6 +16,7 @@ from lxml import etree
 import requests_mock
 
 from .. import archive
+from ..fixmimes import mimetypes
 
 
 class FeedarchiverTestCase(
