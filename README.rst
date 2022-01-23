@@ -225,7 +225,7 @@ of the plugin configuration.  Here's an example ``link-paths`` definition::
           api-key: "????????????????????????????????"
     link-paths:
       # Link all feed item enclosures into the media library under the podcasts directory
-      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}"
+      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()})/{basename}"
   feeds:
     - remote-url:
 	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"

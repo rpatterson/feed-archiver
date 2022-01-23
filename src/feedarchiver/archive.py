@@ -11,6 +11,7 @@ import yaml
 import requests
 
 import feedarchiver
+from . import utils
 from . import feed
 from . import linkpaths
 from .utils import mimetypes
@@ -135,16 +136,14 @@ class Archive:
         url_path = pathlib.PurePosixPath(url_relative)
         archive_path = (
             pathlib.Path(
-                urllib.parse.quote(split_url.scheme),
-                urllib.parse.quote(split_url.netloc),
+                utils.quote(split_url.scheme),
+                utils.quote(split_url.netloc),
             )
-            / pathlib.Path(
-                *(urllib.parse.quote(part) for part in url_path.parent.parts)
-            )
+            / pathlib.Path(*(utils.quote(part) for part in url_path.parent.parts))
             / url_path.with_stem(
                 # Place the query and fragment from the URL before the extension/suffix
                 # in the path
-                urllib.parse.quote(
+                utils.quote(
                     split_url._replace(
                         scheme="", netloc="", path=url_path.stem
                     ).geturl(),

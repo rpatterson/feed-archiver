@@ -5,7 +5,6 @@ Tests for this feed archiver foundation or template.
 import os
 import datetime
 import pathlib
-import urllib.parse
 import tempfile
 import shutil
 import email.utils
@@ -15,6 +14,7 @@ from lxml import etree
 
 import requests_mock
 
+from .. import utils
 from .. import archive
 from ..utils import mimetypes
 
@@ -46,7 +46,7 @@ class FeedarchiverTestCase(
         "https",
         "foo-username%3Asecret%40grault.example.com",
         "feeds",
-        f"{FEED_ARCHIVE_STEM}{urllib.parse.quote(FEED_ARCHIVE_QUERY)}"
+        f"{FEED_ARCHIVE_STEM}{utils.quote(FEED_ARCHIVE_QUERY)}"
         f"{FEED_ARCHIVE_SUFFIX}",
     )
 
@@ -180,7 +180,7 @@ class FeedarchiverDownloadsTestCase(FeedarchiverTestCase):
         "foo.example.com",
         "podcast",
         "episodes",
-        urllib.parse.quote(ITEM_SLUG),
+        utils.quote(ITEM_SLUG),
         "download",
     )
     ENCLOSURE_MOCK_PATH = (
@@ -193,7 +193,7 @@ class FeedarchiverDownloadsTestCase(FeedarchiverTestCase):
         "https",
         "bar.example.com",
         "media",
-        f"{urllib.parse.quote(ITEM_SLUG_PREFIX)}.mp3",
+        f"{utils.quote(ITEM_SLUG_PREFIX)}.mp3",
     )
     ENCLOSURE_REDIRECT_URL = f"https://bar.example.com/media/{ITEM_SLUG_PREFIX}.mp3"
 
