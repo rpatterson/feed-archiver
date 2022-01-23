@@ -13,7 +13,7 @@ import requests
 import feedarchiver
 from . import feed
 from . import linkpaths
-from .fixmimes import mimetypes
+from .utils import mimetypes
 
 
 logger = logging.getLogger(__name__)

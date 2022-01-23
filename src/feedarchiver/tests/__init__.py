@@ -16,7 +16,7 @@ from lxml import etree
 import requests_mock
 
 from .. import archive
-from ..fixmimes import mimetypes
+from ..utils import mimetypes
 
 
 class FeedarchiverTestCase(
