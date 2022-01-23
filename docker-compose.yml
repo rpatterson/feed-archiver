@@ -16,5 +16,7 @@ services:
     volumes:
       # For development, test changes without rebuilding the image
       - "./:/usr/local/src/feed-archiver/"
+      # Use separate Python artifacts inside the image and locally on the host
+      - "./src/feed_archiver-docker.egg-info/:/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
       - "./.tox-docker/:/usr/local/src/feed-archiver/.tox/"
     restart: "unless-stopped"

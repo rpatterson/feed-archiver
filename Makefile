@@ -117,11 +117,17 @@ expand-template:
 		./Dockerfile ./docker-compose.yml ./.env.in
 # Ensure access permissions to the `./.tox/` directory inside docker.  If created by `#
 # dockerd`, it ends up owned by `root`.
-	mkdir -pv "./.tox-docker/"
 	docker-compose build --pull \
 	    --build-arg "PUID=$(PUID)" --build-arg "PGID=$(PGID)" \
 	    --build-arg "REQUIREMENTS=$(REQUIREMENTS)" >> "$(@)"
-# Ensure that `./.tox/` is also up to date in the container
+# Use separate Python artifacts inside the image and locally on the host
+	mkdir -pv "./src/feed_archiver-docker.egg-info/" "./.tox-docker/"
+	sudo chown -Rc "$(PUID):$(PGID)" \
+	    "./src/feedarchiver/version.py" \
+	    "./src/feed_archiver-docker.egg-info/" "./.tox-docker/"
+	docker-compose run --rm --user="root" \
+	    --workdir="/usr/local/src/feed-archiver/" \
+	    --entrypoint="pip" feed-archiver install --no-cache-dir -e "./"
 	docker-compose run --rm --workdir="/usr/local/src/feed-archiver/" \
 	    --entrypoint="tox" feed-archiver -r --notest -v
 
