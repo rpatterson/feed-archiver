@@ -79,7 +79,7 @@ test-docker: ./var/log/docker-build.log
 .PHONY: test-debug
 ### Run tests in the main/default environment and invoke the debugger on errors/failures
 test-debug: ./var/log/editable.log
-	./.tox/py3/bin/pytest --pdb
+	./.tox/py310/bin/pytest --pdb
 
 .PHONY: upgrade
 ### Update all fixed/pinned dependencies to their latest available versions
@@ -126,7 +126,7 @@ expand-template:
 	tox -r --notest -v | tee "$(@)"
 # Workaround tox's `usedevelop = true` not working with `./pyproject.toml`
 ./var/log/editable.log: ./var/log/recreate.log
-	./.tox/py3/bin/pip install -e "./"
+	./.tox/py310/bin/pip install -e "./"
 
 # Docker targets
 ./var/log/docker-build.log: \
