@@ -13,8 +13,17 @@ PRIORITY_TYPES = {
 
 def init(files=None, priority_types=None):
     """
-    For each given priority type, ensure that the extension is returned first.
+    Fix broken defaults in the Python's `mimetypes` standard library module.
 
+    https://bugs.python.org/issue1043134
+
+    Unfortunately, the defaults in the `mimetypes` module are wrong; `application/xml`
+    for example is associated with `.xsl`.  Also unfortunately, `**/mime.types` files
+    are also often wrong; `audio/mpeg` for example is associated with `.mpga`, at least
+    in Ubuntu's `/etc/mime.types`.  Since both are wrong in different ways, there's no
+    avoiding manual intervention.
+
+    For each given priority type, ensure that the extension is returned first.
     Internally, the `mimetypes` module relies on the order in which types are added to
     the registry to decide which extension/suffix is first and thus the default for a
     given MIME type.  As such, for each priority type we manually move the priority
