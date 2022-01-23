@@ -401,39 +401,12 @@ class ArchiveFeed:
         ) in item_content_paths.items():
             basename = content_archive_relative.name
             for link_path_plugin in self.link_path_plugins:
-                # Check for a regular expression match if configured to do so
                 match = None
                 if "match-re" in link_path_plugin.config:
-                    try:
-                        match_string = eval(  # pylint: disable=eval-used
-                            f"f{link_path_plugin.config['match-string']!r}"
-                        )
-                    except Exception:  # pragma: no cover, pylint: disable=broad-except
-                        logger.exception(
-                            "Problem expanding `match-string` template for %r: %r",
-                            type(link_path_plugin),
-                            link_path_plugin.config["match-string"],
-                        )
-                        if feedarchiver.DEBUG:
-                            raise
-                        continue
-                    try:
-                        match = link_path_plugin.config["match-re"].match(match_string)
-                    except Exception:  # pragma: no cover, pylint: disable=broad-except
-                        logger.exception(
-                            "Problem matching `match-pattern` for %r: %r",
-                            type(link_path_plugin),
-                            link_path_plugin.config["match-string"],
-                        )
-                        if feedarchiver.DEBUG:
-                            raise
-                        continue
-                    if match is None:  # pragma: no cover
-                        logger.info(
-                            "The %r plugin `match-pattern` did not match: %r",
-                            type(link_path_plugin),
-                            match_string,
-                        )
+                    match_kwargs = locals().copy()
+                    del match_kwargs["self"]
+                    match = self.link_item_plugin_match(**match_kwargs)
+                    if match is None:
                         continue
 
                 # Delegate to the plugin
@@ -474,6 +447,47 @@ class ArchiveFeed:
                         )
                     )
         return content_link_paths
+
+    def link_item_plugin_match(self, **kwargs):
+        """
+        If configured, check for a regular expression match for a feed item enclosure.
+        """
+        link_path_plugin = kwargs["link_path_plugin"]
+        kwargs["self"] = self
+        try:
+            match_string = eval(  # pylint: disable=eval-used
+                f"f{link_path_plugin.config['match-string']!r}",
+                globals(),
+                kwargs,
+            )
+        except Exception:  # pragma: no cover, pylint: disable=broad-except
+            logger.exception(
+                "Problem expanding `match-string` template for %r: %r",
+                type(link_path_plugin),
+                link_path_plugin.config["match-string"],
+            )
+            if feedarchiver.DEBUG:
+                raise
+            return None
+        try:
+            match = link_path_plugin.config["match-re"].match(match_string)
+        except Exception:  # pragma: no cover, pylint: disable=broad-except
+            logger.exception(
+                "Problem matching `match-pattern` for %r: %r",
+                type(link_path_plugin),
+                link_path_plugin.config["match-string"],
+            )
+            if feedarchiver.DEBUG:
+                raise
+            return None
+        if match is None:  # pragma: no cover
+            logger.info(
+                "The %r plugin `match-pattern` did not match: %r",
+                type(link_path_plugin),
+                match_string,
+            )
+            return None
+        return match
 
     def link_plugin_file(self, url_result, content_archive_relative, content_link_str):
         """
