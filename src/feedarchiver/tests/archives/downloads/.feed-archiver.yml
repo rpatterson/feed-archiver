@@ -6,7 +6,8 @@ defaults:
         url: "http://localhost:8989"
         api-key: "secret"
   link-paths:
-    - template: "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}"
+    - template:
+        "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}"
 feeds:
   - remote-url:
       "https://foo.example.com/podcast/feed.rss"

@@ -2,7 +2,9 @@
 Modifications to the standard library and other helpers.
 """
 
+import functools
 import mimetypes
+import urllib.parse
 
 PRIORITY_TYPES = {
     "application/xml": ".xml",
@@ -59,3 +61,9 @@ def init(files=None, priority_types=None):
 
 
 init()
+
+
+# Abuse URL quoting for paths that are safe across filesystems:
+# - *do* quote (IOW, do *not* allow) "/"
+# - do *not* quote (IOW, *do* allow) spaces
+quote = functools.partial(urllib.parse.quote, safe=" ")
