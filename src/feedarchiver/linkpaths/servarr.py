@@ -4,16 +4,22 @@ Link enclosures about a TV series episode next to the video file as external aud
 
 import functools
 import pathlib
+import re
+import logging
 
 import arrapi
 
 from .. import linkpaths
+
+logger = logging.getLogger(__name__)
 
 
 class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
     """
     Link enclosures about a TV series episode next to the video file as external audio.
     """
+
+    MULTI_EPISODE_RE = re.compile("[Ee&-]")
 
     url = "http://localhost:8989"
     client = None
@@ -86,7 +92,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
         match,
         *args,
         **kwargs,
-    ):
+    ):  # pylint: disable=too-many-locals
         """
         Lookup the episode and link the enclosure/content next to the video file.
         """
@@ -105,17 +111,20 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
             raise ValueError(
                 f"Sonarr `season_number` must be an integer: {season_number!r}",
             ) from exc
-        episode_number = params.get("episode_number")
-        if not episode_number:  # pragma: no cover
+        episode_numbers_param = params.get("episode_numbers")
+        if not episode_numbers_param:  # pragma: no cover
             raise ValueError(
-                f"Sonarr `episode_number` missing or empty: {episode_number!r}",
+                f"Sonarr `episode_numbers` missing or empty: {episode_numbers_param!r}",
             )
-        try:
-            episode_number = int(episode_number)
-        except ValueError as exc:  # pragma: no cover
-            raise ValueError(
-                f"Sonarr `episode_number` must be an integer: {episode_number!r}",
-            ) from exc
+        episode_numbers = []
+        for episode_number in self.MULTI_EPISODE_RE.split(episode_numbers_param):
+            try:
+                episode_number = int(episode_number)
+            except ValueError as exc:  # pragma: no cover
+                raise ValueError(
+                    f"Sonarr `episode_number` must be an integer: {episode_number!r}",
+                ) from exc
+            episode_numbers.append(episode_number)
         stem_append = params.get("stem-append", "")
         if not isinstance(stem_append, str):  # pragma: no cover
             raise ValueError(
@@ -140,16 +149,23 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
                 f"S{season_number}",
             )
         season_episode_paths = episode_paths[season_number]
-        if episode_number not in season_episode_paths:  # pragma: no cover
-            raise ValueError(
-                f"Sonarr `episode_number` not in series {series_id} episodes: "
-                f"S{season_number}E{episode_number}",
-            )
-        episode_path = pathlib.Path(season_episode_paths[episode_number])
 
-        # Assemble a path next to the episode file and return
-        return str(
-            episode_path.with_stem(f"{episode_path.stem}{stem_append}").with_suffix(
-                pathlib.Path(basename).suffix
+        episodes_file_paths = []
+        for episode_number in episode_numbers:
+            if episode_number not in season_episode_paths:  # pragma: no cover
+                logger.error(
+                    "Sonarr `episode_number` not in series %s episodes: S%sE%s",
+                    series_id,
+                    season_number,
+                    episode_number,
+                )
+                continue
+            # Assemble a path next to the episode file
+            episode_path = pathlib.Path(season_episode_paths[episode_number])
+            episodes_file_paths.append(
+                episode_path.with_stem(f"{episode_path.stem}{stem_append}").with_suffix(
+                    pathlib.Path(basename).suffix,
+                ),
             )
-        )
+
+        return [str(episode_file_path) for episode_file_path in episodes_file_paths]
