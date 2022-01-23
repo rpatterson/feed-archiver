@@ -211,9 +211,10 @@ and whose instances must be callable and accept the following arguments when cal
 
      {feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}
 
-If the plugin returns a value, it must be a string and will be used as the target path
-at which to link the enclosure.  Relative paths are resolved against the archive root.
-Here's an example ``link-paths`` definition::
+If the plugin returns a value, it must be a list of strings and will be used as the
+target paths at which to link the enclosure.  Relative paths are resolved against the
+archive root.  These paths are not escaped, so if escaping is needed it must be a part
+of the plugin configuration.  Here's an example ``link-paths`` definition::
 
   defaults:
     base-url: "https://feeds.example.com"
@@ -234,7 +235,7 @@ Here's an example ``link-paths`` definition::
 	# an external audio track using a non-default plugin.
 	- plugin: "sonarr"
 	  match-string: "{item_elem.find('title').text.strip()}"
-	  match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_number>[0-9]+)\\)"
+	  match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee&-]*)\\)"
 	  stem-append: "-garply"
   ...
 
@@ -263,7 +264,8 @@ contain:
 - ``series_id`` or ``series_title`` used to `look up the TV show/series`_, note that
   using ``series_id`` saves on Sonarr API request per update
 - ``season_number`` used to `lookup the episode file`_
-- ``episode_number`` or ``episode_title`` used to `lookup the episode file`_
+- ``episode_numbers`` used to `lookup the episode file`_, plural to support
+  multi-episode files
 
 They may also include:
 

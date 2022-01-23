@@ -82,7 +82,12 @@ class LinkPathPlugin:
 
     def __call__(self, *args, **kwargs):  # pragma: no cover
         """
-        Perform the actual linking for an individual feed item enclosure/content.
+        Determine the paths that should be linked to the feed item enclosure/content.
+
+        Plugin implementations may return a list of paths and let the `ArchiveFeed`
+        instance handle the actual linking including appending an numerical index to the
+        end of the stem when the link target already exists.  Alternatively, the plugin
+        may handle the linking itself and return None.
         """
         raise NotImplementedError(
             "Link path plugin subclasses must implement the `__call__` method"

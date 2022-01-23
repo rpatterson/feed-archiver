@@ -16,5 +16,5 @@ feeds:
       # an alternate audio track using a non-default plugin.
       - plugin: "sonarr"
         match-string: "{item_elem.find('title').text.strip()}"
-        match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_number>[0-9]+)\\)"
+        match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+)\\)"
         stem-append: "-garply"

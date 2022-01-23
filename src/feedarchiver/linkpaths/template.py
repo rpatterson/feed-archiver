@@ -52,4 +52,4 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):
         # problem since anyone that can run `$ feedarchiver` can also run `$ python`.
         # But still, this has a bad code smell.
         # https://python-forum.io/thread-24481.html
-        return eval(f"f{self.template!r}")  # pylint: disable=eval-used
+        return [eval(f"f{self.template!r}")]  # pylint: disable=eval-used
