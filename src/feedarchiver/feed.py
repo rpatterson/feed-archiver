@@ -48,7 +48,7 @@ class ArchiveFeed:
             linkpaths.load_plugins(self, self.config),
         )
 
-    def update(self):  # pylint: disable=too-many-locals
+    def update(self):  # pylint: disable=too-many-locals,too-many-statements
         """
         Request the URL of one feed in the archive and update contents accordingly.
         """
@@ -96,10 +96,18 @@ class ArchiveFeed:
         # Ensure that the order of new feed items is preserved
         remote_items.reverse()
         for remote_item_elem in remote_items:
+            logger.debug(
+                "Processing remote feed item:\n%s",
+                etree.tostring(remote_item_elem).decode(),
+            )
             remote_item_id = remote_format.get_item_id(remote_item_elem)
             if remote_item_id in archived_item_ids:
                 # This item was already seen in the archived feed, we don't need to
                 # update the archive or search further in the archived feed.
+                logger.debug(
+                    "Skipping remote feed item already in archived feed: %r",
+                    remote_item_id,
+                )
                 continue
             for archived_item_elem in archived_items_iter:
                 archived_item_ids.add(remote_format.get_item_id(archived_item_elem))
@@ -109,6 +117,10 @@ class ArchiveFeed:
                     # Optimization for the common case where a feed only contains the
                     # most recent items ATM but accrues a lot of items in the archive
                     # over time.
+                    logger.debug(
+                        "Skipping remote feed item already in archived feed: %r",
+                        remote_item_id,
+                    )
                     break
             else:
                 # The remote item ID was not found in the archived feed, update the feed
