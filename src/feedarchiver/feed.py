@@ -414,6 +414,7 @@ class ArchiveFeed:
             content_archive_relative,
         ) in item_content_paths.items():
             basename = content_archive_relative.name
+            link_idx = 0
             for link_path_plugin in self.link_path_plugins:
                 match = None
                 if "match-re" in link_path_plugin.config:
@@ -458,8 +459,10 @@ class ArchiveFeed:
                             url_result,
                             content_archive_relative,
                             content_link_str,
+                            link_idx,
                         )
                     )
+                    link_idx += 1
         return content_link_paths
 
     def link_item_plugin_match(self, **kwargs):
@@ -503,7 +506,13 @@ class ArchiveFeed:
             return None
         return match
 
-    def link_plugin_file(self, url_result, content_archive_relative, content_link_str):
+    def link_plugin_file(
+        self,
+        url_result,
+        content_archive_relative,
+        content_link_str,
+        link_idx,
+    ):
         """
         Link an item content/enclosure to a filesystem path returned by a plugin.
         """
@@ -545,10 +554,10 @@ class ArchiveFeed:
             )
             content_link_path.parent.mkdir(parents=True, exist_ok=True)
             content_link_path.symlink_to(content_link_target)
-            url_result.getparent().attrib[f"{{{self.NAMESPACE}}}content-link"] = str(
-                content_link_path
-            )
 
+        url_result.getparent().attrib[
+            f"{{{self.NAMESPACE}}}content-link-{link_idx}"
+        ] = str(content_link_path)
         return content_link_path
 
 
