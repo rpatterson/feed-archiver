@@ -195,7 +195,7 @@ class Archive:
         updated_feeds = {}
         for archive_feed in self.archive_feeds:
             try:
-                updated_items = archive_feed.update()
+                updated_items, download_paths = archive_feed.update()
             except Exception:  # pragma: no cover, pylint: disable=broad-except
                 logger.exception(
                     "Unhandled exception updating feed: %r",
@@ -204,6 +204,6 @@ class Archive:
                 if feedarchiver.DEBUG:
                     raise
                 continue
-            if updated_items:
-                updated_feeds[archive_feed.url] = updated_items
+            if updated_items or download_paths:  # pragma: no cover
+                updated_feeds[archive_feed.url] = updated_items, download_paths
         return updated_feeds

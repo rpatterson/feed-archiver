@@ -13,9 +13,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
     """
 
     # From `./remotes/simple/orig/.../garply%3Fbar%3Dqux%252Fbaz%23corge.rss`
-    UPDATE_RETURN_VALUE = {
-        "7bd204c6-1655-4c27-aeee-53f933c5395f": dict(title="Example entry"),
-    }
+    UPDATE_RETURN_VALUE = ["7bd204c6-1655-4c27-aeee-53f933c5395f"], {}
 
     @mock.patch("feedarchiver.feed.ArchiveFeed")
     def test_feeds_updated(self, mock_feed_class):
