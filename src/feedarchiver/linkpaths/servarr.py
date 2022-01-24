@@ -19,7 +19,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
     Link enclosures about a TV series episode next to the video file as external audio.
     """
 
-    MULTI_EPISODE_RE = re.compile("[Ee&-]")
+    MULTI_EPISODE_RE = re.compile("[Ee& -]")
 
     url = "http://localhost:8989"
     client = None
@@ -114,8 +114,10 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
             )
         episode_numbers = []
         for episode_number in self.MULTI_EPISODE_RE.split(episode_numbers_param):
+            if not episode_number.strip():
+                continue
             try:
-                episode_number = int(episode_number)
+                episode_number = int(episode_number.strip())
             except ValueError as exc:  # pragma: no cover
                 raise ValueError(
                     f"Sonarr `episode_number` must be an integer: {episode_number!r}",

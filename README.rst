@@ -235,7 +235,7 @@ of the plugin configuration.  Here's an example ``link-paths`` definition::
 	# an external audio track using a non-default plugin.
 	- plugin: "sonarr"
 	  match-string: "{item_elem.find('title').text.strip()}"
-	  match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee&-]*)\\)"
+	  match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
 	  stem-append: "-garply"
   ...
 
