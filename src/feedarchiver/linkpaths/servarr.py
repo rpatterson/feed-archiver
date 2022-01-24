@@ -56,18 +56,12 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
         """
         Request, correlate and cache episode file DB ids to season and episode numbers.
         """
-        episodes = {}
+        episode_files_episodes = {}
         for episode in self.client_get("episode", seriesId=series_id):
-            episodes.setdefault(episode["seasonNumber"], {})[
-                episode["episodeNumber"]
-            ] = episode["episodeFileId"]
-        return {
-            episode["episodeFileId"]: (
-                episode["seasonNumber"],
-                episode["episodeNumber"],
+            episode_files_episodes.setdefault(episode["episodeFileId"], []).append(
+                (episode["seasonNumber"], episode["episodeNumber"])
             )
-            for episode in self.client_get("episode", seriesId=series_id)
-        }
+        return episode_files_episodes
 
     @functools.cache
     def get_episode_paths(self, series_id):
@@ -77,10 +71,12 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
         episode_files_episodes = self.get_episode_files_seasons(series_id)
         episode_paths = {}
         for episode_file in self.client_get("episodeFile", seriesId=series_id):
-            season_number, episode_number = episode_files_episodes[episode_file["id"]]
-            episode_paths.setdefault(season_number, {})[episode_number] = episode_file[
-                "path"
-            ]
+            for season_number, episode_number in episode_files_episodes[
+                episode_file["id"]
+            ]:
+                episode_paths.setdefault(season_number, {})[
+                    episode_number
+                ] = episode_file["path"]
         return episode_paths
 
     # I disagree with PyLint here regarding the number of local variables.  To me, the
