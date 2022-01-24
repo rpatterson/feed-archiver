@@ -69,7 +69,6 @@ class ArchiveFeed:
         )
         archive_root = archive_tree.getroot()
         archived_items_parent = remote_format.get_items_parent(archive_root)
-        archived_items = list(remote_format.iter_items(archive_root))
 
         logger.info(
             "Updating feed in archive: %r -> %r",
@@ -79,6 +78,7 @@ class ArchiveFeed:
         self.update_self(remote_format, archive_root)
         # Iterate through the remote feed to make updates to the archived feed as
         # appropriate.
+        archived_items_iter = remote_format.iter_items(archive_root)
         archived_item_ids = set()
         updated_items = {}
         # What is the lowest child index for the first item, used to insert new items at
@@ -101,12 +101,14 @@ class ArchiveFeed:
                 # This item was already seen in the archived feed, we don't need to
                 # update the archive or search further in the archived feed.
                 continue
-            for archived_item_elem in archived_items:
+            for archived_item_elem in archived_items_iter:
                 archived_item_ids.add(remote_format.get_item_id(archived_item_elem))
                 if remote_item_id in archived_item_ids:
-                    # Found this item in the archived feed, we don't need to
-                    # update the archive and we can stop searching the archived feed for
-                    # now.
+                    # Found this item in the archived feed, we don't need to update the
+                    # archive and we can stop searching the archived feed for now.
+                    # Optimization for the common case where a feed only contains the
+                    # most recent items ATM but accrues a lot of items in the archive
+                    # over time.
                     break
             else:
                 # The remote item ID was not found in the archived feed, update the feed
