@@ -14,7 +14,7 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
         """
         A URL is escaped to a safe file-system path.
         """
-        feed_path = self.archive.url_to_path(self.feed_url)
+        feed_path = self.archive.root_path / self.archive.url_to_path(self.feed_url)
         self.assertEqual(
             feed_path,
             self.feed_path,
@@ -37,12 +37,17 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
         URL escaping to safe filesystem paths is stable and reproducible.
         """
         self.assertEqual(
-            self.archive.path_to_url(self.archive.url_to_path(self.feed_url)),
+            self.archive.path_to_url(
+                self.archive.root_path / self.archive.url_to_path(self.feed_url),
+            ),
             self.feed_url,
             "Different URL after escaping and un-escaping",
         )
         self.assertEqual(
-            self.archive.url_to_path(self.archive.path_to_url(self.feed_path)),
+            self.archive.root_path
+            / self.archive.url_to_path(
+                self.archive.path_to_url(self.feed_path),
+            ),
             self.feed_path,
             "Different path after un-escaping and re-escaping",
         )
@@ -59,7 +64,7 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
             "Wrong directory URL for index path",
         )
         self.assertEqual(
-            self.archive.url_to_path(dir_url),
+            self.archive.root_path / self.archive.url_to_path(dir_url),
             index_path,
             "Wrong index path for directory URL",
         )

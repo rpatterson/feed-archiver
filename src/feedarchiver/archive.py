@@ -2,6 +2,7 @@
 An archive of RSS/Atom syndication feeds.
 """
 
+import os
 import pathlib
 import urllib.parse
 import cgi
@@ -20,7 +21,7 @@ from .utils import mimetypes
 logger = logging.getLogger(__name__)
 
 
-class Archive:
+class Archive:  # pylint: disable=too-many-instance-attributes
     """
     An archive of RSS/Atom syndication feeds.
     """
@@ -41,6 +42,7 @@ class Archive:
         Instantiate a representation of an archive from a file-system path.
         """
         self.root_path = pathlib.Path(root_dir)
+        self.root_stat = os.statvfs(self.root_path)
         self.config_path = self.root_path / self.FEED_CONFIGS_BASENAME
         assert (
             self.config_path.is_file()
@@ -119,7 +121,7 @@ class Archive:
             if suffix:
                 url_path = url_path.with_suffix(suffix)
 
-        return url_path
+        return self.truncate_path_parts(url_path)
 
     def url_to_path(self, url):
         """
@@ -151,7 +153,22 @@ class Archive:
             ).name
         )
         # Translate back to platform-native filesystem path separators/slashes
-        return self.root_path / archive_path
+        return self.truncate_path_parts(archive_path)
+
+    def truncate_path_parts(self, path):
+        """
+        Truncate the basenames of each part of the path to the filesystem maximum.
+        """
+        truncated_path = pathlib.Path()
+        for part in path.parts:
+            part_path = pathlib.Path(part)
+            truncated_path = (
+                truncated_path
+                / part_path.with_stem(
+                    part_path.stem[: self.root_stat.f_namemax - len(part_path.suffix)],
+                ).name
+            )
+        return truncated_path
 
     def path_to_url(self, path):
         """
