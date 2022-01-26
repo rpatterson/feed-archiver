@@ -150,30 +150,18 @@ class ArchiveFeed:
                     remote_item_id,
                     str(self.path),
                 )
-                item_download_asset_urls = formats.all_xpaths_results(
+
+                item_download_paths = self.download_item_content(
+                    remote_format,
                     remote_item_elem,
-                    remote_format.DOWNLOAD_ITEM_ASSET_URLS_XPATHS,
+                    remote_item_id,
                 )
-                item_download_content_urls = formats.all_xpaths_results(
-                    remote_item_elem,
-                    remote_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
-                )
-                try:
-                    # Download enclosures and assets only for this item.
-                    item_download_asset_paths = self.download_urls(
-                        item_download_asset_urls,
-                    )
-                    item_download_content_paths = self.download_urls(
-                        item_download_content_urls,
-                    )
-                except Exception:  # pragma: no cover, pylint: disable=broad-except
-                    logger.exception(
-                        "Problem downloading item URLs, continuing to next: %r",
-                        remote_item_id,
-                    )
-                    if feedarchiver.POST_MORTEM:  # pragma: no cover
-                        raise
+                if item_download_paths is None:  # pragma: no cover
                     continue
+                (
+                    item_download_asset_paths,
+                    item_download_content_paths,
+                ) = item_download_paths
                 download_paths.update(item_download_asset_paths)
                 download_paths.update(item_download_content_paths)
                 updated_items[remote_item_id] = remote_item_elem
@@ -194,6 +182,36 @@ class ArchiveFeed:
         update_download_metadata(remote_response, self.path)
 
         return list(updated_items.keys()), download_paths
+
+    def download_item_content(self, remote_format, remote_item_elem, remote_item_id):
+        """
+        Download all the enclosures/content from a feed item.
+        """
+        item_download_asset_urls = formats.all_xpaths_results(
+            remote_item_elem,
+            remote_format.DOWNLOAD_ITEM_ASSET_URLS_XPATHS,
+        )
+        item_download_content_urls = formats.all_xpaths_results(
+            remote_item_elem,
+            remote_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
+        )
+        try:
+            # Download enclosures and assets only for this item.
+            item_download_asset_paths = self.download_urls(
+                item_download_asset_urls,
+            )
+            item_download_content_paths = self.download_urls(
+                item_download_content_urls,
+            )
+        except Exception:  # pragma: no cover, pylint: disable=broad-except
+            logger.exception(
+                "Problem downloading item URLs, continuing to next: %r",
+                remote_item_id,
+            )
+            if feedarchiver.POST_MORTEM:
+                raise
+            return None
+        return item_download_asset_paths, item_download_content_paths
 
     def update_self(self, feed_format, archive_root):
         """
