@@ -55,7 +55,9 @@ class ArchiveFeed:
         logger.info("Requesting feed: %r", self.url)
         remote_response = self.archive.requests.get(self.url)
         # Maybe update the extension based on the headers
-        self.path = self.archive.response_to_path(remote_response)
+        self.path = self.archive.root_path / self.archive.response_to_path(
+            remote_response,
+        )
         remote_tree = self.load_remote_tree(remote_response)
         remote_root = remote_tree.getroot()
         remote_format = formats.FeedFormat.from_tree(self, remote_tree)
@@ -365,7 +367,10 @@ class ArchiveFeed:
             url_result,
             stream=True,
         ) as download_response:
-            download_path = self.archive.response_to_path(download_response, url_result)
+            download_path = self.archive.root_path / self.archive.response_to_path(
+                download_response,
+                url_result,
+            )
             download_relative = download_path.relative_to(self.archive.root_path)
             if download_path.exists():
                 logger.debug(
@@ -544,7 +549,11 @@ class ArchiveFeed:
                 break
             content_index += 1
             content_link_path = content_link_path.with_stem(
-                f"{content_link_stem}-{content_index}",
+                content_link_stem[
+                    : self.archive.root_stat.f_namemax
+                    - (len(content_link_path.suffix) + len(str(content_index)))
+                ]
+                + str(content_index),
             )
         else:
             logger.info(
