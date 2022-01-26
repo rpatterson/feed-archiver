@@ -13,7 +13,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
     """
 
     # From `./remotes/simple/orig/.../garply%3Fbar%3Dqux%252Fbaz%23corge.rss`
-    UPDATE_RETURN_VALUE = ["7bd204c6-1655-4c27-aeee-53f933c5395f"], {}
+    UPDATE_RETURN_VALUE = (["7bd204c6-1655-4c27-aeee-53f933c5395f"], {})
 
     @mock.patch("feedarchiver.feed.ArchiveFeed")
     def test_feeds_updated(self, mock_feed_class):
@@ -59,7 +59,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         Archive handles updates without any updated feed items.
         """
         mock_update_method = mock_feed_class.return_value.update
-        mock_update_method.return_value = {}
+        mock_update_method.return_value = ([], {})
 
         updated_feeds = self.archive.update()
 
