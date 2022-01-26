@@ -79,18 +79,46 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
                 ] = episode_file["path"]
         return episode_paths
 
-    # I disagree with PyLint here regarding the number of local variables.  To me, the
-    # variables here make this code much easier to read and understand so limiting them
-    # is premature/inappropriate optimization.
-    def __call__(
-        self,
-        basename,
-        match,
-        *args,
-        **kwargs,
-    ):  # pylint: disable=too-many-locals
+    def __call__(self, basename, match, *args, **kwargs):
         """
         Lookup the episode and link the enclosure/content next to the video file.
+        """
+        series_id, season_number, episode_numbers, stem_append = self.validate_params(
+            match,
+        )
+
+        # Combine all the parameters to lookup the episode file
+        episode_paths = self.get_episode_paths(series_id)
+        if season_number not in episode_paths:  # pragma: no cover
+            raise ValueError(
+                f"Sonarr `season_number` not in series {series_id} episodes: "
+                f"S{season_number}",
+            )
+        season_episode_paths = episode_paths[season_number]
+
+        episodes_file_paths = []
+        for episode_number in episode_numbers:
+            if episode_number not in season_episode_paths:  # pragma: no cover
+                logger.error(
+                    "Sonarr `episode_number` not in series %s episodes: S%sE%s",
+                    series_id,
+                    season_number,
+                    episode_number,
+                )
+                continue
+            # Assemble a path next to the episode file
+            episode_path = pathlib.Path(season_episode_paths[episode_number])
+            episodes_file_paths.append(
+                episode_path.with_stem(f"{episode_path.stem}{stem_append}").with_suffix(
+                    pathlib.Path(basename).suffix,
+                ),
+            )
+
+        return [str(episode_file_path) for episode_file_path in episodes_file_paths]
+
+    def validate_params(self, match):
+        """
+        Combine plugin config and regex match groups, extract and validate parameters.
         """
         # Get API lookup parameters from the config and override with regex match groups
         params = dict(self.config, **match.groupdict())
@@ -139,31 +167,4 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
                 )
             series_id = self.series_by_title[series_title]
 
-        # Combine all the parameters to lookup the episode file
-        episode_paths = self.get_episode_paths(series_id)
-        if season_number not in episode_paths:  # pragma: no cover
-            raise ValueError(
-                f"Sonarr `season_number` not in series {series_id} episodes: "
-                f"S{season_number}",
-            )
-        season_episode_paths = episode_paths[season_number]
-
-        episodes_file_paths = []
-        for episode_number in episode_numbers:
-            if episode_number not in season_episode_paths:  # pragma: no cover
-                logger.error(
-                    "Sonarr `episode_number` not in series %s episodes: S%sE%s",
-                    series_id,
-                    season_number,
-                    episode_number,
-                )
-                continue
-            # Assemble a path next to the episode file
-            episode_path = pathlib.Path(season_episode_paths[episode_number])
-            episodes_file_paths.append(
-                episode_path.with_stem(f"{episode_path.stem}{stem_append}").with_suffix(
-                    pathlib.Path(basename).suffix,
-                ),
-            )
-
-        return [str(episode_file_path) for episode_file_path in episodes_file_paths]
+        return series_id, season_number, episode_numbers, stem_append
