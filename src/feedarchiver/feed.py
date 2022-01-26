@@ -387,7 +387,16 @@ class ArchiveFeed:
 
         update_download_metadata(download_response, download_path)
 
-        if "Content-Length" in download_response.headers:
+        if (
+            download_response.headers.get(
+                "Content-Encoding",
+                "binary",
+            )
+            .strip()
+            .lower()
+            == "binary"
+            and "Content-Length" in download_response.headers
+        ):
             try:
                 remote_content_length = int(
                     download_response.headers["Content-Length"].strip(),
