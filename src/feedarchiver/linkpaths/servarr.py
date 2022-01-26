@@ -90,24 +90,33 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
         # Combine all the parameters to lookup the episode file
         episode_paths = self.get_episode_paths(series_id)
         if season_number not in episode_paths:  # pragma: no cover
-            raise ValueError(
-                f"Sonarr `season_number` not in series {series_id} episodes: "
-                f"S{season_number}",
+            logger.error(
+                "Sonarr `season_number` not in series %s episodes: S%s",
+                series_id,
+                season_number,
             )
-        season_episode_paths = episode_paths[season_number]
+        season_episode_paths = episode_paths.get(season_number, {})
 
         episodes_file_paths = []
         for episode_number in episode_numbers:
-            if episode_number not in season_episode_paths:  # pragma: no cover
-                logger.error(
-                    "Sonarr `episode_number` not in series %s episodes: S%sE%s",
-                    series_id,
-                    season_number,
-                    episode_number,
+            if episode_number in season_episode_paths:  # pragma: no cover
+                # Assemble a path next to the episode file
+                episode_path = pathlib.Path(season_episode_paths[episode_number])
+            else:
+                if season_episode_paths:  # pragma: no cover
+                    logger.error(
+                        "Sonarr `episode_number` not in series %s episodes: S%sE%02d",
+                        series_id,
+                        season_number,
+                        episode_number,
+                    )
+                # Simulate the episode path
+                series = self.client_get(f"series/{series_id}")
+                episode_path = pathlib.Path(
+                    series["path"],
+                    f"Season {season_number:02d}",
+                    f"{series['title']} S{season_number}E{episode_number:02d}.mkv",
                 )
-                continue
-            # Assemble a path next to the episode file
-            episode_path = pathlib.Path(season_episode_paths[episode_number])
             episodes_file_paths.append(
                 episode_path.with_stem(f"{episode_path.stem}{stem_append}").with_suffix(
                     pathlib.Path(basename).suffix,
