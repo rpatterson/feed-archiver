@@ -131,7 +131,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         # Want a relative path, strip the leading, root slash
         url_relative = split_url.path.lstrip("/")
         # Add explicit index page basename if the URL points to a directory
-        if split_url.path.endswith("/"):
+        if not split_url.path or split_url.path.endswith("/"):
             url_relative += self.INDEX_BASENAME
         # Use `pathlib.PurePosixPath` to split on forward slashes in the URL regardless
         # of what the path separator is for this platform.
