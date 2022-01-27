@@ -218,7 +218,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                     "Unhandled exception updating feed: %r",
                     archive_feed.url,
                 )
-                if feedarchiver.DEBUG:
+                if feedarchiver.POST_MORTEM:  # pragma: no cover
                     raise
                 continue
             if updated_items or download_paths:  # pragma: no cover
