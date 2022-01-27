@@ -21,12 +21,12 @@ except ImportError:  # pragma: no cover
 else:  # pragma: no cover
     __version__ = version.version
 
-DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
+TRUE_STRS = {"1", "true", "yes", "on"}
+DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in TRUE_STRS
+POST_MORTEM = (
+    "POST_MORTEM" in os.environ
+    and os.getenv("POST_MORTEM").strip().lower() in TRUE_STRS
+)
 
 # Define command line options and arguments
 parser = argparse.ArgumentParser(

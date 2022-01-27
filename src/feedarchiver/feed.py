@@ -153,7 +153,7 @@ class ArchiveFeed:
                         "Problem downloading item URLs, continuing to next: %r",
                         remote_item_id,
                     )
-                    if feedarchiver.DEBUG:
+                    if feedarchiver.POST_MORTEM:  # pragma: no cover
                         raise
                     continue
                 download_paths.update(item_download_asset_paths)
@@ -294,7 +294,7 @@ class ArchiveFeed:
                         "Problem downloading URL, removing from archive: %r",
                         url_result,
                     )
-                    if feedarchiver.DEBUG:
+                    if feedarchiver.POST_MORTEM:  # pragma: no cover
                         raise
                     if download_path is not None:
                         download_path.unlink()
@@ -459,7 +459,7 @@ class ArchiveFeed:
                         type(link_path_plugin),
                         str(content_archive_relative),
                     )
-                    if feedarchiver.DEBUG:
+                    if feedarchiver.POST_MORTEM:  # pragma: no cover
                         raise
                     continue
                 if content_link_strs is None:  # pragma: no cover
@@ -497,7 +497,7 @@ class ArchiveFeed:
                 type(link_path_plugin),
                 link_path_plugin.config["match-string"],
             )
-            if feedarchiver.DEBUG:
+            if feedarchiver.POST_MORTEM:  # pragma: no cover
                 raise
             return None
         try:
@@ -508,7 +508,7 @@ class ArchiveFeed:
                 type(link_path_plugin),
                 link_path_plugin.config["match-string"],
             )
-            if feedarchiver.DEBUG:
+            if feedarchiver.POST_MORTEM:  # pragma: no cover
                 raise
             return None
         if match is None:  # pragma: no cover
