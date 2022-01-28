@@ -32,11 +32,11 @@ High Priority
    element's child text nodes).
 
 #. Parallelize both the processing of whole feeds and the downloading of enclosures and
-   assets within each feed using a shared pool.  Maybe using httpx/async:
+   assets within each feed using a shared pool.  Maybe using:
 
-   https://www.python-httpx.org/async/
-
-   https://docs.python.org/3/library/asyncio-queue.html#examples
+   - https://github.com/requests/requests-threads
+   - https://toolbelt.readthedocs.io/en/latest/threading.html
+   - https://www.python-httpx.org/async/
 
 #. Determine if HTTP/2 is a significant performance improvement for serving large media
    files and integrate into the Traefik -> Nginx stack if yes.
