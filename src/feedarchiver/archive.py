@@ -11,7 +11,6 @@ import tracemalloc
 
 import yaml
 import requests
-import cachecontrol
 import user_agent
 
 import feedarchiver
@@ -53,12 +52,9 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         assert (
             self.config_path.is_file()
         ), f"Feeds definition path is not a file: {self.config_path}"
-
-        session = requests.Session()
+        self.requests = requests.Session()
         # Avoid bot detection, real-world `User-Agent` HTTP header values
-        session.headers.update({"User-Agent": user_agent.generate_user_agent()})
-        # Avoid redundant requests to remotes
-        self.requests = cachecontrol.CacheControl(session)
+        self.requests.headers.update({"User-Agent": user_agent.generate_user_agent()})
 
     def load_config(self):
         """
