@@ -56,9 +56,7 @@ services:
       - "./server/.htpasswd:/server/.htpasswd"
     healthcheck:
       test: >-
-        traefik healthcheck --ping &&
-        wget --no-check-certificate -O "-" -S "https://traefik" 2>&1 |
-        grep "404 Not Found"
+        traefik healthcheck --ping
 
   # Static site server.  Use only for serving the feed archive, handle anything else
   # such as HTTP `Basic` authentication, TLS/SSL, etc., in a container-native proxy such
