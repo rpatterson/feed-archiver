@@ -26,7 +26,7 @@
     <itunes:category text="Qux &amp; Quux">
       <itunes:category text="Corge" />
     </itunes:category>
-    <itunes:image href="https://foo.example.com/podcast/image.png"/>
+    <itunes:image href="//foo.example.com/podcast/image.png"/>
     <itunes:explicit>false</itunes:explicit>
     <itunes:owner>
       <itunes:email>grault.garply@foo.example.com</itunes:email>

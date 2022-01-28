@@ -367,8 +367,19 @@ class ArchiveFeed:
         """
         content_length = 0
         logger.info("Downloading URL into archive: %r", url_result)
+        url_split = urllib.parse.urlsplit(url_result)
+        if url_split.netloc and not url_split.scheme:
+            # Protocol/scheme-relative URL, e.g.: `href="//example.com/path"`
+            url_split = url_split._replace(
+                scheme=urllib.parse.urlsplit(self.url).scheme,
+            )
+            logger.debug(
+                "Resolving protocol-relative URL: %r -> %r",
+                url_result,
+                url_split.geturl(),
+            )
         with self.archive.requests.get(
-            url_result,
+            url_split.geturl(),
             stream=True,
         ) as download_response:
             download_path = self.archive.root_path / self.archive.response_to_path(
