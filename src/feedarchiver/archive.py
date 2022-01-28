@@ -7,6 +7,7 @@ import pathlib
 import urllib.parse
 import cgi
 import logging
+import tracemalloc
 
 import yaml
 import requests
@@ -18,7 +19,6 @@ from . import utils
 from . import feed
 from . import linkpaths
 from .utils import mimetypes
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,10 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         """
         Instantiate a representation of an archive from a file-system path.
         """
+        if feedarchiver.DEBUG:  # pragma: no cover
+            # Optionally initialize memory profiling
+            self.tracemalloc_snapshot = tracemalloc.take_snapshot()
+
         self.root_path = pathlib.Path(root_dir)
         self.root_stat = os.statvfs(self.root_path)
         self.config_path = self.root_path / self.FEED_CONFIGS_BASENAME
@@ -230,4 +234,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 continue
             if updated_items or download_paths:  # pragma: no cover
                 updated_feeds[archive_feed.url] = updated_items, download_paths
+            if feedarchiver.DEBUG:  # pragma: no cover
+                # Optionally compare memory consumption
+                self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
         return updated_feeds

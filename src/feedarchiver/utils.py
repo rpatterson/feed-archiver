@@ -5,6 +5,10 @@ Modifications to the standard library and other helpers.
 import functools
 import mimetypes
 import urllib.parse
+import logging
+import tracemalloc
+
+logger = logging.getLogger(__name__)
 
 PRIORITY_TYPES = {
     "application/xml": ".xml",
@@ -67,3 +71,20 @@ init()
 # - *do* quote (IOW, do *not* allow) "/"
 # - do *not* quote (IOW, *do* allow) spaces
 quote = functools.partial(urllib.parse.quote, safe=" ")
+
+
+def compare_memory_snapshots(parent):  # pragma: no cover
+    """
+    Compare two traemalloc snapshots and log the results.
+    """
+    snapshot = tracemalloc.take_snapshot()
+    if getattr(parent, "tracemalloc_snapshot", None) is not None:
+        stats = snapshot.compare_to(
+            parent.tracemalloc_snapshot,
+            "lineno",
+        )
+        logger.debug(
+            "Memory consumption changes:\n%s",
+            "\n".join(str(stat) for stat in stats[:10]),
+        )
+    return snapshot
