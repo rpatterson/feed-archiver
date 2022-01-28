@@ -280,6 +280,7 @@ class ArchiveFeed:
         Escape URLs to archive paths, download if new, and update URLs.
         """
         downloaded_paths = {}
+        excs = {}
         for url_result in url_results:
             if url_result == self.url:
                 # The feed itself is handled in `self.update()`
@@ -293,15 +294,18 @@ class ArchiveFeed:
                 # Download the URL to the escaped local path in the archive
                 try:
                     download_path = self.download_url(url_result)
-                except Exception:  # pragma: no cover, pylint: disable=broad-except
+                except (
+                    Exception  # pylint: disable=broad-except
+                ) as exc:  # pragma: no cover
+                    excs[url_result] = exc
                     logger.exception(
                         "Problem downloading URL, removing from archive: %r",
                         url_result,
                     )
-                    if feedarchiver.POST_MORTEM:  # pragma: no cover
-                        raise
                     if download_path is not None:
                         download_path.unlink()
+                    if feedarchiver.POST_MORTEM:  # pragma: no cover
+                        raise
                     continue
                 downloaded_paths[url_result] = download_path.relative_to(
                     self.archive.root_path,
@@ -359,6 +363,10 @@ class ArchiveFeed:
                     " not implemented yet",
                 )
 
+        if excs:  # pragma: no cover
+            # Ensure the feed item is processed again if any problem occurred with with
+            # it's downloads
+            raise list(excs.values())[0]
         return downloaded_paths
 
     def download_url(self, url_result):
