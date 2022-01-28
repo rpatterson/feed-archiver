@@ -256,14 +256,20 @@ class ArchiveFeed:
 
             # Consistent with initial download of the feed, only download assets for the
             # initial version of the feed.
-            download_paths.update(
-                self.download_urls(
+            try:
+                archive_download_paths = self.download_urls(
                     formats.all_xpaths_results(
                         archive_root,
                         remote_format.DOWNLOAD_FEED_URLS_XPATHS,
                     ),
-                ),
-            )
+                )
+            except Exception:  # pragma: no cover, pylint: disable=broad-except
+                logger.exception(
+                    "Problem downloading feed assets, continuing with items: %s",
+                    self.url,
+                )
+            else:
+                download_paths.update(archive_download_paths)
 
             self.path.parent.mkdir(parents=True, exist_ok=True)
             logger.debug(
