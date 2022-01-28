@@ -22,7 +22,11 @@ requests==2.27.1
     # via
     #   arrapi
     #   feed-archiver (./pyproject.toml)
+six==1.16.0
+    # via user-agent
 urllib3==1.26.8
     # via requests
+user-agent==0.1.10
+    # via feed-archiver (./pyproject.toml)
 zipp==3.7.0
     # via importlib-metadata

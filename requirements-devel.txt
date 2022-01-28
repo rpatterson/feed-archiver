@@ -126,6 +126,7 @@ six==1.16.0
     # via
     #   requests-mock
     #   tox
+    #   user-agent
     #   virtualenv
 toml==0.10.2
     # via
@@ -152,6 +153,8 @@ typing-extensions==4.0.1
     #   pylint
 urllib3==1.26.8
     # via requests
+user-agent==0.1.10
+    # via feed-archiver (./pyproject.toml)
 virtualenv==20.13.0
     # via
     #   pre-commit
