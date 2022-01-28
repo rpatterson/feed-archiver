@@ -25,6 +25,9 @@ requests==2.28.1
     #   arrapi
     #   cachecontrol
     #   feed-archiver (./pyproject.toml)
+    #   requests-toolbelt
+requests-toolbelt==0.10.1
+    # via feed-archiver (./pyproject.toml)
 six==1.16.0
     # via user-agent
 urllib3==1.26.12

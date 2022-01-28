@@ -1,5 +1,5 @@
 # From https://hub.docker.com/_/python
-FROM python:3
+FROM python:3.10
 
 # Add a user whose home directory will contain the configuration file
 ARG PUID=1000
