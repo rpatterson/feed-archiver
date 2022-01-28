@@ -89,6 +89,10 @@ class ArchiveFeed:
         for first_item_idx, item_sibling in enumerate(
             archived_items_parent.iterchildren(),
         ):
+            if not isinstance(item_sibling.tag, str):
+                # Ignore comments or other unusual XML detritus/artifacts
+                # `ValueError: Invalid tag name '<cyfunction Comment at 0x...>'`
+                continue
             item_sibling_tag = etree.QName(item_sibling.tag).localname
             if item_sibling_tag.lower() == remote_format.ITEM_TAG:
                 break
