@@ -4,6 +4,7 @@ An RSS/Atom syndication feed in an archive.
 
 import os
 import copy
+import re
 import urllib
 import email.utils
 import pathlib
@@ -24,6 +25,7 @@ class ArchiveFeed:
     An RSS/Atom syndication feed in an archive.
     """
 
+    URL_SCHEME_RE = re.compile(r"^(?P<scheme>[a-zA-Z][a-zA-Z0-9+.-]*):$")
     NAMESPACE = "https://github.com/rpatterson/feed-archiver"
 
     # Initialized when the configuration is loaded prior to update
@@ -382,6 +384,29 @@ class ArchiveFeed:
         """
         logger.info("Downloading URL into archive: %r", url_result)
         url_split = urllib.parse.urlsplit(url_result)
+        netloc_scheme_match = self.URL_SCHEME_RE.match(url_split.netloc)
+        if url_split.scheme and netloc_scheme_match:
+            # Mal-formed repeated scheme URL, e.g.: `href="https://https://example.com"`
+            url_split = urllib.parse.urlsplit(
+                url_split._replace(scheme="", netloc="")
+                ._replace(
+                    scheme=netloc_scheme_match.group("scheme"),
+                )
+                .geturl()
+            )
+            logger.error(
+                "Correcting invalid URL: %r -> %r",
+                url_result,
+                url_split.geturl(),
+            )
+        elif not url_split.scheme and not url_split.netloc:
+            # Mal-formed host/netloc-only URL, e.g.: `href="example.com"`
+            url_split = urllib.parse.urlsplit("//" + url_split.geturl())
+            logger.error(
+                "Correcting invalid URL: %r -> %r",
+                url_result,
+                url_split.geturl(),
+            )
         if url_split.netloc and not url_split.scheme:
             # Protocol/scheme-relative URL, e.g.: `href="//example.com/path"`
             url_split = url_split._replace(
