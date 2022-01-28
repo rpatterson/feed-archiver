@@ -6,6 +6,7 @@ import os
 import pathlib
 import logging
 import argparse
+import tracemalloc
 
 from . import archive
 
@@ -77,6 +78,7 @@ def config_cli_logging(
     logging.basicConfig(level=root_level)
     if DEBUG:  # pragma: no cover
         level = logging.DEBUG
+        tracemalloc.start()
     else:
         level = logging.INFO
     logger.setLevel(level)

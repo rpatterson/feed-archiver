@@ -14,6 +14,7 @@ from lxml import etree
 from requests_toolbelt.downloadutils import stream
 
 import feedarchiver
+from . import utils
 from . import formats
 from . import linkpaths
 
@@ -39,6 +40,10 @@ class ArchiveFeed:
         """
         Instantiate a representation of an archive from a file-system path.
         """
+        if feedarchiver.DEBUG:  # pragma: no cover
+            # Optionally initialize memory profiling
+            self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive)
+
         self.archive = archive
         self.config = config
 
@@ -51,7 +56,9 @@ class ArchiveFeed:
             linkpaths.load_plugins(self, self.config),
         )
 
-    def update(self):  # pylint: disable=too-many-locals,too-many-statements
+    def update(
+        self,
+    ):  # pylint: disable=too-many-locals,too-many-statements,too-many-branches
         """
         Request the URL of one feed in the archive and update contents accordingly.
         """
@@ -109,6 +116,10 @@ class ArchiveFeed:
                 "Processing remote feed item:\n%s",
                 etree.tostring(remote_item_elem).decode(),
             )
+            if feedarchiver.DEBUG:  # pragma: no cover
+                # Optionally compare memory consumption
+                self.tracemalloc_snapshot = utils.compare_memory_snapshots(self)
+
             remote_item_id = remote_format.get_item_id(remote_item_elem)
             if remote_item_id in archived_item_ids:
                 # This item was already seen in the archived feed, we don't need to
@@ -295,6 +306,9 @@ class ArchiveFeed:
                 # The feed itself is handled in `self.update()`
                 continue
             download_path = None
+            if feedarchiver.DEBUG:  # pragma: no cover
+                # Optionally compare memory consumption
+                self.tracemalloc_snapshot = utils.compare_memory_snapshots(self)
             if url_result in downloaded_paths:
                 logger.debug("Duplicate URL, skipping download: %r", url_result)
                 # Proceed below to update the URLs in the duplicate XML element
