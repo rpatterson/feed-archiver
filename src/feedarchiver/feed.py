@@ -10,6 +10,7 @@ import pathlib
 import logging
 
 from lxml import etree
+from requests_toolbelt.downloadutils import stream
 
 import feedarchiver
 from . import formats
@@ -379,7 +380,6 @@ class ArchiveFeed:
         """
         Request a URL and stream the response to the file.
         """
-        content_length = 0
         logger.info("Downloading URL into archive: %r", url_result)
         url_split = urllib.parse.urlsplit(url_result)
         if url_split.netloc and not url_split.scheme:
@@ -409,10 +409,8 @@ class ArchiveFeed:
                 return download_path
             logger.debug("Writing download into archive: %r", str(download_relative))
             download_path.parent.mkdir(parents=True, exist_ok=True)
-            with download_path.open("wb") as download_opened:
-                for chunk in download_response.iter_content(chunk_size=None):
-                    download_opened.write(chunk)
-                    content_length += len(chunk)
+            stream.stream_response_to_file(download_response, path=download_path)
+        download_stat = download_path.stat()
 
         update_download_metadata(download_response, download_path)
 
@@ -433,10 +431,10 @@ class ArchiveFeed:
             except ValueError:  # pragma: no cover
                 pass
             else:
-                if content_length != remote_content_length:  # pragma: no cover
+                if download_stat.st_size != remote_content_length:  # pragma: no cover
                     logger.error(
                         "Downloaded content size different from remote: %r -> %r",
-                        content_length,
+                        download_stat.st_size,
                         remote_content_length,
                     )
 
