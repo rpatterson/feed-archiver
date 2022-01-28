@@ -16,6 +16,8 @@ autopep8==1.6.0
     # via feed-archiver (./pyproject.toml)
 black==22.1.0
     # via flake8-black
+cachecontrol==0.12.10
+    # via feed-archiver (./pyproject.toml)
 certifi==2021.10.8
     # via requests
 cfgv==3.3.1
@@ -62,6 +64,8 @@ mccabe==0.6.1
     # via
     #   flake8
     #   pylint
+msgpack==1.0.3
+    # via cachecontrol
 mypy-extensions==0.4.3
     # via black
 nodeenv==1.6.0
@@ -116,6 +120,7 @@ pyyaml==6.0
 requests==2.27.1
     # via
     #   arrapi
+    #   cachecontrol
     #   feed-archiver (./pyproject.toml)
     #   requests-mock
 requests-mock==1.9.3
