@@ -10,6 +10,7 @@ import logging
 
 import yaml
 import requests
+import user_agent
 
 import feedarchiver
 from . import utils
@@ -48,6 +49,8 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             self.config_path.is_file()
         ), f"Feeds definition path is not a file: {self.config_path}"
         self.requests = requests.Session()
+        # Avoid bot detection, real-world `User-Agent` HTTP header values
+        self.requests.headers.update({"User-Agent": user_agent.generate_user_agent()})
 
     def load_config(self):
         """
