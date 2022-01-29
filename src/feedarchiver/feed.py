@@ -254,7 +254,7 @@ class ArchiveFeed:
 
         Also do any pre-processing needed to start updating the archive.
         """
-        if self.path.exists():
+        if not self.archive.recreate and self.path.exists():
             logger.debug("Parsing archive XML: %r", self.url)
             with self.path.open() as feed_archive_opened:
                 archive_tree = etree.parse(feed_archive_opened)

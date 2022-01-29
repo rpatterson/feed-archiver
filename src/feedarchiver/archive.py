@@ -38,7 +38,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
     url = url_split = None
     archive_feeds = None
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, recreate=False):
         """
         Instantiate a representation of an archive from a file-system path.
         """
@@ -52,6 +52,9 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         assert (
             self.config_path.is_file()
         ), f"Feeds definition path is not a file: {self.config_path}"
+
+        self.recreate = recreate
+
         self.requests = requests.Session()
         # Avoid bot detection, real-world `User-Agent` HTTP header values
         self.requests.headers.update({"User-Agent": user_agent.generate_user_agent()})
