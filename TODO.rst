@@ -10,9 +10,6 @@ Required
 High Priority
 *************
 
-#. Can all podcatcher apps handle relative URLs in feed XML?  How about other
-   feed syndication clients/subscribers?
-
 #. Initialize Python's ``mimetypes`` module with same ``mime.types`` file as is used by
    the static site server::
 

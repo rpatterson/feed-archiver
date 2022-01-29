@@ -35,7 +35,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
     global_config = None
     link_path_plugins = None
     # The default base URL for assembling absolute URLs
-    url = None
+    url = url_split = None
     archive_feeds = None
 
     def __init__(self, root_dir):
@@ -70,6 +70,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         # The first row after the header defines defaults and/or global options
         self.global_config = archive_config["defaults"]
         self.url = self.global_config["base-url"]
+        self.url_split = urllib.parse.urlsplit(self.global_config["base-url"])
         self.link_path_plugins = list(linkpaths.load_plugins(self, self.global_config))
 
         feed_configs = archive_config["feeds"]

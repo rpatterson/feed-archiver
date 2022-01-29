@@ -179,12 +179,15 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
 
         # Assert archive URLs updated
         archive_tree = etree.parse(self.archive_feed.path.open())
+        feed_link_split = urllib.parse.urlsplit(
+            archive_tree.find("channel").find("link").text,
+        )
         feed_link_path = (
-            pathlib.Path(archive_tree.find("channel").find("link").text) / "index.html"
+            pathlib.PurePosixPath(feed_link_split.path.lstrip("/")) / "index.html"
         )
         self.assertTrue(
-            (self.archive_feed.path.parent / feed_link_path).is_file(),
-            "Wrong feed link index HTML relative URL in feed",
+            (self.archive.root_path / feed_link_path).is_file(),
+            "Wrong feed link index HTML absolute URL in feed",
         )
         feed_href_split = urllib.parse.urlsplit(
             archive_tree.find("channel")
@@ -194,44 +197,57 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         feed_href_path = pathlib.PurePosixPath(feed_href_split.path.lstrip("/"))
         self.assertTrue(
             (self.archive_feed.archive.root_path / feed_href_path).is_file(),
-            "Wrong feed XML href relative URL in feed",
+            "Wrong feed XML href absolute URL in feed",
         )
-        feed_image_path = pathlib.Path(
+        feed_image_split = urllib.parse.urlsplit(
             archive_tree.find("channel")
             .find("{http://www.itunes.com/dtds/podcast-1.0.dtd}image")
             .attrib["href"]
         )
+        feed_image_path = pathlib.PurePosixPath(feed_image_split.path.lstrip("/"))
         self.assertTrue(
-            (self.archive_feed.path.parent / feed_image_path).is_file(),
-            "Wrong feed image relative URL in feed",
+            (self.archive.root_path / feed_image_path).is_file(),
+            "Wrong feed image absolute URL in feed",
         )
         archive_items = archive_tree.find("channel").findall("item")
-        item_link_path = pathlib.Path(archive_items[0].find("link").text) / "index.html"
-        self.assertTrue(
-            (self.archive_feed.path.parent / item_link_path).is_file(),
-            "Wrong item link index HTML relative URL in feed",
+        item_link_split = urllib.parse.urlsplit(archive_items[0].find("link").text)
+        item_link_path = (
+            pathlib.PurePosixPath(item_link_split.path.lstrip("/")) / "index.html"
         )
-        item_enclosure_path = pathlib.Path(
+        self.assertTrue(
+            (self.archive.root_path / item_link_path).is_file(),
+            "Wrong item link index HTML absolute URL in feed",
+        )
+        item_enclosure_split = urllib.parse.urlsplit(
             archive_items[0].find("enclosure").attrib["url"],
         )
-        self.assertTrue(
-            (self.archive_feed.path.parent / item_enclosure_path).is_file(),
-            "Wrong item enclosure relative URL in feed",
+        item_enclosure_path = pathlib.PurePosixPath(
+            item_enclosure_split.path.lstrip("/"),
         )
-        item_media_content_path = pathlib.Path(
+        self.assertTrue(
+            (self.archive.root_path / item_enclosure_path).is_file(),
+            "Wrong item enclosure absolute URL in feed",
+        )
+        item_media_content_split = urllib.parse.urlsplit(
             archive_items[0].find("{*}content").attrib["url"],
+        )
+        item_media_content_path = pathlib.PurePosixPath(
+            item_media_content_split.path.lstrip("/"),
         )
         self.assertEqual(
             item_media_content_path,
             item_enclosure_path,
-            "Wrong item media content relative URL in feed",
+            "Wrong item media content absolute URL in feed",
         )
-        item_image_path = pathlib.Path(
+        item_image_split = urllib.parse.urlsplit(
             archive_items[0].find("{*}image").attrib["href"],
         )
+        item_image_path = pathlib.PurePosixPath(
+            item_image_split.path.lstrip("/"),
+        )
         self.assertTrue(
-            (self.archive_feed.path.parent / item_image_path).is_file(),
-            "Wrong item image relative URL in feed",
+            (self.archive.root_path / item_image_path).is_file(),
+            "Wrong item image absolute URL in feed",
         )
 
         # Assert existing downloads not re-downloaded

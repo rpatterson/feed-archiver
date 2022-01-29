@@ -357,22 +357,15 @@ class ArchiveFeed:
             # errors.
             if hasattr(url_result, "getparent") and hasattr(url_result, "attrname"):
                 url_parent = url_result.getparent()
-                if download_path.name == self.archive.INDEX_BASENAME:
-                    download_relative = download_path.parent
-                else:
-                    download_relative = download_path
-                download_url_path = pathlib.PurePosixPath(
-                    os.path.relpath(download_relative, self.path.parent),
-                )
-                download_url_split = urllib.parse.SplitResult(
-                    # Make fully relative to the feed
-                    scheme="",
-                    netloc="",
+                download_relative = downloaded_paths[url_result]
+                if download_relative.name == self.archive.INDEX_BASENAME:
+                    download_relative = download_relative.parent
+                download_url_split = self.archive.url_split._replace(
                     # Let pathlib normalize the relative path
-                    path=str(download_url_path),
-                    # Archive paths should have not query or fragment
-                    query="",
-                    fragment="",
+                    path=str(
+                        pathlib.PurePosixPath(self.archive.url_split.path)
+                        / download_relative
+                    ),
                 )
                 if url_result.attrname:
                     logger.debug(
