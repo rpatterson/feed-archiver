@@ -15,7 +15,10 @@ such a way that the archive can serve (at least) 2 use cases:
     clients/subscribers (such as podcatchers).  For example, you can subscribe to the
     archived feed from your podcatcher app on your phone with auto-download and
     auto-delete of podcast episodes while archiving those same episodes on your HTPC
-    server with large enough storage to keep all episodes.
+    server with large enough storage to keep all episodes.  The archived version of the
+    feed will also reflect the earliest form of feed XML, item XML, enclosures, and
+    assets that the archive downloaded and as such can be used to reflect the original
+    version to clients even as the remote feed changes over time.
 
 #. `Ingest Feed Enclosures Into Media Libraries`_
 
