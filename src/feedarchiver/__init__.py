@@ -53,8 +53,11 @@ subparsers = parser.add_subparsers(
 )
 
 
-def update(archive_dir):  # pragma: no cover, pylint: disable=missing-function-docstring
-    feed_archive = archive.Archive(archive_dir)
+def update(
+    archive_dir=parser.get_default("--archive-dir"),
+    recreate=parser.get_default("--recreate"),
+):  # pragma: no cover, pylint: disable=missing-function-docstring
+    feed_archive = archive.Archive(archive_dir, recreate)
     return feed_archive.update()
 
 
@@ -67,6 +70,12 @@ parser_update = subparsers.add_parser(
 # Make the function for the sub-command specified in the CLI argument available in the
 # argument parser for delegation below.
 parser_update.set_defaults(command=update)
+parser_update.add_argument(
+    "--recreate",
+    "-r",
+    help="ignore existing feed XML in the archive and rewrite it",
+    action=argparse.BooleanOptionalAction,
+)
 
 
 def config_cli_logging(
