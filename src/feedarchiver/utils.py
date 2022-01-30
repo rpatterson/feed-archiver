@@ -69,8 +69,28 @@ init()
 
 # Abuse URL quoting for paths that are safe across filesystems:
 # - *do* quote (IOW, do *not* allow) "/"
-# - do *not* quote (IOW, *do* allow) spaces
-quote = functools.partial(urllib.parse.quote, safe=" ")
+# - do *not* quote (IOW, *do* allow) spaces and other special characters found not to
+#   cause problems
+#
+# So far, special characters have been checked in a Samba share as browsed in the
+# Windows 10 explorer in order to determine which should be allowed/unquoted.  The `%`
+# character works in this test bed but of course it *must* be quoted, otherwise quoting
+# and unquoting would not be symmetrical.  A directory with a Unicode character was also
+# tested against this environment and found to be working but it doesn't seem possible
+# to get `urllib.parse.quote` to leave them unquoted.  Test files were generated in the
+# Samba share from the Linux side using the following:
+#
+#     tmp_path = pathlib.Path("/media/Library/tmp/feed-archiver")
+#     [
+#         (tmp_path / f"{char_idx}{char}").write_text("")
+#         for char_idx, char in enumerate(string.printable)
+#         if urllib.parse.quote(char, safe=" ").startswith("%")
+#     ]
+#
+# Please do report any additional cases that cause issues in any other
+# common filesystems.
+SAFE_CHARS_WIN10_SAMBA = " !#$&'()+,;=@[]^`{}"
+quote = functools.partial(urllib.parse.quote, safe=SAFE_CHARS_WIN10_SAMBA)
 
 
 def compare_memory_snapshots(parent):  # pragma: no cover

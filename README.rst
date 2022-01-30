@@ -45,19 +45,19 @@ Specifically, special characters are ``%xx`` escaped using `Python's
 urllib.parse.quote`_ function.  Note that this will double-escape any
 ``%xx`` escapes in the remote URL:
 
-  ``.../foo?bar=qux%2Fbaz#corge`` -> ``.../foo%3Fbar%3Dqux%252Fbaz%23corge``
+  ``.../foo?bar=qux%2Fbaz#corge`` -> ``.../foo%3Fbar=qux%252Fbaz#corge``
 
 Then the URL is converted to a corresponding filesystem path:
 
   ``https://foo-username:secret@grault.example.com/feeds/garply.rss`` ->
-  ``./https/foo-username%3Asecret%40grault.example.com/feeds/garply.rss``
+  ``./https/foo-username%3Asecret@grault.example.com/feeds/garply.rss``
 
 Assuming the archived feeds are all hosted via HTTPS/TLS from an `nginx server_name`_ of
 ``feeds.example.com``, then subscribing to the archived feed in a syndication client,
 such as a pod-catcher app can be done by transforming the URL like so:
 
   ``https://foo-username:secret@grault.example.com/feeds/garply.rss`` ->
-  ``https://feeds.example.com/https/foo-username%3Asecret%40grault.example.com/feeds/garply.rss``
+  ``https://feeds.example.com/https/foo-username%3Asecret@grault.example.com/feeds/garply.rss``
 
 IOW, it's as close as possible to simply prepending your archives host name to the feed
 URL.

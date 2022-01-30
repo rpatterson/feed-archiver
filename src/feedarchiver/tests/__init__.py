@@ -44,7 +44,7 @@ class FeedarchiverTestCase(
     FEED_ARCHIVE_QUERY = "?bar=qux%2Fbaz#corge"
     FEED_ARCHIVE_RELATIVE = pathlib.Path(
         "https",
-        "foo-username%3Asecret%40grault.example.com",
+        "foo-username%3Asecret@grault.example.com",
         "feeds",
         f"{FEED_ARCHIVE_STEM}{utils.quote(FEED_ARCHIVE_QUERY)}"
         f"{FEED_ARCHIVE_SUFFIX}",
