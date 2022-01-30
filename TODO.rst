@@ -70,8 +70,10 @@ Nice to Have
 
 #. Improve XML namespace map/prefix for custom attributes.
 
-#. Re-evaluate escaping.  Is ``urllib.parse.quote(...)`` too conservative for our use
-   cases?  Do most filesystems support Unicode, for instance?  How do static file
-   servers handle Unicode in filesystem paths?
+#. Archive config option to specify the list of safe characters for quoting.
+
+#. Maybe allow Unicode in filesystem path escaping?  Do most filesystems support
+   Unicode, for instance?  How do static file servers handle Unicode in filesystem
+   paths?
 
 #. Option to use hard links instead of symlinks.
