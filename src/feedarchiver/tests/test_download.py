@@ -49,7 +49,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         """
         # Constants specific to this test
         enclosure_archive_path = (
-            self.archive.root_path / self.ENCLOSURE_BASENAME_RELATIVE
+            self.archive.root_path / self.ENCLOSURE_RELATIVE.with_suffix(".mp3")
         )
 
         # Set the mock file path modification date which is used by the test fixture to

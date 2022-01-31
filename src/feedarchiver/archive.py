@@ -105,7 +105,11 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         Currently this just involves adding or correcting the suffix/extension if it
         doesn't match a `Content-Type` header.
         """
-        url_path = self.url_to_path(url_response.request.url)
+        if url_response.history:
+            request = url_response.history[0]
+        else:
+            request = url_response.request
+        url_path = self.url_to_path(request.url)
         mime_type = None
 
         # First try to get the MIME type from the response headers
