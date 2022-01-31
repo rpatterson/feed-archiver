@@ -189,12 +189,6 @@ class FeedarchiverDownloadsTestCase(FeedarchiverTestCase):
         / FeedarchiverTestCase.REMOTE_MOCK
         / ENCLOSURE_RELATIVE
     )
-    ENCLOSURE_BASENAME_RELATIVE = pathlib.Path(
-        "https",
-        "bar.example.com",
-        "media",
-        f"{utils.quote(ITEM_SLUG_PREFIX)}.mp3",
-    )
     ENCLOSURE_REDIRECT_URL = f"https://bar.example.com/media/{ITEM_SLUG_PREFIX}.mp3"
 
 
