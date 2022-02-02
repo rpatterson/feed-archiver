@@ -12,6 +12,8 @@ services:
       - "ofelia"
       - "sonarr"
     volumes:
+      # Specify the default archive within your media library
+      - "${FEED_ARCHIVE}:${FEED_ARCHIVE}"
       # For development, test changes without rebuilding the image
       - "./:/usr/local/src/feed-archiver/"
       # Use separate Python artifacts inside the image and locally on the host
