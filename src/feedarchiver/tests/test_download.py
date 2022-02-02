@@ -18,19 +18,6 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
     Test the feed-archiver downloading of enclosures, assets, etc..
     """
 
-    def archive_relative_to_remote_url(self, archive_relative, remote_mock_path):
-        """
-        Return the remote URL for the archive path adjusted for the mocks.
-        """
-        mock_path = remote_mock_path / archive_relative
-        remote_url_path = self.archive.root_path / archive_relative
-        if archive_relative == self.ENCLOSURE_RELATIVE.with_suffix(".mp3"):
-            # Adjust for the case where the remote URL is missing the
-            # suffix/extension
-            remote_url_path = remote_url_path.with_suffix("")
-            mock_path = mock_path.with_suffix("")
-        return self.archive.path_to_url(remote_url_path), mock_path
-
     def test_real_requests_disabled(self):
         """
         Confirm that tests will fail if real/external requests are attempted.
