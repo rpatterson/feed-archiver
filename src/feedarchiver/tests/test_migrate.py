@@ -153,7 +153,7 @@ class FeedarchiverMigrateTests(tests.FeedarchiverDownloadsTestCase):
                 if download_url == self.feed_url:
                     self.assertEqual(
                         download_request_mock.call_count,
-                        2,
+                        3,
                         f"Wrong number of feed requests: {download_url!r}",
                     )
                 else:

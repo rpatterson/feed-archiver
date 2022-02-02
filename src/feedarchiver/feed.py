@@ -666,22 +666,49 @@ class ArchiveFeed:
         """
         Use archived feed XML to migrate items as they would be handled now.
         """
-        # Find and link the Feed XML file
-        feed_relative = self.archive.url_to_path(self.url)
-        orig_feed_path = self.archive.root_path / feed_relative
-        migrated_paths = {}
-        if not orig_feed_path.exists():  # pragma: no cover
-            remote_response = self.archive.requests.get(self.url)
-            feed_relative = self.archive.response_to_path(remote_response)
-            orig_feed_path = self.archive.root_path / feed_relative
-        if orig_feed_path.is_file():
-            migrated_feed_path = self.archive.migrate_path(target_path, feed_relative)
-            migrated_paths[str(orig_feed_path)] = str(migrated_feed_path)
+        # Request and parse the remote feed XML for the most current representation of
+        # items that are still available in the remote.
+        remote_response = self.archive.requests.get(self.url)
+        remote_tree = self.load_remote_tree(remote_response)
+        remote_root = remote_tree.getroot()
+        remote_format = formats.FeedFormat.from_tree(self, remote_tree)
+
+        # Find the old feed XML file in the original archive, starting with the oldest
+        # possible version first
+        for redirect_response in [remote_response] + list(
+                reversed(remote_response.history),
+        ):
+            remote_response_relative = self.archive.response_to_path(
+                remote_response,
+                request=redirect_response.request,
+            )
+            # Try without extension as before working around MIME types issues
+            orig_feed_relative = remote_response_relative.with_suffix("")
+            self.path = self.archive.root_path / orig_feed_relative
+            if self.path.is_file():
+                break
+            # Fallback to the currenct/correct extension
+            orig_feed_relative = remote_response_relative
+            self.path = self.archive.root_path / orig_feed_relative
+            if self.path.is_file():
+                break
         else:  # pragma: no cover
             raise ValueError(
                 "Could not find original archive feed file from URL: "
-                f"{self.url!r} -> {str(feed_relative)!r}"
+                f"{self.url!r} -> {str(orig_feed_relative)!r}"
             )
+
+        # Copy the feed XML to the location the current version of the code would
+        # generate
+        migrated_feed_relative = self.archive.response_to_path(remote_response)
+        migrated_paths = {}
+        migrated_feed_path = self.archive.migrate_path(
+            target_path,
+            orig_feed_relative,
+            migrated_feed_relative,
+            copy=True,
+        )
+        migrated_paths[self.url] = (str(self.path), str(migrated_feed_path))
 
         # Parse the feed XML in the target archive
         logger.debug("Parsing archive XML: %r", self.url)
@@ -689,57 +716,57 @@ class ArchiveFeed:
             archive_tree = etree.parse(migrated_feed_opened)
         archive_format = formats.FeedFormat.from_tree(self, archive_tree)
         archive_root = archive_tree.getroot()
-
-        # Link feed-level downloads into the target archive
         self_link_elems = archive_format.get_items_parent(archive_root).xpath(
             archive_format.SELF_LINK_XPATH,
         )
-        for feed_download_url_result in formats.all_xpaths_results(
-            archive_root,
-            archive_format.DOWNLOAD_FEED_URLS_XPATHS,
-        ):
-            if (
-                self_link_elems
-                and feed_download_url_result.getparent() is self_link_elems[0]
-            ):
-                # Skip the feed-level `<link rel="self"...` URL
-                continue
-            archive_file_path, target_file_path = self.migrate_url_result(
+
+        # Link feed-level downloads into the target archive
+        migrated_paths.update(
+            self.migrate_url_results(
                 target_path,
-                feed_download_url_result,
-            )
-            migrated_paths[str(archive_file_path)] = str(target_file_path)
+                xpath_queries=archive_format.DOWNLOAD_FEED_URLS_XPATHS,
+                archive_elem=archive_root,
+                remote_elem=remote_root,
+                exclude_url_elems=self_link_elems,
+            ),
+        )
+
+        # Map remote items to their IDs for pairing with archive items
+        remote_item_elems = {}
+        for remote_item_elem in remote_format.iter_items(remote_root):
+            remote_item_elems[
+                remote_format.get_item_id(remote_item_elem)
+            ] = remote_item_elem
 
         # Link item-level downloads into the target archive
         archived_items_parent = archive_format.get_items_parent(archive_root)
         for archive_item_elem in archive_format.iter_items(archive_root):
+            archive_item_id = archive_format.get_item_id(archive_item_elem)
+            remote_item_elem = remote_item_elems.get(archive_item_id)
+
             # Migrate item assets in the archive only
-            item_asset_urls = formats.all_xpaths_results(
-                archive_item_elem,
-                archive_format.DOWNLOAD_ITEM_ASSET_URLS_XPATHS,
-            )
-            for item_asset_url_result in item_asset_urls:
-                archive_file_path, target_file_path = self.migrate_url_result(
+            migrated_paths.update(
+                self.migrate_url_results(
                     target_path,
-                    item_asset_url_result,
-                )
-                migrated_paths[str(archive_file_path)] = str(target_file_path)
+                    xpath_queries=archive_format.DOWNLOAD_ITEM_ASSET_URLS_XPATHS,
+                    archive_elem=archive_item_elem,
+                    remote_elem=remote_item_elem,
+                ).items()
+            )
 
             # Migrate item content in the archive and re-link
-            item_content_urls = formats.all_xpaths_results(
+            migrated_content_paths = self.migrate_url_results(
+                target_path,
+                xpath_queries=archive_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
+                archive_elem=archive_item_elem,
+                remote_elem=remote_item_elem,
+            )
+            migrated_paths.update(migrated_content_paths)
+            # Remove content links prior to re-creating
+            for item_content_url_result in formats.all_xpaths_results(
                 archive_item_elem,
                 archive_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
-            )
-            item_content_paths = {}
-            for item_content_url_result in item_content_urls:
-                archive_file_path, target_file_path = self.migrate_url_result(
-                    target_path,
-                    item_content_url_result,
-                )
-                item_content_paths[item_content_url_result] = target_file_path
-                migrated_paths[str(archive_file_path)] = str(target_file_path)
-
-                # Remove content links prior to re-creating
+            ):
                 content_elem = item_content_url_result.getparent()
                 for attr_name, content_link_str in content_elem.attrib.items():
                     if not attr_name.startswith(f"{{{self.NAMESPACE}}}content-link-"):
@@ -756,7 +783,15 @@ class ArchiveFeed:
             self.link_item_content(
                 feed_elem=archived_items_parent,
                 item_elem=archive_item_elem,
-                item_content_paths=item_content_paths,
+                item_content_paths={
+                    archive_url_result: pathlib.Path(
+                        target_file_path,
+                    ).relative_to(target_path)
+                    for archive_url_result, (
+                        archive_file_path,
+                        target_file_path,
+                    ) in migrated_content_paths.items()
+                },
             )
 
         # Pretty format the feed for readability
@@ -766,31 +801,139 @@ class ArchiveFeed:
 
         return migrated_paths
 
-    def migrate_url_result(self, target_path, url_result):
+    def migrate_url_results(
+        self,
+        target_path,
+        xpath_queries,
+        archive_elem,
+        remote_elem=None,
+        exclude_url_elems=None,
+    ):  # pylint: disable=too-many-arguments,too-many-locals
+        """
+        Reconcile the same XPath query URLs from both the remote and the archive.
+        """
+        archive_url_results = formats.all_xpaths_results(archive_elem, xpath_queries)
+        remote_url_results = None
+        if remote_elem is not None:  # pragma: no cover
+            remote_url_results = formats.all_xpaths_results(remote_elem, xpath_queries)
+
+        # Compare the 2 sets of XPath URL results
+        if remote_url_results and len(remote_url_results) != len(
+            archive_url_results
+        ):  # pragma: no cover
+            logger.warning(
+                "Remote has different XPath results than the archive",
+            )
+            remote_url_results = None
+        if remote_url_results:
+            for archive_url_result_idx, archive_url_result in enumerate(
+                archive_url_results,
+            ):
+                archive_url_elem = archive_url_result.getparent()
+                remote_url_result = remote_url_results[archive_url_result_idx]
+                remote_url_elem = remote_url_result.getparent()
+                if archive_url_elem.tag != remote_url_elem.tag:  # pragma: no cover
+                    logger.warning(
+                        "Remote has different XPath results than the archive: %r",
+                        archive_url_result,
+                    )
+                    remote_url_results = None
+                    break
+
+        # Perform the actual migrations
+        if exclude_url_elems is None:
+            exclude_url_elems = []
+        file_paths = {}
+        for archive_url_result_idx, archive_url_result in enumerate(
+            archive_url_results,
+        ):
+            archive_url_elem = archive_url_result.getparent()
+            for exclude_url_elem in exclude_url_elems:
+                # Check if the parent element of the URL result is excluded
+                if exclude_url_elem is archive_url_elem:
+                    break
+            else:
+                remote_url_result = None
+                if remote_url_results:  # pragma: no cover
+                    remote_url_result = remote_url_results[archive_url_result_idx]
+                migrated_file_paths = self.migrate_url_result(
+                    target_path,
+                    archive_url_result,
+                    remote_url_result,
+                )
+                if migrated_file_paths is None:
+                    break
+                archive_file_path, target_file_path = migrated_file_paths
+                file_paths[archive_url_result] = (
+                    str(archive_file_path),
+                    str(target_file_path),
+                )
+        return file_paths
+
+    def migrate_url_result(
+        self,
+        target_path,
+        archive_url_result,
+        remote_url_result=None,
+    ):
         """
         Use `feed-archiver` XML attributes to migrate an individual URL.
         """
-        archive_url_split = urllib.parse.urlsplit(url_result)
-        archive_relative_path = pathlib.PurePosixPath(
-            archive_url_split.path.lstrip("/"),
-        )
-        archive_file_path = self.archive.root_path / archive_relative_path
-        if archive_file_path.is_dir():
-            archive_relative_path = archive_relative_path / self.archive.INDEX_BASENAME
-            archive_file_path = self.archive.root_path / archive_relative_path
-
-        # Would the migrated archive path for this download would be different now?
-        url_parent = url_result.getparent()
-        if url_result.attrname:
+        # Lookup the original URL from the XML namespace attribute
+        url_parent = archive_url_result.getparent()
+        if remote_url_result is not None:
+            remote_url = remote_url_result
+        elif archive_url_result.attrname:  # pragma: no cover
             remote_url = url_parent.attrib[
-                f"{{{self.NAMESPACE}}}attribute-{url_result.attrname}"
+                f"{{{self.NAMESPACE}}}attribute-{archive_url_result.attrname}"
             ]
-        else:
+        else:  # pragma: no cover
             remote_url = url_parent.attrib[f"{{{self.NAMESPACE}}}text"]
         remote_url_split = self.resolve_url(remote_url)
         target_relative_path = self.archive.url_to_path(
             remote_url_split.geturl(),
-        ).with_suffix(archive_relative_path.suffix)
+        )
+
+        # Determine the path to the file in the archive
+        archive_base_url_split = urllib.parse.urlsplit(
+            self.config.get("base-url") or self.archive.global_config["base-url"],
+        )
+        archive_url_split = urllib.parse.urlsplit(archive_url_result)
+        archive_relative_path = pathlib.PurePosixPath(
+            archive_url_split.path.lstrip("/"),
+        )
+        # Start with the oldest form, relative to the feed
+        if not archive_url_split.scheme and not archive_url_split.netloc:
+            archive_file_path = self.path.parent / archive_relative_path
+            archive_relative_path = archive_file_path.relative_to(
+                self.archive.root_path,
+            )
+        # Newer, absolute URLs using `base-url` from the cofig
+        elif (
+            archive_url_split.scheme, archive_url_split.netloc
+        ) == (
+            archive_base_url_split.scheme, archive_base_url_split.netloc
+        ):
+            archive_relative_path = pathlib.PurePosixPath(
+                archive_url_split.path.lstrip("/"),
+            )
+            archive_file_path = self.archive.root_path / archive_relative_path
+        else:
+            # Probably a download URL added to the remote feed since the original
+            # archive was last updated
+            logger.debug(
+                "URL not downloaded in original archive: %r",
+                archive_url_split.geturl(),
+            )
+            return None
+        # Handle directory `index.html` files
+        if archive_file_path.is_dir():
+            archive_relative_path = archive_relative_path / self.archive.INDEX_BASENAME
+            archive_file_path = archive_file_path / self.archive.INDEX_BASENAME
+        else:
+            target_relative_path = target_relative_path.with_suffix(
+                archive_relative_path.suffix,
+            )
 
         # Update the archived URL in the XML a
         migrated_url_split = self.archive.url_split._replace(
@@ -808,8 +951,8 @@ class ArchiveFeed:
             str(archive_relative_path),
             str(target_relative_path),
         )
-        if url_result.attrname:
-            url_parent.attrib[url_result.attrname] = migrated_url_split.geturl()
+        if archive_url_result.attrname:
+            url_parent.attrib[archive_url_result.attrname] = migrated_url_split.geturl()
         else:
             url_parent.text = migrated_url_split.geturl()
 
@@ -820,6 +963,7 @@ class ArchiveFeed:
             target_file_path = self.archive.migrate_path(
                 target_path,
                 archive_relative_path,
+                target_relative_path,
             )
 
         return archive_file_path, target_file_path
