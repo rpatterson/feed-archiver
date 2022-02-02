@@ -13,9 +13,6 @@ services:
     environment:
       # Find the same configuration file even when run as another user, e.g. `root`.
       HOME: "/home/feed-archiver"
-    volumes:
-      # Specify the default archive within your media library
-      - "${FEED_ARCHIVE}:${FEED_ARCHIVE}"
     working_dir: "${FEED_ARCHIVE}"
     restart: "unless-stopped"
     labels:
