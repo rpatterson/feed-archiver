@@ -78,6 +78,33 @@ parser_update.add_argument(
 )
 
 
+def migrate(
+    archive_dir=parser.get_default("--archive-dir"),
+    target_dir=parser.get_default("target_dir"),
+):  # pragma: no cover, pylint: disable=missing-function-docstring
+    feed_archive = archive.Archive(archive_dir)
+    return feed_archive.migrate(target_dir)
+
+
+migrate.__doc__ = archive.Archive.migrate.__doc__
+parser_migrate = subparsers.add_parser(
+    "migrate",
+    help=migrate.__doc__.strip(),
+    description=migrate.__doc__.strip(),
+)
+# Make the function for the sub-command specified in the CLI argument available in the
+# argument parser for delegation below.
+parser_migrate.set_defaults(command=migrate)
+parser_migrate.add_argument(
+    "target_dir",
+    help=(
+        "the target root directory into which all feeds, their enclosures and assets "
+        "will be migrated"
+    ),
+    type=pathlib.Path,
+)
+
+
 def config_cli_logging(
     root_level=logging.INFO, **kwargs
 ):  # pragma: no cover, pylint: disable=unused-argument

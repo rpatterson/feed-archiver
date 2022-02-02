@@ -242,3 +242,44 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
         return updated_feeds
+
+    def migrate(self, target_path):
+        """
+        Use archived feed XML to migrate an archive to a new archive.
+
+        The new archive should have the same contents as if the current `feed-archiver`
+        version has been used for all previous archive updates.  IOW, this can be used
+        to migrate changes to how `feed-archive` would form the archive today.  It also
+        uses hard links for the new archive content so it can also be used to prune
+        stale or disconnected content from an archive: migrate, check migrated contents,
+        then delete the original.
+        """
+        self.load_config()
+        self.migrate_path(target_path, pathlib.Path(self.FEED_CONFIGS_BASENAME))
+
+        migrated_feeds = {}
+        for archive_feed in self.archive_feeds:
+            migrated_paths = archive_feed.migrate(target_path)
+            if migrated_paths:  # pragma: no cover
+                migrated_feeds[archive_feed.url] = migrated_paths
+            if feedarchiver.DEBUG:  # pragma: no cover
+                # Optionally compare memory consumption
+                self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
+        return migrated_feeds
+
+    def migrate_path(self, target_path, orig_relative_path, target_relative_path=None):
+        """
+        Link one file from the original archive into the new archive.
+        """
+        if target_relative_path is None:  # pragma: no cover
+            target_relative_path = orig_relative_path
+        orig_file_path = self.root_path / orig_relative_path
+        target_file_path = target_path / target_relative_path
+        logger.info(
+            "Linking archive file: %r -> %r",
+            str(orig_relative_path),
+            str(target_relative_path),
+        )
+        target_file_path.parent.mkdir(parents=True, exist_ok=True)
+        orig_file_path.link_to(target_file_path)
+        return target_file_path
