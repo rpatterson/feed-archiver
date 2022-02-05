@@ -805,7 +805,7 @@ class ArchiveFeed:
         # Update the archived feed file
         archive_tree.write(str(migrated_feed_path))
 
-        return migrated_paths
+        return len(migrated_paths)
 
     def migrate_url_results(
         self,
