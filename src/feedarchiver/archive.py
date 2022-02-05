@@ -155,14 +155,16 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         url_path = pathlib.PurePosixPath(url_relative)
         archive_path = (
             pathlib.Path(
-                utils.quote(split_url.scheme),
-                utils.quote(split_url.netloc),
+                utils.quote_basename(split_url.scheme),
+                utils.quote_basename(split_url.netloc),
             )
-            / pathlib.Path(*(utils.quote(part) for part in url_path.parent.parts))
+            / pathlib.Path(
+                *(utils.quote_basename(part) for part in url_path.parent.parts),
+            )
             / url_path.with_stem(
                 # Place the query and fragment from the URL before the extension/suffix
                 # in the path
-                utils.quote(
+                utils.quote_basename(
                     split_url._replace(
                         scheme="", netloc="", path=url_path.stem
                     ).geturl(),

@@ -46,7 +46,7 @@ class FeedarchiverTestCase(
         "https",
         "foo-username%3Asecret@grault.example.com",
         "feeds",
-        f"{FEED_ARCHIVE_STEM}{utils.quote(FEED_ARCHIVE_QUERY)}"
+        f"{FEED_ARCHIVE_STEM}{utils.quote_basename(FEED_ARCHIVE_QUERY)}"
         f"{FEED_ARCHIVE_SUFFIX}",
     )
 
@@ -186,7 +186,7 @@ class FeedarchiverDownloadsTestCase(FeedarchiverTestCase):
         "foo.example.com",
         "podcast",
         "episodes",
-        utils.quote(ITEM_SLUG),
+        utils.quote_basename(ITEM_SLUG),
         "download",
     )
     ENCLOSURE_MOCK_PATH = (

@@ -2,6 +2,7 @@
 Modifications to the standard library and other helpers.
 """
 
+import os
 import functools
 import mimetypes
 import urllib.parse
@@ -93,7 +94,11 @@ init()
 # Please do report any additional cases that cause issues in any other
 # common filesystems.
 SAFE_CHARS_WIN10_SAMBA = " !#$&'()+,;=@[]^`{}"
-quote = functools.partial(urllib.parse.quote, safe=SAFE_CHARS_WIN10_SAMBA)
+quote_basename = functools.partial(urllib.parse.quote, safe=SAFE_CHARS_WIN10_SAMBA)
+quote_path = functools.partial(
+    urllib.parse.quote,
+    safe=f"{SAFE_CHARS_WIN10_SAMBA}{os.sep}{os.altsep}",
+)
 
 
 def compare_memory_snapshots(parent):  # pragma: no cover
