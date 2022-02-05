@@ -4,6 +4,7 @@ An archive of RSS/Atom syndication feeds.
 
 import os
 import pathlib
+import shutil
 import urllib.parse
 import cgi
 import logging
@@ -268,7 +269,13 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
         return migrated_feeds
 
-    def migrate_path(self, target_path, orig_relative_path, target_relative_path=None):
+    def migrate_path(
+            self,
+            target_path,
+            orig_relative_path,
+            target_relative_path=None,
+            copy=False,
+    ):
         """
         Link one file from the original archive into the new archive.
         """
@@ -276,11 +283,19 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             target_relative_path = orig_relative_path
         orig_file_path = self.root_path / orig_relative_path
         target_file_path = target_path / target_relative_path
-        logger.info(
-            "Linking archive file: %r -> %r",
-            str(orig_relative_path),
-            str(target_relative_path),
-        )
         target_file_path.parent.mkdir(parents=True, exist_ok=True)
-        orig_file_path.link_to(target_file_path)
+        if copy:
+            logger.info(
+                "Copying archive file: %r -> %r",
+                str(orig_relative_path),
+                str(target_relative_path),
+            )
+            shutil.copyfile(orig_file_path, target_file_path)
+        else:
+            logger.info(
+                "Linking archive file: %r -> %r",
+                str(orig_relative_path),
+                str(target_relative_path),
+            )
+            orig_file_path.link_to(target_file_path)
         return target_file_path
