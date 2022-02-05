@@ -14,6 +14,9 @@ PRIORITY_TYPES = {
     "application/xml": ".xml",
     "audio/ogg": ".ogg",
     "video/x-matroska": ".mkv",
+    # Not actually needed as overrides but found in the wild
+    # and not in `/etc/mime.types`
+    "application/rss+xml": ".rss",  # `application/x-rss+xml` in `/etc/mime.types`
 }
 
 
