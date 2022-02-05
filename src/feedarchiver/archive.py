@@ -42,7 +42,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         """
         Instantiate a representation of an archive from a file-system path.
         """
-        if feedarchiver.DEBUG:  # pragma: no cover
+        if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
             # Optionally initialize memory profiling
             self.tracemalloc_snapshot = tracemalloc.take_snapshot()
 
@@ -239,7 +239,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 continue
             if updated_items or download_paths:  # pragma: no cover
                 updated_feeds[archive_feed.url] = updated_items, download_paths
-            if feedarchiver.DEBUG:  # pragma: no cover
+            if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
         return updated_feeds
@@ -263,7 +263,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             migrated_paths = archive_feed.migrate(target_path)
             if migrated_paths:  # pragma: no cover
                 migrated_feeds[archive_feed.url] = migrated_paths
-            if feedarchiver.DEBUG:  # pragma: no cover
+            if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
         return migrated_feeds

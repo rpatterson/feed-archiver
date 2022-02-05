@@ -7,7 +7,6 @@ import pathlib
 import logging
 import argparse
 import pprint
-import tracemalloc
 
 from . import archive
 
@@ -27,6 +26,10 @@ DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in TRUE_STR
 POST_MORTEM = (
     "POST_MORTEM" in os.environ
     and os.getenv("POST_MORTEM").strip().lower() in TRUE_STRS
+)
+PYTHONTRACEMALLOC = (
+    "PYTHONTRACEMALLOC" in os.environ
+    and os.getenv("PYTHONTRACEMALLOC").strip().lower()
 )
 
 # Define command line options and arguments
@@ -113,11 +116,9 @@ def config_cli_logging(
     """
     # Want just our logger's level, not others', to be controlled by options/environment
     logging.basicConfig(level=root_level)
+    level = logging.INFO
     if DEBUG:  # pragma: no cover
         level = logging.DEBUG
-        tracemalloc.start()
-    else:
-        level = logging.INFO
     logger.setLevel(level)
     # Finer control of external loggers to reduce logger noise or expose information
     # that may be useful to users.
