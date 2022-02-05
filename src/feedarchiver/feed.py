@@ -772,12 +772,18 @@ class ArchiveFeed:
                     if not attr_name.startswith(f"{{{self.NAMESPACE}}}content-link-"):
                         continue
                     content_link_path = pathlib.Path(content_link_str)
-                    logger.info(
-                        "Removing content link: %r -> %r",
-                        content_link_str,
-                        str(content_link_path.readlink()),
-                    )
-                    content_link_path.unlink()
+                    if content_link_path.is_symlink():
+                        logger.info(
+                            "Removing content link: %r -> %r",
+                            content_link_str,
+                            str(content_link_path.readlink()),
+                        )
+                        content_link_path.unlink()
+                    else:
+                        logger.info(
+                            "Content link doesn't exist: %r",
+                            content_link_str,
+                        )
                     del content_elem.attrib[attr_name]
             # Re-apply current `link-path` plugins
             self.link_item_content(
