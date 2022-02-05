@@ -828,7 +828,9 @@ class ArchiveFeed:
             archive_url_results
         ):  # pragma: no cover
             logger.warning(
-                "Remote has different XPath results than the archive",
+                "Remote has different XPath results than the archive: %s != %s",
+                len(archive_url_results),
+                len(remote_url_results),
             )
             remote_url_results = None
         if remote_url_results:
