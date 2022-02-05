@@ -40,7 +40,7 @@ class ArchiveFeed:
         """
         Instantiate a representation of an archive from a file-system path.
         """
-        if feedarchiver.DEBUG:  # pragma: no cover
+        if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
             # Optionally initialize memory profiling
             self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive)
 
@@ -116,7 +116,7 @@ class ArchiveFeed:
                 "Processing remote feed item:\n%s",
                 etree.tostring(remote_item_elem).decode(),
             )
-            if feedarchiver.DEBUG:  # pragma: no cover
+            if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(self)
 
@@ -324,7 +324,7 @@ class ArchiveFeed:
                 # The feed itself is handled in `self.update()`
                 continue
             download_path = None
-            if feedarchiver.DEBUG:  # pragma: no cover
+            if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(self)
             if url_result in downloaded_paths:
