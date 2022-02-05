@@ -82,6 +82,15 @@ class ArchiveFeed:
         archive_root = archive_tree.getroot()
         archived_items_parent = remote_format.get_items_parent(archive_root)
 
+        remote_item_elems = list(remote_format.iter_items(remote_root))
+        archive_item_elems = list(remote_format.iter_items(archive_root))
+        if (len(remote_item_elems) - len(archive_item_elems)) > 4:
+            logger.warning(
+                "Many more items in remote than archive: %s > %s",
+                len(remote_item_elems),
+                len(archive_item_elems),
+            )
+
         logger.info(
             "Updating feed in archive: %r -> %r",
             self.url,
@@ -90,7 +99,6 @@ class ArchiveFeed:
         self.update_self(remote_format, archive_root)
         # Iterate through the remote feed to make updates to the archived feed as
         # appropriate.
-        archived_items_iter = remote_format.iter_items(archive_root)
         archived_item_ids = set()
         updated_items = {}
         # What is the lowest child index for the first item, used to insert new items at
@@ -108,10 +116,9 @@ class ArchiveFeed:
                 break
         else:
             first_item_idx += 1
-        remote_items = list(remote_format.iter_items(remote_root))
         # Ensure that the order of new feed items is preserved
-        remote_items.reverse()
-        for remote_item_elem in remote_items:
+        remote_item_elems.reverse()
+        for remote_item_elem in remote_item_elems:
             logger.debug(
                 "Processing remote feed item:\n%s",
                 etree.tostring(remote_item_elem).decode(),
@@ -129,7 +136,7 @@ class ArchiveFeed:
                     remote_item_id,
                 )
                 continue
-            for archived_item_elem in archived_items_iter:
+            for archived_item_elem in archive_item_elems:
                 archived_item_ids.add(remote_format.get_item_id(archived_item_elem))
                 if remote_item_id in archived_item_ids:
                     # Found this item in the archived feed, we don't need to update the
@@ -720,6 +727,15 @@ class ArchiveFeed:
             archive_format.SELF_LINK_XPATH,
         )
 
+        remote_item_elems_list = list(remote_format.iter_items(remote_root))
+        archive_item_elems = list(archive_format.iter_items(archive_root))
+        if (len(remote_item_elems_list) - len(archive_item_elems)) > 4:
+            logger.warning(
+                "Many more items in remote than archive: %s > %s",
+                len(remote_item_elems_list),
+                len(archive_item_elems),
+            )
+
         # Link feed-level downloads into the target archive
         migrated_paths.update(
             self.migrate_url_results(
@@ -733,14 +749,14 @@ class ArchiveFeed:
 
         # Map remote items to their IDs for pairing with archive items
         remote_item_elems = {}
-        for remote_item_elem in remote_format.iter_items(remote_root):
+        for remote_item_elem in remote_item_elems_list:
             remote_item_elems[
                 remote_format.get_item_id(remote_item_elem)
             ] = remote_item_elem
 
         # Link item-level downloads into the target archive
         archived_items_parent = archive_format.get_items_parent(archive_root)
-        for archive_item_elem in archive_format.iter_items(archive_root):
+        for archive_item_elem in archive_item_elems:
             archive_item_id = archive_format.get_item_id(archive_item_elem)
             remote_item_elem = remote_item_elems.get(archive_item_id)
 
