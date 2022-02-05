@@ -43,7 +43,7 @@ class FeedFormat:
     ROOT_TAG = ""
     ITEM_TAG = ""
     ITEM_ID_TAG = ""
-    DOWNLOAD_TEXT_TAGS = ["link"]
+    DOWNLOAD_TEXT_TAGS = ["link", "url"]
     DOWNLOAD_CONTENT_TAGS = ["enclosure", "content"]
     DOWNLOAD_CONTENT_EXPR = "@rel='enclosure'"
     DOWNLOAD_ATTR_NAMES = ["href", "url", "src"]
