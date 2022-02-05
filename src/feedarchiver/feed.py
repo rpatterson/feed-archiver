@@ -232,7 +232,7 @@ class ArchiveFeed:
         )
         base_url_path = pathlib.PurePosixPath(
             archive_base_url_split.path
-        ) / os.path.relpath(self.path, self.archive.root_path)
+        ) / urllib.parse.quote(os.path.relpath(self.path, self.archive.root_path))
         base_url_split = archive_base_url_split._replace(path=str(base_url_path))
         for self_link_elem in feed_format.get_items_parent(archive_root).xpath(
             feed_format.SELF_LINK_XPATH
@@ -371,7 +371,7 @@ class ArchiveFeed:
                     # Let pathlib normalize the relative path
                     path=str(
                         pathlib.PurePosixPath(self.archive.url_split.path)
-                        / download_relative
+                        / urllib.parse.quote(str(download_relative))
                     ),
                 )
                 if url_result.attrname:
@@ -622,7 +622,7 @@ class ArchiveFeed:
         Link an item content/enclosure to a filesystem path returned by a plugin.
         """
         content_link_path = self.archive.root_path / pathlib.Path(
-            urllib.parse.quote(content_link_str, safe=" /"),
+            utils.quote_path(content_link_str),
         )
         # Make the link relative
         content_link_target = pathlib.Path(
@@ -960,14 +960,13 @@ class ArchiveFeed:
             )
 
         # Update the archived URL in the XML a
+        target_relative_url_path = target_relative_path
+        if target_relative_path.name == self.archive.INDEX_BASENAME:
+            target_relative_url_path = target_relative_path.parent
         migrated_url_split = self.archive.url_split._replace(
             path=str(
                 pathlib.PurePosixPath(self.archive.url_split.path)
-                / (
-                    target_relative_path.parent
-                    if target_relative_path.name == self.archive.INDEX_BASENAME
-                    else target_relative_path
-                ),
+                / urllib.parse.quote(str(target_relative_url_path)),
             ),
         )
         logger.info(
