@@ -25,6 +25,8 @@ requests-toolbelt==0.10.1
     # via feed-archiver (./pyproject.toml)
 six==1.16.0
     # via user-agent
+tenacity==8.1.0
+    # via feed-archiver (./pyproject.toml)
 urllib3==1.26.12
     # via requests
 user-agent==0.1.10

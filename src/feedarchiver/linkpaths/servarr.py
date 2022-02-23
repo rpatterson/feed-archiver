@@ -5,9 +5,11 @@ Link enclosures about a TV series episode next to the video file as external aud
 import functools
 import pathlib
 import re
+import socket
 import logging
 
 import arrapi
+import tenacity
 
 from .. import linkpaths
 
@@ -25,6 +27,16 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
     client = None
     client_get = None
 
+    @tenacity.retry(
+        retry=tenacity.retry_if_exception_type((
+            socket.error,
+            arrapi.exceptions.ConnectionFailure,
+        )),
+        wait=tenacity.wait_fixed(1),
+        stop=tenacity.stop_after_attempt(10),
+        reraise=True,
+        before_sleep=tenacity.before_sleep_log(logger, logging.DEBUG),
+    )
     def load_config(self):
         """
         Pre-process and validate the plugin config prior to linking each enclosure.
