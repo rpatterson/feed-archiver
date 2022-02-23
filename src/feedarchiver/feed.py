@@ -521,54 +521,80 @@ class ArchiveFeed:
             basename = content_archive_relative.name
             link_idx = 0
             for link_path_plugin in self.link_path_plugins:
-                match = None
-                if "match-re" in link_path_plugin.config:
-                    match_kwargs = locals().copy()
-                    del match_kwargs["self"]
-                    match = self.link_item_plugin_match(**match_kwargs)
-                    if match is None:
-                        continue
-
-                # Delegate to the plugin
-                logger.debug(
-                    "Linking item content with %r plugin: %s",
-                    type(link_path_plugin),
-                    str(content_archive_relative),
-                )
-                try:
-                    content_link_strs = link_path_plugin(
-                        archive_feed=self,
-                        feed_elem=feed_elem,
-                        item_elem=item_elem,
-                        url_result=url_result,
-                        basename=basename,
-                        match=match,
-                    )
-                except Exception:  # pragma: no cover, pylint: disable=broad-except
-                    logger.exception(
-                        "Problem linking item content with %r, continuing to next: %s",
-                        type(link_path_plugin),
-                        str(content_archive_relative),
-                    )
-                    if feedarchiver.POST_MORTEM:  # pragma: no cover
-                        raise
-                    continue
-                if content_link_strs is None:  # pragma: no cover
-                    # Plugin handled any linking itself
-                    continue
-                if isinstance(content_link_strs, str):  # pragma: no cover
-                    content_link_strs = [content_link_strs]
-                for content_link_str in content_link_strs:
+                for content_link_path in self.list_item_content_link_plugin_paths(
+                        feed_elem,
+                        item_elem,
+                        url_result,
+                        basename,
+                        content_archive_relative,
+                        link_path_plugin,
+                ):
                     content_link_paths.setdefault(url_result, []).append(
                         self.link_plugin_file(
                             url_result,
                             content_archive_relative,
-                            content_link_str,
+                            content_link_path,
                             link_idx,
                         )
                     )
                     link_idx += 1
         return content_link_paths
+
+    def list_item_content_link_plugin_paths(
+            self,
+            feed_elem,
+            item_elem,
+            url_result,
+            basename,
+            content_archive_relative,
+            link_path_plugin,
+    ):
+        """
+        Return the content link paths for an individual download and plugin.
+        """
+        match = None
+        if "match-re" in link_path_plugin.config:
+            match_kwargs = locals().copy()
+            del match_kwargs["self"]
+            match = self.link_item_plugin_match(**match_kwargs)
+            if match is None:
+                return []
+
+        # Delegate to the plugin
+        logger.debug(
+            "Linking item content with %r plugin: %s",
+            type(link_path_plugin),
+            str(content_archive_relative),
+        )
+        try:
+            content_link_strs = link_path_plugin(
+                archive_feed=self,
+                feed_elem=feed_elem,
+                item_elem=item_elem,
+                url_result=url_result,
+                basename=basename,
+                match=match,
+            )
+        except Exception:  # pragma: no cover, pylint: disable=broad-except
+            logger.exception(
+                "Problem linking item content with %r, continuing to next: %s",
+                type(link_path_plugin),
+                str(content_archive_relative),
+            )
+            if feedarchiver.POST_MORTEM:  # pragma: no cover
+                raise
+            content_link_strs = []
+        if content_link_strs is None:  # pragma: no cover
+            # Plugin handled any linking itself
+            content_link_strs = []
+        if isinstance(content_link_strs, str):  # pragma: no cover
+            content_link_strs = [content_link_strs]
+        return [
+            self.archive.root_path / pathlib.Path(
+                utils.quote_path(content_link_str),
+            )
+            for content_link_str in content_link_strs
+        ]
 
     def link_item_plugin_match(self, **kwargs):
         """
@@ -615,15 +641,12 @@ class ArchiveFeed:
         self,
         url_result,
         content_archive_relative,
-        content_link_str,
+        content_link_path,
         link_idx,
     ):
         """
         Link an item content/enclosure to a filesystem path returned by a plugin.
         """
-        content_link_path = self.archive.root_path / pathlib.Path(
-            utils.quote_path(content_link_str),
-        )
         # Make the link relative
         content_link_target = pathlib.Path(
             os.path.relpath(
@@ -783,24 +806,81 @@ class ArchiveFeed:
                 archive_item_elem,
                 archive_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
             ):
+                # Remove content links listed in the download's item XML namespace
+                # attributes.
                 content_elem = item_content_url_result.getparent()
+                content_link_strs = []
                 for attr_name, content_link_str in content_elem.attrib.items():
                     if not attr_name.startswith(f"{{{self.NAMESPACE}}}content-link-"):
                         continue
+                    content_link_strs.append(content_link_str)
+                    del content_elem.attrib[attr_name]
+                # Remove content links that may be stale/old from previous versions of
+                # the code
+                content_archive_relative = pathlib.PurePosixPath(
+                    urllib.parse.unquote(
+                        urllib.parse.urlsplit(item_content_url_result).path.lstrip("/"),
+                    ),
+                )
+                for link_path_plugin in self.link_path_plugins:
+                    for content_link_path in self.list_item_content_link_plugin_paths(
+                        archive_format.get_items_parent(archive_root),
+                        archive_item_elem,
+                        item_content_url_result,
+                        content_archive_relative.name,
+                        content_archive_relative,
+                        link_path_plugin,
+                    ):
+                        content_link_str = str(content_link_path)
+                        content_link_strs.extend([
+                            # Fully unquoted
+                            content_link_str,
+                            # Double quoted path characters, single quoted others
+                            urllib.parse.quote(
+                                utils.quote_path(content_link_str),
+                                safe="/ ",
+                            ),
+                            # Single quoted all characters
+                            urllib.parse.quote(content_link_str, safe="/ "),
+                            # Double quoted all characters
+                            urllib.parse.quote(
+                                urllib.parse.quote(content_link_str, safe="/ "),
+                                safe="/ ",
+                            ),
+                            # Double quoted path characters
+                            utils.quote_path(utils.quote_path(content_link_str)),
+                        ])
+                # Perform the actual deletion
+                logger.debug(
+                    "Cleaning up content link viriations:\n%s",
+                    "\n".join(content_link_strs)
+                )
+                for content_link_str in content_link_strs:
                     content_link_path = pathlib.Path(content_link_str)
-                    if content_link_path.is_symlink():
+                    content_link_stem = content_link_path.stem
+                    content_index = 0
+                    while content_link_path.is_symlink():
                         logger.info(
                             "Removing content link: %r -> %r",
                             content_link_str,
                             str(content_link_path.readlink()),
                         )
                         content_link_path.unlink()
-                    else:
-                        logger.info(
-                            "Content link doesn't exist: %r",
-                            content_link_str,
+                        content_index += 1
+                        # Missing the dash before the index
+                        content_link_path = content_link_path.with_stem(
+                            f"{content_link_stem}{str(content_index)}",
                         )
-                    del content_elem.attrib[attr_name]
+                        if content_link_path.is_symlink():
+                            logger.info(
+                                "Removing content link: %r -> %r",
+                                content_link_str,
+                                str(content_link_path.readlink()),
+                            )
+                            content_link_path.unlink()
+                        content_link_path = content_link_path.with_stem(
+                            f"{content_link_stem}-{str(content_index)}",
+                        )
             # Re-apply current `link-path` plugins
             self.link_item_content(
                 feed_elem=archived_items_parent,
@@ -924,7 +1004,7 @@ class ArchiveFeed:
         )
         archive_url_split = urllib.parse.urlsplit(archive_url_result)
         archive_relative_path = pathlib.PurePosixPath(
-            archive_url_split.path.lstrip("/"),
+            urllib.parse.unquote(archive_url_split.path.lstrip("/")),
         )
         # Start with the oldest form, relative to the feed
         if not archive_url_split.scheme and not archive_url_split.netloc:
@@ -932,14 +1012,14 @@ class ArchiveFeed:
             archive_relative_path = archive_file_path.relative_to(
                 self.archive.root_path,
             )
-        # Newer, absolute URLs using `base-url` from the cofig
+        # Newer, absolute URLs using `base-url` from the config
         elif (
             archive_url_split.scheme, archive_url_split.netloc
         ) == (
             archive_base_url_split.scheme, archive_base_url_split.netloc
         ):
             archive_relative_path = pathlib.PurePosixPath(
-                archive_url_split.path.lstrip("/"),
+                urllib.parse.unquote(archive_url_split.path.lstrip("/")),
             )
             archive_file_path = self.archive.root_path / archive_relative_path
         else:
