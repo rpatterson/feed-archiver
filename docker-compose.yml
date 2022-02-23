@@ -8,13 +8,15 @@ services:
   feed-archiver:
     image: "rpatterson/feed-archiver"
     container_name: "feed-archiver"
+    # Needed because we expect the container to run once and exit and to be run by
+    # ofelia from then on.
+    restart: "no"
     # Match permissions inside and outside the container
     user: "${PUID:-1000}:${PGID:-100}"
     environment:
       # Find the same configuration file even when run as another user, e.g. `root`.
       HOME: "/home/feed-archiver"
     working_dir: "${FEED_ARCHIVE}"
-    restart: "unless-stopped"
     labels:
       ofelia.enabled: true
       ofelia.job-run.feed-archiver-update.schedule: "@hourly"
