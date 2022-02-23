@@ -131,6 +131,8 @@ six==1.16.0
     #   tox
     #   user-agent
     #   virtualenv
+tenacity==8.0.1
+    # via feed-archiver (./pyproject.toml)
 toml==0.10.2
     # via
     #   autopep8
