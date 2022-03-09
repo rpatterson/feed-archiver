@@ -31,8 +31,9 @@ services:
       TZ: "America/Los_Angeles"
     volumes:
       - "./sonarr/config/:/config/"
-    ports:
-      - "8989:8989"
+    # Add this uncommented to your deployment's `./docker-compose.override.yml`
+    # ports:
+    #   - "8989:8989"
     restart: "unless-stopped"
     healthcheck:
       test: >-

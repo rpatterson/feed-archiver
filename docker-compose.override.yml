@@ -6,6 +6,8 @@ version: "3.8"
 services:
 
   feed-archiver:
+    # Allow use in development checkout alongside a real deployment, avoid name clash
+    container_name: "feed-archiver-devel"
     build: "./"
     depends_on:
       # Don't force service dependencies on other deployments that extend the base
@@ -19,3 +21,19 @@ services:
       # Use separate Python artifacts inside the image and locally on the host
       - "./src/feed_archiver-docker.egg-info/:/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
       - "./.tox-docker/:/usr/local/src/feed-archiver/.tox/"
+
+  # Allow use in development checkout alongside a real deployment, avoid name clash
+  sonarr:
+    container_name: "feed-archiver-devel-sonarr"
+    # Choose a port prefix unlikely to be in use from the ephemeral port range
+    # https://en.wikipedia.org/wiki/Ephemeral_port#Range
+    #     $ shuf -i 49-65 -n 1
+    #     54
+    ports:
+      - "8989:54989"
+  traefik:
+    container_name: "feed-archiver-devel-traefik"
+  nginx:
+    container_name: "feed-archiver-devel-nginx"
+  ofelia:
+    container_name: "feed-archiver-devel-ofelia"
