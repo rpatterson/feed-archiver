@@ -1,12 +1,12 @@
 server {
     # FIXME: Should we find a way to switch to HTTPS so we can use HTTP/2
-    listen ${NGINX_PORT} default_server;
-    listen [::]:${NGINX_PORT} default_server;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name ${NGINX_HOST};
 
     # Make browsing/discovery easier, serve indexes of directories:
     # https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/#root-directory-and-index-files
-    root ${NGINX_ROOT};
+    root /var/www/html;
     autoindex on;
 
     location / {
