@@ -42,17 +42,17 @@ build-dist: build
 .PHONY: start
 ### Run the local development end-to-end stack services in the background as daemons
 start: build
-	docker-compose down
-	docker-compose up -d
+	docker compose down
+	docker compose up -d
 .PHONY: run
 ### Run the local development end-to-end stack services in the foreground for debugging
 run: build
-	docker-compose down
-	docker-compose up
+	docker compose down
+	docker compose up
 .PHONY: run-debug
 ### Run the update sub-command in the container via the interactive debugger
 run-debug: build
-	docker-compose run --rm -e DEBUG="$(DEBUG)" -e POST_MORTEM="$(POST_MORTEM)" \
+	docker compose run --rm -e DEBUG="$(DEBUG)" -e POST_MORTEM="$(POST_MORTEM)" \
 	    --entrypoint="python" "feed-archiver" -m "pdb" \
 	    "/usr/local/bin/feed-archiver" "update"
 
@@ -71,12 +71,12 @@ test: build format test-docker
 .PHONY: test-docker
 ### Run the full suite of tests inside a docker container
 test-docker: ./var/log/docker-build.log
-	docker-compose run --rm --workdir="/usr/local/src/feed-archiver/" \
+	docker compose run --rm --workdir="/usr/local/src/feed-archiver/" \
 	    --entrypoint="tox" feed-archiver
 # Ensure the dist/package has been correctly installed in the image
-	docker-compose run --rm --entrypoint="python" feed-archiver \
+	docker compose run --rm --entrypoint="python" feed-archiver \
 	    -m feedarchiver --help
-	docker-compose run --rm --entrypoint="feed-archiver" feed-archiver --help
+	docker compose run --rm --entrypoint="feed-archiver" feed-archiver --help
 
 .PHONY: test-debug
 ### Run tests in the main/default environment and invoke the debugger on errors/failures
@@ -136,12 +136,15 @@ expand-template:
 		./Dockerfile ./docker-compose.yml ./.env
 # Ensure access permissions to the `./.tox/` directory inside docker.  If created by `#
 # dockerd`, it ends up owned by `root`.
-	mkdir -pv "./.tox-docker/" "./src/feed_archiver-docker.egg-info/"
-	docker-compose build --pull \
+	docker compose build --pull \
 	    --build-arg "PUID=$(PUID)" --build-arg "PGID=$(PGID)" \
 	    --build-arg "REQUIREMENTS=$(REQUIREMENTS)" >> "$(@)"
-# Ensure that `./.tox/` is also up to date in the container
-	docker-compose run --rm --workdir="/usr/local/src/feed-archiver/" \
+# Use separate Python artifacts inside the image and locally on the host
+	mkdir -pv "./.tox-docker/" "./src/feed_archiver-docker.egg-info/"
+	docker compose run --rm --user="root" \
+	    --workdir="/usr/local/src/feed-archiver/" \
+	    --entrypoint="pip" feed-archiver install --no-cache-dir -e "./"
+	docker compose run --rm --workdir="/usr/local/src/feed-archiver/" \
 	    --entrypoint="tox" feed-archiver -r --notest -v
 
 # Local environment variables from a template
@@ -161,7 +164,7 @@ expand-template:
 
 # Extract the Sonarr API key
 ./sonarr/config/config.xml: ./var/log/docker-build.log
-	docker-compose up -d sonarr
+	docker compose up -d sonarr
 	sleep 1
 	until [ -e "$(@)" ]
 	do

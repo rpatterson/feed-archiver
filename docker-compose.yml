@@ -1,4 +1,4 @@
-# Example `$ docker-compose ...` configuration to demonstrate the requirements for
+# Example `$ docker compose ...` configuration to demonstrate the requirements for
 # running `$ feed-archiver ...` in containers.  See `./.env` for the source of variable
 # substitutions.
 version: "3.8"
