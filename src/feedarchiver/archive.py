@@ -299,5 +299,5 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 str(orig_relative_path),
                 str(target_relative_path),
             )
-            orig_file_path.link_to(target_file_path)
+            target_file_path.hardlink_to(orig_file_path)
         return target_file_path
