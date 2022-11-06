@@ -136,7 +136,8 @@ expand-template:
 		./Dockerfile ./docker-compose.yml ./.env
 # Ensure access permissions to the `./.tox/` directory inside docker.  If created by `#
 # dockerd`, it ends up owned by `root`.
-	mkdir -pv "./.tox-docker/" "./src/feed_archiver-docker.egg-info/"
+	mkdir -pv "./.tox-docker/" "./src/feed_archiver-docker.egg-info/" \
+	    "./sonarr/config/" "./letsencrypt/"
 	docker compose build --pull \
 	    --build-arg "PUID=$(PUID)" --build-arg "PGID=$(PGID)" \
 	    --build-arg "REQUIREMENTS=$(REQUIREMENTS)" >> "$(@)"
