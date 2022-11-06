@@ -28,10 +28,12 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
     client_get = None
 
     @tenacity.retry(
-        retry=tenacity.retry_if_exception_type((
-            socket.error,
-            arrapi.exceptions.ConnectionFailure,
-        )),
+        retry=tenacity.retry_if_exception_type(
+            (
+                socket.error,
+                arrapi.exceptions.ConnectionFailure,
+            )
+        ),
         wait=tenacity.wait_fixed(1),
         stop=tenacity.stop_after_attempt(10),
         reraise=True,

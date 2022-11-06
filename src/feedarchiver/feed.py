@@ -522,12 +522,12 @@ class ArchiveFeed:
             link_idx = 0
             for link_path_plugin in self.link_path_plugins:
                 for content_link_path in self.list_item_content_link_plugin_paths(
-                        feed_elem,
-                        item_elem,
-                        url_result,
-                        basename,
-                        content_archive_relative,
-                        link_path_plugin,
+                    feed_elem,
+                    item_elem,
+                    url_result,
+                    basename,
+                    content_archive_relative,
+                    link_path_plugin,
                 ):
                     content_link_paths.setdefault(url_result, []).append(
                         self.link_plugin_file(
@@ -541,13 +541,13 @@ class ArchiveFeed:
         return content_link_paths
 
     def list_item_content_link_plugin_paths(
-            self,
-            feed_elem,
-            item_elem,
-            url_result,
-            basename,
-            content_archive_relative,
-            link_path_plugin,
+        self,
+        feed_elem,
+        item_elem,
+        url_result,
+        basename,
+        content_archive_relative,
+        link_path_plugin,
     ):
         """
         Return the content link paths for an individual download and plugin.
@@ -590,7 +590,8 @@ class ArchiveFeed:
         if isinstance(content_link_strs, str):  # pragma: no cover
             content_link_strs = [content_link_strs]
         return [
-            self.archive.root_path / pathlib.Path(
+            self.archive.root_path
+            / pathlib.Path(
                 utils.quote_path(content_link_str),
             )
             for content_link_str in content_link_strs
@@ -706,7 +707,7 @@ class ArchiveFeed:
         # Find the old feed XML file in the original archive, starting with the oldest
         # possible version first
         for redirect_response in [remote_response] + list(
-                reversed(remote_response.history),
+            reversed(remote_response.history),
         ):
             remote_response_relative = self.archive.response_to_path(
                 remote_response,
@@ -832,28 +833,30 @@ class ArchiveFeed:
                         link_path_plugin,
                     ):
                         content_link_str = str(content_link_path)
-                        content_link_strs.extend([
-                            # Fully unquoted
-                            content_link_str,
-                            # Double quoted path characters, single quoted others
-                            urllib.parse.quote(
-                                utils.quote_path(content_link_str),
-                                safe="/ ",
-                            ),
-                            # Single quoted all characters
-                            urllib.parse.quote(content_link_str, safe="/ "),
-                            # Double quoted all characters
-                            urllib.parse.quote(
+                        content_link_strs.extend(
+                            [
+                                # Fully unquoted
+                                content_link_str,
+                                # Double quoted path characters, single quoted others
+                                urllib.parse.quote(
+                                    utils.quote_path(content_link_str),
+                                    safe="/ ",
+                                ),
+                                # Single quoted all characters
                                 urllib.parse.quote(content_link_str, safe="/ "),
-                                safe="/ ",
-                            ),
-                            # Double quoted path characters
-                            utils.quote_path(utils.quote_path(content_link_str)),
-                        ])
+                                # Double quoted all characters
+                                urllib.parse.quote(
+                                    urllib.parse.quote(content_link_str, safe="/ "),
+                                    safe="/ ",
+                                ),
+                                # Double quoted path characters
+                                utils.quote_path(utils.quote_path(content_link_str)),
+                            ]
+                        )
                 # Perform the actual deletion
                 logger.debug(
                     "Cleaning up content link viriations:\n%s",
-                    "\n".join(content_link_strs)
+                    "\n".join(content_link_strs),
                 )
                 for content_link_str in content_link_strs:
                     content_link_path = pathlib.Path(content_link_str)
@@ -1013,10 +1016,9 @@ class ArchiveFeed:
                 self.archive.root_path,
             )
         # Newer, absolute URLs using `base-url` from the config
-        elif (
-            archive_url_split.scheme, archive_url_split.netloc
-        ) == (
-            archive_base_url_split.scheme, archive_base_url_split.netloc
+        elif (archive_url_split.scheme, archive_url_split.netloc) == (
+            archive_base_url_split.scheme,
+            archive_base_url_split.netloc,
         ):
             archive_relative_path = pathlib.PurePosixPath(
                 urllib.parse.unquote(archive_url_split.path.lstrip("/")),

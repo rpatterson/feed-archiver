@@ -28,8 +28,7 @@ POST_MORTEM = (
     and os.getenv("POST_MORTEM").strip().lower() in TRUE_STRS
 )
 PYTHONTRACEMALLOC = (
-    "PYTHONTRACEMALLOC" in os.environ
-    and os.getenv("PYTHONTRACEMALLOC").strip().lower()
+    "PYTHONTRACEMALLOC" in os.environ and os.getenv("PYTHONTRACEMALLOC").strip().lower()
 )
 
 # Define command line options and arguments

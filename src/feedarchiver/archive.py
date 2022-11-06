@@ -272,11 +272,11 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         return migrated_feeds
 
     def migrate_path(
-            self,
-            target_path,
-            orig_relative_path,
-            target_relative_path=None,
-            copy=False,
+        self,
+        target_path,
+        orig_relative_path,
+        target_relative_path=None,
+        copy=False,
     ):
         """
         Link one file from the original archive into the new archive.
