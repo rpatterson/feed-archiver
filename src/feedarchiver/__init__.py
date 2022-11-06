@@ -2,12 +2,12 @@
 Archive RSS/Atom syndication feeds and their enclosures and assets.
 """
 
-import os
 import pathlib
 import logging
 import argparse
 import pprint
 
+from . import utils
 from . import archive
 
 logger = logging.getLogger(__name__)
@@ -20,16 +20,6 @@ except ImportError:  # pragma: no cover
     pass
 else:  # pragma: no cover
     __version__ = version.version
-
-TRUE_STRS = {"1", "true", "yes", "on"}
-DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in TRUE_STRS
-POST_MORTEM = (
-    "POST_MORTEM" in os.environ
-    and os.getenv("POST_MORTEM").strip().lower() in TRUE_STRS
-)
-PYTHONTRACEMALLOC = (
-    "PYTHONTRACEMALLOC" in os.environ and os.getenv("PYTHONTRACEMALLOC").strip().lower()
-)
 
 # Define command line options and arguments
 parser = argparse.ArgumentParser(
@@ -116,7 +106,7 @@ def config_cli_logging(
     # Want just our logger's level, not others', to be controlled by options/environment
     logging.basicConfig(level=root_level)
     level = logging.INFO
-    if DEBUG:  # pragma: no cover
+    if utils.DEBUG:  # pragma: no cover
         level = logging.DEBUG
     logger.setLevel(level)
     # Finer control of external loggers to reduce logger noise or expose information

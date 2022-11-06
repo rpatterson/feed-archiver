@@ -14,7 +14,6 @@ import logging
 from lxml import etree
 from requests_toolbelt.downloadutils import stream
 
-import feedarchiver
 from . import utils
 from . import formats
 from . import linkpaths
@@ -41,7 +40,7 @@ class ArchiveFeed:
         """
         Instantiate a representation of an archive from a file-system path.
         """
-        if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
+        if utils.PYTHONTRACEMALLOC:  # pragma: no cover
             # Optionally initialize memory profiling
             self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive)
 
@@ -124,7 +123,7 @@ class ArchiveFeed:
                 "Processing remote feed item:\n%s",
                 etree.tostring(remote_item_elem).decode(),
             )
-            if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
+            if utils.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(self)
 
@@ -216,7 +215,7 @@ class ArchiveFeed:
                 "Problem downloading item URLs, continuing to next: %r",
                 remote_item_id,
             )
-            if feedarchiver.POST_MORTEM:
+            if utils.POST_MORTEM:
                 raise
             return None
         return item_download_asset_paths, item_download_content_paths
@@ -332,7 +331,7 @@ class ArchiveFeed:
                 # The feed itself is handled in `self.update()`
                 continue
             download_path = None
-            if feedarchiver.PYTHONTRACEMALLOC:  # pragma: no cover
+            if utils.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(self)
             if url_result in downloaded_paths:
@@ -353,7 +352,7 @@ class ArchiveFeed:
                     )
                     if download_path is not None:
                         download_path.unlink()
-                    if feedarchiver.POST_MORTEM:  # pragma: no cover
+                    if utils.POST_MORTEM:  # pragma: no cover
                         raise
                     continue
                 downloaded_paths[url_result] = download_path.relative_to(
@@ -582,7 +581,7 @@ class ArchiveFeed:
                 type(link_path_plugin),
                 str(content_archive_relative),
             )
-            if feedarchiver.POST_MORTEM:  # pragma: no cover
+            if utils.POST_MORTEM:  # pragma: no cover
                 raise
             content_link_strs = []
         if content_link_strs is None:  # pragma: no cover
@@ -616,7 +615,7 @@ class ArchiveFeed:
                 type(link_path_plugin),
                 link_path_plugin.config["match-string"],
             )
-            if feedarchiver.POST_MORTEM:  # pragma: no cover
+            if utils.POST_MORTEM:  # pragma: no cover
                 raise
             return None
         try:
@@ -627,7 +626,7 @@ class ArchiveFeed:
                 type(link_path_plugin),
                 link_path_plugin.config["match-string"],
             )
-            if feedarchiver.POST_MORTEM:  # pragma: no cover
+            if utils.POST_MORTEM:  # pragma: no cover
                 raise
             return None
         if match is None:  # pragma: no cover

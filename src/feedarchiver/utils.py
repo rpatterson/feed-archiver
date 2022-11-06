@@ -11,6 +11,16 @@ import tracemalloc
 
 logger = logging.getLogger(__name__)
 
+TRUE_STRS = {"1", "true", "yes", "on"}
+DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in TRUE_STRS
+POST_MORTEM = (
+    "POST_MORTEM" in os.environ
+    and os.getenv("POST_MORTEM").strip().lower() in TRUE_STRS
+)
+PYTHONTRACEMALLOC = (
+    "PYTHONTRACEMALLOC" in os.environ and os.getenv("PYTHONTRACEMALLOC").strip().lower()
+)
+
 PRIORITY_TYPES = {
     "application/xml": ".xml",
     "audio/ogg": ".ogg",
