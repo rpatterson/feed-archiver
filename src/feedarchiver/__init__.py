@@ -6,6 +6,7 @@ import os
 import pathlib
 import logging
 import argparse
+import pprint
 
 from . import archive
 
@@ -101,7 +102,11 @@ def main(args=None):  # pragma: no cover, pylint: disable=missing-function-docst
 
     # Delegate to the function for the sub-command CLI argument
     logger.debug("Running %r sub-command", parsed_args.command.__name__)
-    return parsed_args.command(**cli_kwargs)
+    # Sub-commands may return a result to be pretty printed, or handle output themselves
+    # and return nothing.
+    result = parsed_args.command(**cli_kwargs)
+    if result is not None:
+        pprint.pprint(result)
 
 
 main.__doc__ = __doc__
