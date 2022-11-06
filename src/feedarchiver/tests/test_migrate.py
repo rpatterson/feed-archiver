@@ -108,12 +108,13 @@ class FeedarchiverMigrateTests(tests.FeedarchiverDownloadsTestCase):
                     "Original content differs after migration: "
                     f"{str(archive_relative)}",
                 )
-                self.assertEqual(
-                    migrated_stat,
-                    orig_stat,
-                    "Migrated metadata differs from the original: "
-                    f"{str(archive_relative)}",
-                )
+                if archive_relative != self.FEED_ARCHIVE_RELATIVE:
+                    self.assertEqual(
+                        migrated_stat,
+                        orig_stat,
+                        "Migrated metadata differs from the original: "
+                        f"{str(archive_relative)}",
+                    )
                 self.assertTrue(
                     migrated_bytes == orig_bytes,
                     "Migrated content differs from the original: "

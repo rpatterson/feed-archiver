@@ -14,7 +14,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
     """
 
     FEED_BASENAME = "Foo Podcast Title"
-    ITEM_BASENAME = "El Ni%C3%B1o Episode Title %28Qux Series Title 106 %26 07%29"
+    ITEM_BASENAME = "El Ni%C3%B1o Episode Title (Qux Series Title 106 & 07)"
     DOWNLOAD_BASENAME = "download.mp3"
 
     def test_basic_feed_item_linking(self):

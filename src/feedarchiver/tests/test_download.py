@@ -199,7 +199,10 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         archive_items = archive_tree.find("channel").findall("item")
         item_link_split = urllib.parse.urlsplit(archive_items[0].find("link").text)
         item_link_path = (
-            pathlib.PurePosixPath(item_link_split.path.lstrip("/")) / "index.html"
+            pathlib.PurePosixPath(
+                urllib.parse.unquote(item_link_split.path).lstrip("/")
+            )
+            / "index.html"
         )
         self.assertTrue(
             (self.archive.root_path / item_link_path).is_file(),
@@ -209,7 +212,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             archive_items[0].find("enclosure").attrib["url"],
         )
         item_enclosure_path = pathlib.PurePosixPath(
-            item_enclosure_split.path.lstrip("/"),
+            urllib.parse.unquote(item_enclosure_split.path).lstrip("/"),
         )
         self.assertTrue(
             (self.archive.root_path / item_enclosure_path).is_file(),
@@ -219,7 +222,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             archive_items[0].find("{*}content").attrib["url"],
         )
         item_media_content_path = pathlib.PurePosixPath(
-            item_media_content_split.path.lstrip("/"),
+            urllib.parse.unquote(item_media_content_split.path).lstrip("/"),
         )
         self.assertEqual(
             item_media_content_path,
@@ -230,7 +233,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             archive_items[0].find("{*}image").attrib["href"],
         )
         item_image_path = pathlib.PurePosixPath(
-            item_image_split.path.lstrip("/"),
+            urllib.parse.unquote(item_image_split.path).lstrip("/"),
         )
         self.assertTrue(
             (self.archive.root_path / item_image_path).is_file(),
