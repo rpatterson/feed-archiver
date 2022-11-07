@@ -92,7 +92,7 @@ upgrade:
 .PHONY: clean
 ### Restore the checkout to a state as close to an initial clone as possible
 clean:
-	docker-compose down --rmi "all" -v || true
+	docker compose down --rmi "all" -v || true
 	test ! -x "./.tox/lint/bin/pre-commit" || (
 	    ./.tox/lint/bin/pre-commit uninstall --hook-type pre-push
 	    ./.tox/lint/bin/pre-commit uninstall
