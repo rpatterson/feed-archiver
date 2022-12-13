@@ -2,12 +2,12 @@
 Archive RSS/Atom syndication feeds and their enclosures and assets.
 """
 
+import os
 import pathlib
 import logging
 import argparse
 import pprint
 
-from . import utils
 from . import archive
 
 logger = logging.getLogger(__name__)
@@ -99,15 +99,21 @@ parser_migrate.add_argument(
 
 def config_cli_logging(
     root_level=logging.INFO, **kwargs
-):  # pragma: no cover, pylint: disable=unused-argument
+):  # pylint: disable=unused-argument
     """
     Configure logging CLI usage first, but also appropriate for writing to log files.
     """
     # Want just our logger's level, not others', to be controlled by options/environment
     logging.basicConfig(level=root_level)
-    level = logging.INFO
-    if utils.DEBUG:  # pragma: no cover
+    if "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:  # pragma: no cover
         level = logging.DEBUG
+    else:
+        level = logging.INFO
     logger.setLevel(level)
     # Finer control of external loggers to reduce logger noise or expose information
     # that may be useful to users.
@@ -115,7 +121,7 @@ def config_cli_logging(
     return level
 
 
-def main(args=None):  # pragma: no cover, pylint: disable=missing-function-docstring
+def main(args=None):  # pylint: disable=missing-function-docstring
     # Parse CLI options and positional arguments
     parsed_args = parser.parse_args(args=args)
     # Avoid noisy boilerplate, functions meant to handle CLI usage should accept kwargs
@@ -126,15 +132,25 @@ def main(args=None):  # pragma: no cover, pylint: disable=missing-function-docst
     # generally, err on the side of options and arguments being kwargs, remove the
     # exceptions.
     del cli_kwargs["command"]
+    # Separate the arguments for the sub-command
+    prunerr_dests = {
+        action.dest for action in parser._actions  # pylint: disable=protected-access
+    }
+    shared_kwargs = dict(cli_kwargs)
+    command_kwargs = {}
+    for dest, value in list(shared_kwargs.items()):
+        if dest not in prunerr_dests:  # pragma: no cover
+            command_kwargs[dest] = value
+            del shared_kwargs[dest]
 
     # Configure logging for CLI usage
-    config_cli_logging(**cli_kwargs)
+    config_cli_logging(**shared_kwargs)
 
     # Delegate to the function for the sub-command CLI argument
-    logger.debug("Running %r sub-command", parsed_args.command.__name__)
+    logger.info("Running %r sub-command", parsed_args.command.__name__)
     # Sub-commands may return a result to be pretty printed, or handle output themselves
     # and return nothing.
-    result = parsed_args.command(**cli_kwargs)
+    result = parsed_args.command(**command_kwargs)
     if result is not None:
         pprint.pprint(result)
 

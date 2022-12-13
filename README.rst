@@ -4,7 +4,60 @@ feed-archiver
 Archive the full contents of RSS/Atom syndication feeds including enclosures and assets.
 ****************************************************************************************
 
-.. image:: https://github.com/rpatterson/feed-archiver/workflows/Run%20linter,%20tests%20and,%20and%20release/badge.svg
+.. list-table::
+   :class: borderless align-right
+
+   * - .. figure:: https://img.shields.io/pypi/v/feed-archiver.svg?logo=pypi&label=PyPI&logoColor=gold
+          :alt: PyPI latest release version
+          :target: https://pypi.org/project/feed-archiver/
+       .. figure:: https://img.shields.io/pypi/dm/feed-archiver.svg?color=blue&label=Downloads&logo=pypi&logoColor=gold
+          :alt: PyPI downloads per month
+          :target: https://pypi.org/project/feed-archiver/
+       .. figure:: https://img.shields.io/pypi/pyversions/feed-archiver.svg?logo=python&label=Python&logoColor=gold
+          :alt: PyPI Python versions
+          :target: https://pypi.org/project/feed-archiver/
+       .. figure:: https://img.shields.io/badge/code%20style-black-000000.svg
+          :alt: Python code style
+          :target: https://github.com/psf/black
+
+     - .. figure:: https://gitlab.com/rpatterson/feed-archiver/-/badges/release.svg
+	  :alt: GitLab latest release
+	  :target: https://gitlab.com/rpatterson/feed-archiver/-/releases
+       .. figure:: https://gitlab.com/rpatterson/feed-archiver/badges/master/pipeline.svg
+          :alt: GitLab CI/CD pipeline status
+          :target: https://gitlab.com/rpatterson/feed-archiver/-/commits/master
+       .. figure:: https://gitlab.com/rpatterson/feed-archiver/badges/master/coverage.svg
+          :alt: GitLab coverage report
+	  :target: https://gitlab.com/rpatterson/feed-archiver/-/commits/master
+       .. figure:: https://img.shields.io/gitlab/stars/rpatterson/feed-archiver?gitlab_url=https%3A%2F%2Fgitlab.com&logo=gitlab
+	  :alt: GitLab repo stars
+	  :target: https://gitlab.com/rpatterson/feed-archiver
+
+     - .. figure:: https://img.shields.io/github/v/release/rpatterson/feed-archiver?logo=github
+	  :alt: GitHub release (latest SemVer)
+	  :target: https://github.com/rpatterson/feed-archiver/releases
+       .. figure:: https://github.com/rpatterson/feed-archiver/actions/workflows/ci-cd.yml/badge.svg
+          :alt: GitHub Actions status
+          :target: https://github.com/rpatterson/feed-archiver/
+       .. figure:: https://codecov.io/github/rpatterson/feed-archiver/branch/master/graph/badge.svg?token=GNKVQ8VYOU 
+          :alt: Codecov test coverage
+	  :target: https://codecov.io/github/rpatterson/feed-archiver
+       .. figure:: https://img.shields.io/github/stars/rpatterson/feed-archiver?logo=github
+	  :alt: GitHub repo stars
+	  :target: https://github.com/rpatterson/feed-archiver/
+
+     - .. figure:: https://img.shields.io/docker/v/merpatterson/feed-archiver?sort=semver&logo=docker
+          :alt: Docker Hub image version (latest semver)
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
+       .. figure:: https://img.shields.io/docker/pulls/merpatterson/feed-archiver?logo=docker
+          :alt: Docker Hub image pulls count
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
+       .. figure:: https://img.shields.io/docker/stars/merpatterson/feed-archiver?logo=docker
+	  :alt: Docker Hub stars
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
+       .. figure:: https://img.shields.io/docker/image-size/merpatterson/feed-archiver?logo=docker
+	  :alt: Docker Hub image size (latest semver)
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
 
 The ``$ feed-archiver`` command aims to archive RSS/Atom feeds as fully as possible in
 such a way that the archive can serve (at least) 2 use cases:
@@ -97,6 +150,9 @@ Installation
 Install using any tool for installing standard Python 3 distributions such as `pip`_::
 
   $ sudo pip3 install feed-archiver
+
+Or use `the Docker image`_.  See `the example ./docker-compose.yml file`_ for usage
+details.
 
 
 *****
@@ -276,11 +332,23 @@ They may also include:
   enclosure/content suffix/extension
 
 
+************
+CONTRIBUTING
+************
+
+NOTE: `This project is hosted on GitLab`_.  There's `a mirror on GitHub`_ but please use
+GitLab for reporting issues, submitting PRs/MRs and any other development or maintenance
+activity.
+
+See `the ./CONTRIBUTING.rst file`_ for more details on how to get started with
+development.
+
+
 .. _alternate hierarchy: `Ingest Feed Enclosures Into Media Libraries`_
 .. _a link path plugin: `Plugins`_
 .. _the arguments passed into link path plugins: `Plugins`_
 
-.. _pip: https://pip.pypa.io/en/stable/installing/
+.. _pip: https://pip.pypa.io/en/stable/installation/
 .. _a Python entry point:
    https://packaging.python.org/en/latest/specifications/entry-points/#data-model
 .. _Python format string: https://docs.python.org/3/library/string.html#formatstrings
@@ -303,3 +371,15 @@ They may also include:
 .. _connect to the Sonarr API: https://github.com/Sonarr/Sonarr/wiki/API#url
 .. _look up the TV show/series: https://github.com/Sonarr/Sonarr/wiki/Series#getid
 .. _lookup the episode file: https://github.com/Sonarr/Sonarr/wiki/Episode#get
+
+.. _the Docker image: https://hub.docker.com/r/merpatterson/feed-archiver
+.. _`the example ./docker-compose.yml file`:
+   https://gitlab.com/rpatterson/feed-archiver/blob/master/docker-compose.yml
+
+.. _`This project is hosted on GitLab`:
+   https://gitlab.com/rpatterson/feed-archiver
+.. _`a mirror on GitHub`:
+   https://github.com/rpatterson/feed-archiver
+.. _`Docker`: https://docs.docker.com/
+.. _`the ./CONTRIBUTING.rst file`:
+   https://gitlab.com/rpatterson/feed-archiver/blob/master/CONTRIBUTING.rst

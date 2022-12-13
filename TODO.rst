@@ -4,11 +4,22 @@ Seeking Contributions
 
 Known bugs and desirable features for which contributions are most welcome.
 
+
+********
 Required
 ********
 
+
+*************
 High Priority
 *************
+
+#. Any documentation improvements!
+
+   Documentation benefits perhaps most from the attention of fresh eyes.  If you find
+   anything confusing, please ask for clarification and once you understand what you
+   didn't before, please do contribute changes to the documentation to spare future
+   users the same confusion.
 
 #. Remove migration code once the archive format is stable.
 
@@ -47,6 +58,8 @@ High Priority
 #. Determine if HTTP/2 is a significant performance improvement for serving large media
    files and integrate into the Traefik -> Nginx stack if yes.
 
+
+************
 Nice to Have
 ************
 

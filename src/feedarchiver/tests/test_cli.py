@@ -39,7 +39,7 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         Run the CLI script and return any error messages.
         """
         stderr_file = io.StringIO()
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit, msg="CLI didn't exit"):
             with contextlib.redirect_stderr(stderr_file):
                 feedarchiver.main(args=args)
         return stderr_file.getvalue()
@@ -49,13 +49,13 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         The command line script is self-docummenting.
         """
         stdout_file = io.StringIO()
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit, msg="CLI didn't exit"):
             with contextlib.redirect_stdout(stdout_file):
                 feedarchiver.main(args=["--help"])
         stdout = stdout_file.getvalue()
         self.assertIn(
             feedarchiver.__doc__.strip(),
-            stdout,
+            stdout.replace("\n", " "),
             "The console script name missing from --help output",
         )
 
