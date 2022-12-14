@@ -86,8 +86,12 @@ mccabe==0.7.0
     # via
     #   flake8
     #   pylint
+mypy==0.991
+    # via feed-archiver (./pyproject.toml)
 mypy-extensions==0.4.3
-    # via black
+    # via
+    #   black
+    #   mypy
 nodeenv==1.7.0
     # via pre-commit
 packaging==22.0
@@ -174,6 +178,7 @@ tomli==2.0.1
     #   black
     #   build
     #   flake8-black
+    #   mypy
     #   pep517
     #   pylint
     #   pyproject-api
@@ -191,12 +196,15 @@ typer[all]==0.7.0
     # via rstcheck
 types-docutils==0.19.1.1
     # via rstcheck-core
+types-pyyaml==6.0.12.2
+    # via feed-archiver (./pyproject.toml)
 types-requests==2.28.11.5
     # via feed-archiver (./pyproject.toml)
 types-urllib3==1.26.25.4
     # via types-requests
 typing-extensions==4.4.0
     # via
+    #   mypy
     #   pydantic
     #   setuptools-scm
 urllib3==1.26.13

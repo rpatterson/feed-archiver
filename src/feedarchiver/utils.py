@@ -6,19 +6,21 @@ import os
 import functools
 import mimetypes
 import urllib.parse
+import email
 import logging
 import tracemalloc
 
 logger = logging.getLogger(__name__)
 
 TRUE_STRS = {"1", "true", "yes", "on"}
-DEBUG = "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in TRUE_STRS
+DEBUG = "DEBUG" in os.environ and os.environ["DEBUG"].strip().lower() in TRUE_STRS
 POST_MORTEM = (
     "POST_MORTEM" in os.environ
-    and os.getenv("POST_MORTEM").strip().lower() in TRUE_STRS
+    and os.environ["POST_MORTEM"].strip().lower() in TRUE_STRS
 )
 PYTHONTRACEMALLOC = (
-    "PYTHONTRACEMALLOC" in os.environ and os.getenv("PYTHONTRACEMALLOC").strip().lower()
+    "PYTHONTRACEMALLOC" in os.environ
+    and os.environ["PYTHONTRACEMALLOC"].strip().lower()
 )
 
 PRIORITY_TYPES = {
@@ -126,3 +128,14 @@ def compare_memory_snapshots(parent):  # pragma: no cover
             "\n".join(str(stat) for stat in stats[:10]),
         )
     return snapshot
+
+
+def parse_content_type(content_type):
+    """
+    Parse an RFC822-style `Content-Type` header.
+
+    Useful to safely extract the MIME type from the charset.
+    """
+    message = email.message.Message()
+    message["Content-Type"] = content_type
+    return message.get_params()[0][0]

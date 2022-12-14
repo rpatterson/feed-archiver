@@ -6,7 +6,6 @@ import os
 import pathlib
 import shutil
 import urllib.parse
-import cgi
 import logging
 import tracemalloc
 
@@ -115,7 +114,9 @@ class Archive:  # pylint: disable=too-many-instance-attributes
 
         # First try to get the MIME type from the response headers
         if url_response.headers.get("Content-Type"):
-            mime_type, _ = cgi.parse_header(url_response.headers["Content-Type"])
+            mime_type = utils.parse_content_type(
+                url_response.headers["Content-Type"],
+            )
 
         # If there's no MIME type in the the response headers, fallback to the element's
         # attribute if available
@@ -124,7 +125,9 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             and hasattr(url_result, "getparent")
             and url_result.getparent().attrib.get("type")
         ):
-            mime_type, _ = cgi.parse_header(url_result.getparent().attrib["type"])
+            mime_type = utils.parse_content_type(
+                url_result.getparent().attrib["type"],
+            )
 
         # Fix the suffix/extension if the MIME type doesn't match
         guessed_type, _ = mimetypes.guess_type(url_path.suffix)

@@ -2,6 +2,8 @@
 Test the feed-archiver representation of an archive of syndication feeeds.
 """
 
+import typing
+
 from unittest import mock
 
 from .. import tests
@@ -13,7 +15,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
     """
 
     # From `./remotes/simple/orig/.../garply%3Fbar=qux%252Fbaz%23corge.rss`
-    UPDATE_RETURN_VALUE = (["7bd204c6-1655-4c27-aeee-53f933c5395f"], {})
+    UPDATE_RETURN_VALUE: typing.Tuple = (["7bd204c6-1655-4c27-aeee-53f933c5395f"], {})
 
     @mock.patch("feedarchiver.feed.ArchiveFeed")
     def test_feeds_updated(self, mock_feed_class):

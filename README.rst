@@ -380,6 +380,5 @@ development.
    https://gitlab.com/rpatterson/feed-archiver
 .. _`a mirror on GitHub`:
    https://github.com/rpatterson/feed-archiver
-.. _`Docker`: https://docs.docker.com/
 .. _`the ./CONTRIBUTING.rst file`:
    https://gitlab.com/rpatterson/feed-archiver/blob/master/CONTRIBUTING.rst

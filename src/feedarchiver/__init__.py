@@ -56,8 +56,8 @@ def update(
 update.__doc__ = archive.Archive.update.__doc__
 parser_update = subparsers.add_parser(
     "update",
-    help=update.__doc__.strip(),
-    description=update.__doc__.strip(),
+    help=update.__doc__.strip(),  # type: ignore
+    description=update.__doc__.strip(),  # type: ignore
 )
 # Make the function for the sub-command specified in the CLI argument available in the
 # argument parser for delegation below.
@@ -81,8 +81,8 @@ def migrate(
 migrate.__doc__ = archive.Archive.migrate.__doc__
 parser_migrate = subparsers.add_parser(
     "migrate",
-    help=migrate.__doc__.strip(),
-    description=migrate.__doc__.strip(),
+    help=migrate.__doc__.strip(),  # type: ignore
+    description=migrate.__doc__.strip(),  # type: ignore
 )
 # Make the function for the sub-command specified in the CLI argument available in the
 # argument parser for delegation below.
@@ -150,8 +150,8 @@ def main(args=None):  # pylint: disable=missing-function-docstring
     logger.info("Running %r sub-command", parsed_args.command.__name__)
     # Sub-commands may return a result to be pretty printed, or handle output themselves
     # and return nothing.
-    result = parsed_args.command(**command_kwargs)
-    if result is not None:
+    result = parsed_args.command(**shared_kwargs, **command_kwargs)
+    if result is not None:  # pragma: no cover
         pprint.pprint(result)
 
 

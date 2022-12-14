@@ -2,6 +2,7 @@
 Handle different feed XML formats.
 """
 
+import typing
 import logging
 
 from lxml import etree
@@ -54,7 +55,7 @@ class FeedFormat:
 
     # Map format-specific sub-classes to their corresponding root tag name.
     # Used to match a parsed feed XML tree to the corresponding format.
-    FEED_FORMATS = {}
+    FEED_FORMATS: typing.Dict[typing.Type, typing.Type] = {}
 
     def __init_subclass__(cls, /, **kwargs):
         """Assemble the XPath components from the format constants.
