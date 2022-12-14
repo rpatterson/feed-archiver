@@ -4,10 +4,12 @@ Test updating the archive from the feed URLs.
 
 import os
 import datetime
+import logging
 
 from lxml import etree
 
 from .. import formats
+from .. import feed
 from .. import tests
 
 
@@ -337,4 +339,41 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         self.assert_no_header_download_mtime(
             no_header_request_mock,
             self.feed_path,
+        )
+
+    def test_feed_empty_archive_feed(self):
+        """
+        An empty archive feed file is treated as a first feed request/update.
+        """
+        # Confirm initial fixture
+        orig_request_mocks, _ = self.update_feed(self.archive_feed)
+        _, get_mock = orig_request_mocks[self.feed_url]
+        orig_archive_item_elems = tests.get_feed_items(self.feed_path)
+        self.assertEqual(
+            len(orig_archive_item_elems),
+            1,
+            "Wrong number of original archived feed items",
+        )
+
+        # The archive version of the feed was somehow written as an empty file.
+        self.feed_path.write_text("{'status': 'Got JSON instead of RSS'")
+        with self.assertLogs(
+            feed.logger,
+            level=logging.ERROR,
+        ) as logged_msgs:
+            self.archive_feed.update()
+        self.assertEqual(
+            get_mock.call_count,
+            2,
+            "Wrong number of original feed URL requests",
+        )
+        self.assertEqual(
+            len(logged_msgs.records),
+            1,
+            "Wrong number of download item logged records",
+        )
+        self.assertIn(
+            "Unhandled exception parsing archive feed",
+            logged_msgs.records[0].message,
+            "Wrong logged record message",
         )

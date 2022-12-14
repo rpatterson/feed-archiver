@@ -261,19 +261,40 @@ class ArchiveFeed:
 
         Also do any pre-processing needed to start updating the archive.
         """
-        if not self.archive.recreate and self.path.exists():
+        archive_tree = None
+        if (
+            not self.archive.recreate
+            and self.path.exists()
+            and self.path.read_text().strip()
+        ):
             logger.debug("Parsing archive XML: %r", self.url)
             with self.path.open() as feed_archive_opened:
-                archive_tree = etree.parse(feed_archive_opened)
-            archive_format = formats.FeedFormat.from_tree(self, remote_tree)
-            if not isinstance(archive_format, type(remote_format)):  # pragma: no cover
-                raise NotImplementedError(
-                    f"Remote feed format, {type(remote_format).__name__!r}, is "
-                    f"different from archive format, {type(archive_format).__name__!r}."
-                )
-            archive_root = archive_tree.getroot()
-            archived_items_parent = remote_format.get_items_parent(archive_root)
-        else:
+                # Try to parse the local archive version of the feed if possible.  If
+                # there are errors parsing it, then treat it as if it's the first time
+                # archiving this feed.
+                try:
+                    archive_tree = etree.parse(feed_archive_opened)
+                except SyntaxError:
+                    logger.exception(
+                        "Unhandled exception parsing archive feed: %r",
+                        self.url,
+                    )
+                    if utils.POST_MORTEM:  # pragma: no cover
+                        raise
+            if archive_tree is not None:
+                archive_format = formats.FeedFormat.from_tree(self, remote_tree)
+                if not isinstance(
+                    archive_format,
+                    type(remote_format),
+                ):  # pragma: no cover
+                    raise NotImplementedError(
+                        f"Remote feed format, {type(remote_format).__name__!r}, is "
+                        "different from archive format, "
+                        f"{type(archive_format).__name__!r}."
+                    )
+                archive_root = archive_tree.getroot()
+                archived_items_parent = remote_format.get_items_parent(archive_root)
+        if archive_tree is None:
             # First time requesting this feed, copy the remote feed, minus the items to
             # the archive and download the feed-level assets.
             logger.info(
