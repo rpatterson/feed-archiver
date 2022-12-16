@@ -246,7 +246,7 @@ and whose instances must be callable and accept the following arguments when cal
 
    The `Python XML element object`_ representing the specific feed item.
 
-#. ``url_result=lxml.TODO``
+#. ``url_result=lxml.etree._ElementUnicodeResult``
 
    The `lmxl special string object`_ that contains the URL of the specific enclosure.
    Can be used to access the specific enclosure element.
