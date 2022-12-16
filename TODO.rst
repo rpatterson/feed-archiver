@@ -29,12 +29,6 @@ High Priority
 
 #. Rename to match the Servarr convention: ``feederr``.
 
-#. Docker image published to a registry automatically in CI/CD
-
-#. Example ``./docker-compose.yml`` file with Traefik for HTTPS/TLS and nginx for static
-   file hosting.  Ensure correct ``Content-Type`` based on extension.  Ensure correct
-   ``Last-Modified`` from file modification time.
-
 #. Option to use an alternate element as each item's unique identifier within a feed.
    Also requires generalized element value handling (e.g. ``value`` attribute vs an
    element's child text nodes).
