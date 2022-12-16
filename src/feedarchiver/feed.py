@@ -188,7 +188,11 @@ class ArchiveFeed:
 
         update_download_metadata(remote_response, self.path)
 
-        return list(updated_items.keys()), download_paths
+        return list(updated_items.keys()), {
+            # Return values fit for CLI output
+            download_url: str(download_path)
+            for download_url, download_path in download_paths.items()
+        }
 
     def download_item_content(self, remote_format, remote_item_elem, remote_item_id):
         """

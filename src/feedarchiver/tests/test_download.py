@@ -103,12 +103,18 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         fixture weren't called.
         """
         # Download all feed enclosures and assets
-        orig_request_mocks, _ = self.update_feed(self.archive_feed)
+        orig_request_mocks, updated_feeds = self.update_feed(self.archive_feed)
         self.assertGreater(
             len(orig_request_mocks),
             # At least 2 downloads in addition to the feeds themselves
             len(self.archive.archive_feeds) + 1,
             "Too few request mocks registered by test fixture",
+        )
+        _, download_paths = updated_feeds
+        self.assertIsInstance(
+            list(download_paths.values())[0],
+            str,
+            "Wrong download path return type",
         )
 
         remote_mock_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE / "orig"
