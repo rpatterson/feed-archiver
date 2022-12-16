@@ -21,15 +21,6 @@ High Priority
    didn't before, please do contribute changes to the documentation to spare future
    users the same confusion.
 
-#. Remove migration code once the archive format is stable.
-
-#. Maybe document the ``migrate`` sub-command.  I'm assuming no one else is using this
-   yet, so I haven't done so.  LMK if you do need docs.
-
-#. If the archive format ends up not stabilizing and continues changing over time, add a
-   version to the archive config file and some sort of per-version migration format.
-   The current migration code is way too ad hoc to maintain.
-
 #. Initialize Python's ``mimetypes`` module with same ``mime.types`` file as is used by
    the static site server::
 
