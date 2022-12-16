@@ -67,6 +67,6 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
 
         self.assertEqual(
             updated_feeds,
-            {},
+            None,
             "Archive updated feed items not empty",
         )

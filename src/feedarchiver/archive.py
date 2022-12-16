@@ -246,4 +246,6 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             if utils.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
-        return updated_feeds
+        if updated_feeds:
+            return updated_feeds
+        return None
