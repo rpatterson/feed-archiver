@@ -1,3 +1,12 @@
+Feedarchiver 0.1.2b1 (2022-12-16)
+=================================
+
+Deprecations and Removals
+-------------------------
+
+- Remove the archive migration code and sub-command now that the format is stable. (migrate-sub-command)
+
+
 Feedarchiver 0.1.2b0 (2022-12-16)
 =================================
 
