@@ -12,7 +12,7 @@ attrs==22.1.0
     # via pytest
 autoflake==2.0.0
     # via feed-archiver (./pyproject.toml)
-autopep8==2.0.0
+autopep8==2.0.1
     # via feed-archiver (./pyproject.toml)
 black==22.12.0
     # via flake8-black
@@ -62,7 +62,7 @@ flake8==6.0.0
     #   flake8-black
 flake8-black==0.3.5
     # via feed-archiver (./pyproject.toml)
-identify==2.5.9
+identify==2.5.10
     # via pre-commit
 idna==3.4
     # via requests
@@ -190,7 +190,7 @@ tomlkit==0.11.6
     # via pylint
 towncrier==22.8.0
     # via feed-archiver (./pyproject.toml)
-tox==4.0.9
+tox==4.0.11
     # via feed-archiver (./pyproject.toml)
 typer[all]==0.7.0
     # via rstcheck
