@@ -2,16 +2,10 @@
 Plugins for linking feed item enclosures/content into media libraries.
 """
 
-import sys
 import re
 import pprint
 
-if sys.version_info < (3, 10):  # pragma: no cover
-    # BBB:
-    # https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata
-    from importlib_metadata import entry_points
-else:  # pragma: no cover
-    from importlib.metadata import entry_points
+from importlib.metadata import entry_points
 
 
 def load_plugins(parent, parent_config):
