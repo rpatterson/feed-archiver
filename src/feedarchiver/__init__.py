@@ -2,11 +2,13 @@
 Archive RSS/Atom syndication feeds and their enclosures and assets.
 """
 
-import os
 import pathlib
 import logging
 import argparse
 import pprint
+import pdb
+
+from . import utils
 
 from . import archive
 
@@ -25,6 +27,13 @@ else:  # pragma: no cover
 parser = argparse.ArgumentParser(
     description=__doc__.strip(),
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+parser.add_argument(
+    "--log-level",
+    default=argparse.SUPPRESS,
+    # I only wish the `logging` module provided public access to all defined levels
+    choices=logging._nameToLevel,  # pylint: disable=protected-access
+    help="Select logging verbosity. (default: INFO)",
 )
 parser.add_argument(
     "--archive-dir",
@@ -71,30 +80,40 @@ parser_update.add_argument(
 
 
 def config_cli_logging(
-    root_level=logging.INFO, **kwargs
+    root_level=logging.INFO, log_level=parser.get_default("--log-level"), **kwargs
 ):  # pylint: disable=unused-argument
     """
-    Configure logging CLI usage first, but also appropriate for writing to log files.
+    Configure logging CLI usage as early as possible to affect all output.
     """
     # Want just our logger's level, not others', to be controlled by options/environment
     logging.basicConfig(level=root_level)
-    if "DEBUG" in os.environ and os.getenv("DEBUG").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }:  # pragma: no cover
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
-    logger.setLevel(level)
+    # If the CLI option was not specified, fallback to the environment variable
+    if log_level is None:  # pragma: no cover
+        log_level = "INFO"
+        if utils.DEBUG:
+            log_level = "DEBUG"
+    logger.setLevel(getattr(logging, log_level.strip().upper()))
+
     # Finer control of external loggers to reduce logger noise or expose information
     # that may be useful to users.
     logging.getLogger("charset_normalizer").setLevel(logging.WARNING)
-    return level
+
+    return log_level
 
 
 def main(args=None):  # pylint: disable=missing-function-docstring
+    try:
+        _main(args=args)
+    except Exception:  # pragma: no cover
+        if utils.POST_MORTEM:
+            pdb.post_mortem()
+        raise
+
+
+def _main(args=None):
+    """
+    Inner main CLI handler for outer exception handling.
+    """
     # Parse CLI options and positional arguments
     parsed_args = parser.parse_args(args=args)
     # Avoid noisy boilerplate, functions meant to handle CLI usage should accept kwargs
@@ -118,6 +137,7 @@ def main(args=None):  # pylint: disable=missing-function-docstring
 
     # Configure logging for CLI usage
     config_cli_logging(**shared_kwargs)
+    shared_kwargs.pop("log_level", None)
 
     # Delegate to the function for the sub-command CLI argument
     logger.info("Running %r sub-command", parsed_args.command.__name__)
