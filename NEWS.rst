@@ -1,3 +1,12 @@
+Feedarchiver 1.0.0b0 (2022-12-16)
+=================================
+
+Features
+--------
+
+- First stable release. (initial-release)
+
+
 Feedarchiver 0.1.2 (2022-12-16)
 ===============================
 
