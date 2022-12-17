@@ -509,6 +509,8 @@ endif
 
 # Extract the Sonarr API key
 ./sonarr/config/config.xml: ./var/log/docker-build.log
+	mkdir -pv "$(dir $(@))"
+	docker compose rm -sf sonarr
 	docker compose up -d sonarr
 	sleep 1
 	until [ -e "$(@)" ]
