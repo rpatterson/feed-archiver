@@ -1,3 +1,12 @@
+Feedarchiver 1.0.0b1 (2022-12-17)
+=================================
+
+Bugfixes
+--------
+
+- Don't report results from the ``update`` sub-command when there are none. (empty-results)
+
+
 Feedarchiver 1.0.0b0 (2022-12-16)
 =================================
 
