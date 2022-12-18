@@ -2,10 +2,11 @@
 Archive RSS/Atom syndication feeds and their enclosures and assets.
 """
 
+import sys
 import pathlib
 import logging
 import argparse
-import pprint
+import json
 import pdb
 
 from . import utils
@@ -145,7 +146,7 @@ def _main(args=None):
     # and return nothing.
     result = parsed_args.command(**shared_kwargs, **command_kwargs)
     if result is not None:  # pragma: no cover
-        pprint.pprint(result)
+        json.dump(result, sys.stdout, indent=2)
 
 
 main.__doc__ = __doc__
