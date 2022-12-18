@@ -62,7 +62,7 @@ class ArchiveFeed:
         """
         Request the URL of one feed in the archive and update contents accordingly.
         """
-        logger.info("Requesting feed: %r", self.url)
+        logger.debug("Requesting feed: %r", self.url)
         remote_response = self.archive.requests.get(self.url)
         # Maybe update the extension based on the headers
         self.path = self.archive.root_path / self.archive.response_to_path(
