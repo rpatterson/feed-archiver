@@ -8,7 +8,7 @@ arrapi==1.4.1
     # via feed-archiver (./pyproject.toml)
 astroid==2.12.13
     # via pylint
-attrs==22.1.0
+attrs==22.2.0
     # via pytest
 autoflake==2.0.0
     # via feed-archiver (./pyproject.toml)
@@ -60,9 +60,9 @@ flake8==6.0.0
     # via
     #   feed-archiver (./pyproject.toml)
     #   flake8-black
-flake8-black==0.3.5
+flake8-black==0.3.6
     # via feed-archiver (./pyproject.toml)
-identify==2.5.10
+identify==2.5.11
     # via pre-commit
 idna==3.4
     # via requests
@@ -70,7 +70,7 @@ incremental==22.10.0
     # via towncrier
 iniconfig==1.1.1
     # via pytest
-isort==5.11.3
+isort==5.11.4
     # via pylint
 jinja2==3.1.2
     # via towncrier
@@ -188,9 +188,9 @@ tomli==2.0.1
     #   tox
 tomlkit==0.11.6
     # via pylint
-towncrier==22.8.0
+towncrier==22.12.0
     # via feed-archiver (./pyproject.toml)
-tox==4.0.14
+tox==4.0.16
     # via feed-archiver (./pyproject.toml)
 typer[all]==0.7.0
     # via rstcheck
@@ -198,7 +198,7 @@ types-docutils==0.19.1.1
     # via rstcheck-core
 types-pyyaml==6.0.12.2
     # via feed-archiver (./pyproject.toml)
-types-requests==2.28.11.5
+types-requests==2.28.11.6
     # via feed-archiver (./pyproject.toml)
 types-urllib3==1.26.25.4
     # via types-requests
