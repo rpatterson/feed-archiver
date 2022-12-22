@@ -1,3 +1,20 @@
+Feedarchiver 1.0.0b5 (2022-12-22)
+=================================
+
+Features
+--------
+
+- Add the ``$ feed-archiver relink`` sub-command to re-link existing archived feed item
+  enclosures as they would be if they had been newly archived by the ``$ feed-archiver
+  update`` sub-command. (relink-item-content)
+
+
+Bugfixes
+--------
+
+- Fix the check that the remote feed format (RSS vs Atom) matches the archived feed. (wrong-archive-feed-format-check)
+
+
 Feedarchiver 1.0.0b4 (2022-12-19)
 =================================
 
