@@ -286,7 +286,7 @@ class ArchiveFeed:
                     if utils.POST_MORTEM:  # pragma: no cover
                         raise
             if archive_tree is not None:
-                archive_format = formats.FeedFormat.from_tree(self, remote_tree)
+                archive_format = formats.FeedFormat.from_tree(self, archive_tree)
                 if not isinstance(
                     archive_format,
                     type(remote_format),
