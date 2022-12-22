@@ -655,7 +655,7 @@ class ArchiveFeed:
                 raise
             return None
         if match is None:  # pragma: no cover
-            logger.info(
+            logger.debug(
                 "The %r plugin `match-pattern` did not match: %r",
                 type(link_path_plugin),
                 match_string,
