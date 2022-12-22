@@ -80,6 +80,22 @@ parser_update.add_argument(
 )
 
 
+def relink(
+    archive_dir=parser.get_default("--archive-dir"),
+):  # pragma: no cover, pylint: disable=missing-function-docstring
+    feed_archive = archive.Archive(archive_dir)
+    return feed_archive.relink()
+
+
+relink.__doc__ = archive.Archive.relink.__doc__
+parser_relink = subparsers.add_parser(
+    "relink",
+    help=relink.__doc__.strip(),  # type: ignore
+    description=relink.__doc__.strip(),  # type: ignore
+)
+parser_relink.set_defaults(command=relink)
+
+
 def config_cli_logging(
     root_level=logging.INFO, log_level=parser.get_default("--log-level"), **kwargs
 ):  # pylint: disable=unused-argument

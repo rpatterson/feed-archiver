@@ -61,7 +61,7 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         Archive handles updates without any updated feed items.
         """
         mock_update_method = mock_feed_class.return_value.update
-        mock_update_method.return_value = ([], {})
+        mock_update_method.return_value = None
 
         updated_feeds = self.archive.update()
 

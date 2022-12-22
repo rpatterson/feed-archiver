@@ -187,26 +187,40 @@ from the current version of the feeds::
 
 See also the command-line help for details on options and arguments::
 
-  $ usage: feed-archiver [-h] [archive-dir...]
+  $ feed-archiver --help
+  usage: feed-archiver [-h] [--log-level {CRITICAL,FATAL,ERROR,WARN,WARNING,INFO,DEBUG,NOTSET}]
+		       [--archive-dir [ARCHIVE_DIR]]
+		       {update,relink} ...
 
-  Archive the full contents of RSS/Atom syndication feeds including enclosures and
-  assets.
+  Archive RSS/Atom syndication feeds and their enclosures and assets.
 
   positional arguments:
-    archive-dir  filesystem path to the root of an archive of feeds (default: ./)
+    {update,relink}       sub-command
+      update              Request the URL of each feed in the archive and update contents accordingly.
+      relink              Re-link enclosures to the correct locations for the current configuration.
 
-  optional arguments:
-    -h, --help  show this help message and exit
+  options:
+    -h, --help            show this help message and exit
+    --log-level {CRITICAL,FATAL,ERROR,WARN,WARNING,INFO,DEBUG,NOTSET}
+			  Select logging verbosity. (default: INFO)
+    --archive-dir [ARCHIVE_DIR], -a [ARCHIVE_DIR]
+			  the archive root directory into which all feeds, their enclosures and assets
+			  will be downloaded (default: .)
 
-  ...
-
-To link feed items into an `alternate hierarchy`_, such as in a media library, add a
-``link-paths`` key to the feed configuration whose value is an list/array of objects
-each defining one alternative path to link to the feed item enclosure.  Any
+To link feed item enclosures into an `alternate hierarchy`_, such as in a media library,
+add a ``link-paths`` key to the feed configuration whose value is an list/array of
+objects each defining one alternative path to link to the feed item enclosure.  Any
 ``link-paths`` defined in the top-level ``defaults`` key will be used for all feeds.
 Configuration to be shared across multiple ``link-paths`` configurations may be placed
 in the corresponding ``defaults`` / ``plugins`` / ``link-paths`` / ``{plugin_name}``
 object.  The actual linking of enclosures is delegated to `plugins`_.
+
+When updating the archive from the remote feed URLs using the ``$ feed-archiver
+update`` sub-command, the enclosures of new items are linked as configured.  If the
+``link-paths`` configuration changes or any of the used plugins refer to external
+resources that may change, such as the with the ``sonarr`` plugin when `Sonarr`_ has
+upgraded or renamed the corresponding video files, use the  ``$ feed-archiver relink``
+command to update all existing links.
 
 
 *******

@@ -15,6 +15,7 @@ from lxml import etree
 from requests_toolbelt.downloadutils import stream
 
 from . import utils
+from .utils import mimetypes
 from . import formats
 from . import linkpaths
 
@@ -56,6 +57,8 @@ class ArchiveFeed:
             linkpaths.load_plugins(self, self.config),
         )
 
+    # Sub-commands
+
     def update(
         self,
     ):  # pylint: disable=too-many-locals,too-many-statements,too-many-branches
@@ -74,10 +77,10 @@ class ArchiveFeed:
 
         # Assemble the archive version of the feed XML
         download_paths = {}
-        archive_tree = self.load_archive_tree(
-            remote_format,
+        archive_tree = self.get_archive_tree(
             remote_tree,
             download_paths,
+            remote_format=remote_format,
         )
         archive_root = archive_tree.getroot()
         archived_items_parent = remote_format.get_items_parent(archive_root)
@@ -188,11 +191,84 @@ class ArchiveFeed:
 
         update_download_metadata(remote_response, self.path)
 
-        return list(updated_items.keys()), {
-            # Return values fit for CLI output
-            download_url: str(download_path)
-            for download_url, download_path in download_paths.items()
-        }
+        if updated_items or download_paths:
+            return list(updated_items.keys()), {
+                # Return values fit for CLI output
+                download_url: str(download_path)
+                for download_url, download_path in download_paths.items()
+            }
+        return None
+
+    def relink(self):
+        """
+        Re-link enclosures to the correct locations for this feed.
+        """
+        # Parse this feed's archive XML
+        self.path = self.find_archive_path()
+        archive_tree = self.load_archive_tree()
+        archive_format = formats.FeedFormat.from_tree(self, archive_tree)
+        attr_prefix = f"{{{self.NAMESPACE}}}content-link-"
+
+        # Update the links for each item in this feed
+        is_modified = False
+        link_paths = {}
+        for archive_item_elem in archive_format.iter_items(archive_tree.getroot()):
+            item_content_paths = {}
+            for url_result in formats.all_xpaths_results(
+                archive_item_elem,
+                archive_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
+            ):
+                if not (
+                    hasattr(url_result, "getparent") and hasattr(url_result, "attrname")
+                ):  # pragma: no cover
+                    raise NotImplementedError(
+                        f"Linking URLs in {type(url_result)!r} text nodes"
+                        " not implemented yet",
+                    )
+                for attr, attr_value in list(url_result.getparent().attrib.items()):
+                    if not attr.startswith(attr_prefix):
+                        continue
+                    content_link_path = pathlib.Path(attr_value)
+                    if content_link_path.exists():
+                        logger.info(
+                            "Deleting existing content link: %r -> %r",
+                            str(content_link_path),
+                            str(content_link_path.readlink()),
+                        )
+                        content_link_path.unlink()
+                    del url_result.getparent().attrib[attr]
+                    is_modified = True
+                item_content_paths[url_result] = pathlib.Path(
+                    urllib.parse.urlsplit(url_result).path.lstrip("/")
+                )
+            item_link_paths = self.link_item_content(
+                feed_elem=archive_format.get_items_parent(archive_tree.getroot()),
+                item_elem=archive_item_elem,
+                item_content_paths=item_content_paths,
+            )
+            if item_link_paths:
+                is_modified = True
+            if is_modified:  # pragma: no cover
+                # Pretty format the feed for readability
+                etree.indent(archive_tree)
+                # Update the archived feed file
+                archive_tree.write(str(self.path))
+            link_paths.update(
+                (
+                    url_result,
+                    # Make results JSON serializable for CLI stdout
+                    [
+                        str(content_link_path)
+                        for content_link_path in content_link_paths
+                    ],
+                )
+                for url_result, content_link_paths in item_link_paths.items()
+            )
+        if link_paths:
+            return link_paths
+        return None  # pragma: no cover
+
+    # Other methods
 
     def download_item_content(self, remote_format, remote_item_elem, remote_item_id):
         """
@@ -256,14 +332,33 @@ class ArchiveFeed:
         )
         return etree.ElementTree(remote_root)
 
-    def load_archive_tree(self, remote_format, remote_tree, download_paths):
+    def find_archive_path(self):
+        """
+        Locate this feed's file in the archive.
+        """
+        path = self.archive.root_path / self.archive.url_to_path(self.url)
+        if not path.exists():
+            archive_files = []
+            for archive_file in path.parent.glob(f"{path.name}.*"):
+                guessed_type, _ = mimetypes.guess_type(archive_file)
+                if guessed_type.endswith("/xml") or guessed_type.endswith("+xml"):
+                    archive_files.append(archive_file)
+            if not archive_files:
+                raise ValueError(
+                    "Could not locate feed in archive: {self.url}"
+                )  # pragma: no cover
+            if len(archive_files) > 1:
+                logger.warning(
+                    "Multiple XML files found for feed, using first: %s\n%s",
+                    self.url,
+                    "\n  ".join([str(archive_file) for archive_file in archive_files]),
+                )  # pragma: no cover
+            path = archive_files[0]
+        return path
+
+    def load_archive_tree(self):
         """
         Parse the local feed XML in the archive and return the tree.
-
-        If there is no local feed XML in the archive, such as the first time the feed is
-        updated, then initialize the archive tree from the remote tree.
-
-        Also do any pre-processing needed to start updating the archive.
         """
         archive_tree = None
         if (
@@ -285,7 +380,20 @@ class ArchiveFeed:
                     )
                     if utils.POST_MORTEM:  # pragma: no cover
                         raise
-            if archive_tree is not None:
+        return archive_tree
+
+    def get_archive_tree(self, remote_tree, download_paths, remote_format=None):
+        """
+        Parse the archive feed XML if it exists or initialize an empty archive feed.x
+
+        If there is no local feed XML in the archive, such as the first time the feed is
+        updated, then initialize the archive tree from the remote tree.
+
+        Also do any pre-processing needed to start updating the archive.
+        """
+        archive_tree = self.load_archive_tree()
+        if archive_tree is not None:
+            if remote_format is not None:  # pragma: no cover
                 archive_format = formats.FeedFormat.from_tree(self, archive_tree)
                 if not isinstance(
                     archive_format,
@@ -296,9 +404,9 @@ class ArchiveFeed:
                         "different from archive format, "
                         f"{type(archive_format).__name__!r}."
                     )
-                archive_root = archive_tree.getroot()
-                archived_items_parent = remote_format.get_items_parent(archive_root)
-        if archive_tree is None:
+            archive_root = archive_tree.getroot()
+            archived_items_parent = remote_format.get_items_parent(archive_root)
+        else:
             # First time requesting this feed, copy the remote feed, minus the items to
             # the archive and download the feed-level assets.
             logger.info(
@@ -423,7 +531,7 @@ class ArchiveFeed:
                     url_parent.attrib[f"{{{self.NAMESPACE}}}text"] = url_result
                     # Update the URL in the archive XML to the local, relative URL
                     url_parent.text = download_url_split.geturl()
-            else:  # pragma: no coverx
+            else:  # pragma: no cover
                 raise NotImplementedError(
                     f"Escaping URLs in {type(url_result)!r} text nodes"
                     " not implemented yet",

@@ -224,15 +224,16 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         )
         return split_url.geturl()
 
-    def update(self):
+    def run_feeds_command(self, command, *args, **kwargs):
         """
-        Request the URL of each feed in the archive and update contents accordingly.
+        Call the sub-command for each feed handling exceptions and aggregating results.
         """
         self.load_config()
-        updated_feeds = {}
+        results = {}
         for archive_feed in self.archive_feeds:
+            feed_command = getattr(archive_feed, command)
             try:
-                updated_items, download_paths = archive_feed.update()
+                feed_results = feed_command(*args, **kwargs)
             except Exception:  # pragma: no cover, pylint: disable=broad-except
                 logger.exception(
                     "Unhandled exception updating feed: %r",
@@ -241,11 +242,25 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 if utils.POST_MORTEM:  # pragma: no cover
                     raise
                 continue
-            if updated_items or download_paths:  # pragma: no cover
-                updated_feeds[archive_feed.url] = updated_items, download_paths
+            if feed_results:  # pragma: no cover
+                results[archive_feed.url] = feed_results
             if utils.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
                 self.tracemalloc_snapshot = utils.compare_memory_snapshots(archive_feed)
-        if updated_feeds:
-            return updated_feeds
+        if results:
+            return results
         return None
+
+    # Sub-commands
+
+    def update(self):
+        """
+        Request the URL of each feed in the archive and update contents accordingly.
+        """
+        return self.run_feeds_command("update")
+
+    def relink(self):
+        """
+        Re-link enclosures to the correct locations for the current configuration.
+        """
+        return self.run_feeds_command("relink")
