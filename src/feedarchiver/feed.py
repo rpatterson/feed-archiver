@@ -229,13 +229,18 @@ class ArchiveFeed:
                     if not attr.startswith(attr_prefix):
                         continue
                     content_link_path = pathlib.Path(attr_value)
-                    if content_link_path.exists():
+                    if content_link_path.is_symlink():
                         logger.info(
                             "Deleting existing content link: %r -> %r",
                             str(content_link_path),
                             str(content_link_path.readlink()),
                         )
                         content_link_path.unlink()
+                    elif content_link_path.exists():  # pragma: no cover
+                        logger.error(
+                            "Existing content link is not a symlink: %r",
+                            str(content_link_path),
+                        )
                     del url_result.getparent().attrib[attr]
                     is_modified = True
                 item_content_paths[url_result] = pathlib.Path(
