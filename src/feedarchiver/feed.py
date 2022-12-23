@@ -244,7 +244,9 @@ class ArchiveFeed:
                     del url_result.getparent().attrib[attr]
                     is_modified = True
                 item_content_paths[url_result] = pathlib.Path(
-                    urllib.parse.urlsplit(url_result).path.lstrip("/")
+                    urllib.parse.unquote(
+                        urllib.parse.urlsplit(url_result).path.lstrip("/"),
+                    ),
                 )
             item_link_paths = self.link_item_content(
                 feed_elem=archive_format.get_items_parent(archive_tree.getroot()),
