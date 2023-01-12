@@ -64,6 +64,7 @@ services:
   nginx:
     image: "nginx"
     container_name: "nginx"
+    restart: "unless-stopped"
     volumes:
       - "./nginx/templates/:/etc/nginx/templates/"
       - "${FEED_ARCHIVE}:/var/www/html"
@@ -73,6 +74,9 @@ services:
       - "./.env"
     environment:
       NGINX_HOST: "feeds.example.com"
+    healthcheck:
+      test: >-
+        curl -Lv "http://localhost:80" | grep '<title>Index of /</title>'
     labels:
       # https://doc.traefik.io/traefik/user-guides/docker-compose/acme-tls/#setup
       traefik.enable: true
