@@ -22,22 +22,4 @@ services:
       ofelia.enabled: true
       ofelia.job-run.feed-archiver-update.schedule: "@hourly"
 
-  sonarr:
-    image: "ghcr.io/hotio/sonarr"
-    container_name: "sonarr"
-    environment:
-      # Can't use Docker's `--user` option for images based on `s6-overlay`
-      PUID: "${PUID:-1000}"
-      PGID: "${PGID:-100}"
-      TZ: "America/Los_Angeles"
-    volumes:
-      - "./sonarr/config/:/config/"
-    # Add this uncommented to your deployment's `./docker-compose.override.yml`
-    # ports:
-    #   - "8989:8989"
-    restart: "unless-stopped"
-    healthcheck:
-      test: >-
-        curl -Lv
-        "http://sonarr:8989/api/system/status?apikey=${SONARR_API_KEY:-}" |
-        grep '"appData": *"/config"'
+  # See `./docker-compose-servarr.yml` for an example Sonarr configuration

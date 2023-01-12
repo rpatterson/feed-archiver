@@ -1,0 +1,27 @@
+# Example Sonarr service to demonstrate the integration with Prunerr.
+#
+# In a separate file because integrating with Sonarr is optional.  See the comment above
+# `COMPOSE_FILE` in `./.env.in` for an example of how to add this file.
+version: "3.8"
+
+services:
+
+  sonarr:
+    image: "ghcr.io/hotio/sonarr"
+    container_name: "sonarr"
+    environment:
+      # Can't use Docker's `--user` option for images based on `s6-overlay`
+      PUID: "${PUID:-1000}"
+      PGID: "${PGID:-100}"
+      TZ: "America/Los_Angeles"
+    volumes:
+      - "./sonarr/config/:/config/"
+    # Add this uncommented to your deployment's `./docker-compose.override.yml`
+    # ports:
+    #   - "8989:8989"
+    restart: "unless-stopped"
+    healthcheck:
+      test: >-
+        curl -Lv
+        "http://sonarr:8989/api/system/status?apikey=${SONARR_API_KEY:-}" |
+        grep '"appData": *"/config"'
