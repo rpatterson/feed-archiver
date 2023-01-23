@@ -25,3 +25,8 @@ services:
         curl -Lv
         "http://sonarr:8989/api/system/status?apikey=${SONARR_API_KEY:-}" |
         grep '"appData": *"/config"'
+
+  feed-archiver:
+    depends_on:
+      sonarr:
+        condition: "service_healthy"
