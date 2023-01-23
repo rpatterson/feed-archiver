@@ -14,10 +14,10 @@ services:
       # outside the container.  Default to the common/standard main/first user and group
       # IDs
       PUID: "${PUID:-1000}"
-      PGID: "${PGID:-${PUID:-1000}}"
+      PGID: "${PGID:-100}"
       # Find the same configuration file even when run as another user, e.g. `root`.
       HOME: "/home/feed-archiver"
-    working_dir: "${FEED_ARCHIVE}"
+    working_dir: "${FEED_ARCHIVE:-/media/Library/feeds/}"
     labels:
       ofelia.enabled: true
       ofelia.job-run.feed-archiver-update.schedule: "@hourly"

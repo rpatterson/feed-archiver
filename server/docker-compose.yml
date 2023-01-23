@@ -67,7 +67,7 @@ services:
     restart: "unless-stopped"
     volumes:
       - "./nginx/templates/:/etc/nginx/templates/"
-      - "${FEED_ARCHIVE}:/var/www/html"
+      - "${FEED_ARCHIVE:-/media/Library/feeds/}:/var/www/html/"
     ports:
      - "9080:80"
     env_file:

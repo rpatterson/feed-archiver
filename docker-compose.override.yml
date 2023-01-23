@@ -19,7 +19,7 @@ services:
       # Preserve caches caches between container runs
       - "./home/:/home/feed-archiver/"
       # Specify the default archive within your media library
-      - "${FEED_ARCHIVE}:${FEED_ARCHIVE}"
+      - "${FEED_ARCHIVE:-/media/Library/feeds/}:${FEED_ARCHIVE:-/media/Library/feeds/}"
 
   # Allow use in development checkout alongside a real deployment, avoid name clash
   sonarr:
@@ -46,7 +46,7 @@ services:
     environment:
       # Make the run-time user configurable in `./.env`
       PUID: "${PUID:-1000}"
-      PGID: "${PGID:-${PUID:-1000}}"
+      PGID: "${PGID:-100}"
     volumes:
       # Ensure local changes are reflected inside the container.
       - "./:/usr/local/src/feed-archiver/"
@@ -62,7 +62,7 @@ services:
 
   pandoc:
     image: "pandoc/core"
-    user: "${PUID:-1000}:${PGID:-${PUID:-1000}}"
+    user: "${PUID:-1000}:-100}"
     volumes:
       - "./:/data/"
     command: >-
