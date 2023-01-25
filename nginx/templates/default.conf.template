@@ -6,7 +6,7 @@ server {
 
     # Make browsing/discovery easier, serve indexes of directories:
     # https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/#root-directory-and-index-files
-    root /var/www/html;
+    root ${NGINX_ROOT};
     autoindex on;
 
     location / {

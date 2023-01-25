@@ -67,7 +67,9 @@ services:
     restart: "unless-stopped"
     volumes:
       - "./nginx/templates/:/etc/nginx/templates/"
-      - "${FEED_ARCHIVE:-/media/Library/feeds/}:/var/www/html/"
+      # Add the appropriate volume for your environment that will make `${NGINX_ROOT}`
+      # accessible within the container:
+      # - "${NGINX_ROOT:-/media/Library/feeds/}:${NGINX_ROOT:-/media/Library/feeds/}"
     ports:
      - "9080:80"
     env_file:
