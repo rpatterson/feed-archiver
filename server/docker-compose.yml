@@ -66,7 +66,8 @@ services:
     container_name: "nginx"
     restart: "unless-stopped"
     volumes:
-      - "./nginx/templates/:/etc/nginx/templates/"
+      # Uncomment to use the default configuration:
+      # - "./nginx/templates/:/etc/nginx/templates/"
       # Add the appropriate volume for your environment that will make `${NGINX_ROOT}`
       # accessible within the container:
       # - "${NGINX_ROOT:-/media/Library/feeds/}:${NGINX_ROOT:-/media/Library/feeds/}"
