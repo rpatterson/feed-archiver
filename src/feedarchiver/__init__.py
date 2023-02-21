@@ -1,3 +1,4 @@
+# PYTHON_ARGCOMPLETE_OK
 """
 Archive RSS/Atom syndication feeds and their enclosures and assets.
 """
@@ -8,6 +9,8 @@ import logging
 import argparse
 import json
 import pdb
+
+import argcomplete
 
 from . import utils
 
@@ -79,6 +82,9 @@ parser_update.add_argument(
     action=argparse.BooleanOptionalAction,
 )
 
+# Register shell tab completion
+argcomplete.autocomplete(parser)
+
 
 def relink(
     archive_dir=parser.get_default("--archive-dir"),
@@ -97,8 +103,10 @@ parser_relink.set_defaults(command=relink)
 
 
 def config_cli_logging(
-    root_level=logging.INFO, log_level=parser.get_default("--log-level"), **kwargs
-):  # pylint: disable=unused-argument
+    root_level=logging.INFO,
+    log_level=parser.get_default("--log-level"),
+    **_,
+):
     """
     Configure logging CLI usage as early as possible to affect all output.
     """

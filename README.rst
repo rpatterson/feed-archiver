@@ -142,6 +142,13 @@ feature requires using `a link path plugin`_, or the skill level of a junior dev
 or someone who is comfortable reading and interpreting technical documentation, or
 re-using example configurations known to work by others.
 
+Do not use the ``develop`` or ``master`` branches in your project as those branches are
+used to test the CI/CD automatic releases process and as such contain bumped versions,
+release notes, and other release artifacts that shouldn't be merged into real projects.
+On that same note, when adding this template as a remote be sure to configure it with
+``$ git config remote.template.tagOpt --no-tags`` to avoid clashing VCS versions in your
+project.
+
 
 ************
 Installation
@@ -153,6 +160,8 @@ Install using any tool for installing standard Python 3 distributions such as `p
 
 Or use `the Docker image`_.  See `the example ./docker-compose.yml file`_ for usage
 details.
+
+Optional shell tab completion is available via `argcomplete`_.
 
 
 *****
@@ -363,6 +372,7 @@ development.
 .. _the arguments passed into link path plugins: `Plugins`_
 
 .. _pip: https://pip.pypa.io/en/stable/installation/
+.. _argcomplete: https://kislyuk.github.io/argcomplete/#installation
 .. _a Python entry point:
    https://packaging.python.org/en/latest/specifications/entry-points/#data-model
 .. _Python format string: https://docs.python.org/3/library/string.html#formatstrings

@@ -7,19 +7,22 @@ services:
 
   ## Configuration specific to this checkout
   feed-archiver:
-    image: "merpatterson/feed-archiver:local"
-    build: "./"
-    # Allow use in development checkout alongside a real deployment, avoid name clash
-    container_name: "feed-archiver-devel"
+    image: "merpatterson/feed-archiver:${PYTHON_ENV:-py311}-${VCS_BRANCH:-develop}"
+    container_name: "feed-archiver-checkout"
+    build:
+      context: "${CHECKOUT_DIR}/"
+      args:
+        PYTHON_MINOR: "${PYTHON_MINOR:-3.11}"
+        PYTHON_ENV: "${PYTHON_ENV:-py311}"
+        VERSION: "${VERSION:-}"
     depends_on:
       # Don't force service dependencies on other deployments that extend the base
       - "ofelia"
     volumes:
       # Preserve caches caches between container runs
-      - "./home/:/home/feed-archiver/"
+      - "${CHECKOUT_DIR}/home/:/home/feed-archiver/"
       # Specify the default archive within your media library
       - "${FEED_ARCHIVE:-/media/Library/feeds/}:${FEED_ARCHIVE:-/media/Library/feeds/}"
-
   # Allow use in development checkout alongside a real deployment, avoid name clash
   sonarr:
     container_name: "feed-archiver-devel-sonarr"
@@ -40,32 +43,53 @@ services:
 
   ## Container for use by developers
   feed-archiver-devel:
-    image: "merpatterson/feed-archiver:devel"
+    image: "merpatterson/feed-archiver:devel-${PYTHON_ENV:-py311}-${VCS_BRANCH:-develop}"
+    container_name: "feed-archiver-devel"
     build:
-      context: "./"
-      dockerfile: "./Dockerfile.devel"
+      context: "${CHECKOUT_DIR}/"
+      dockerfile: "${CHECKOUT_DIR}/Dockerfile.devel"
+      args:
+        PYTHON_MINOR: "${PYTHON_MINOR:-3.11}"
+        PYTHON_ENV: "${PYTHON_ENV:-py311}"
+        VERSION: "${VERSION:-}"
     environment:
+      TZ: "${TZ:-Etc/UTC}"
       # Make the run-time user configurable in `./.env`
       PUID: "${PUID:-1000}"
-      PGID: "${PGID:-100}"
+      PGID: "${PGID:-${PUID:-1000}}"
+      # Variables from the environment we want to be passed through into the container:
+      CI: "${CI:-false}"
+      # DEBUG: "true"
     volumes:
       # Ensure local changes are reflected inside the container.
-      - "./:/usr/local/src/feed-archiver/"
+      - "${CHECKOUT_DIR}/bin/entrypoint:/usr/local/bin/entrypoint"
+      - "${CHECKOUT_DIR}/:/usr/local/src/feed-archiver/"
       # Preserve caches caches between container runs
-      - "./home/:/home/feed-archiver/"
-      # Ensure access permissions to build artifacts inside docker.
-      # If created by `# dockerd`, it ends up owned by `root`.
-      - "./var-docker/:/usr/local/src/feed-archiver/var/"
-      - "./.tox-docker/:/usr/local/src/feed-archiver/.tox/"
-      - "./src/feed_archiver-docker.egg-info/:/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
+      - "${CHECKOUT_DIR}/home/:/home/feed-archiver/"
+      # Avoid any clashes between image variants and/or the local host at both build and
+      # run-time.
+      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py311}/:/usr/local/src/feed-archiver/var/"
+      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py311}/.tox/:/usr/local/src/feed-archiver/.tox/"
+      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py311}/feed_archiver.egg-info/:/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
 
-  ## Contianers used during release
+  ## Contianers during development and release
+
+  # https://github.com/hadolint/hadolint#how-to-use
+  hadolint:
+    image: "hadolint/hadolint"
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${CHECKOUT_DIR}/:/usr/local/src/feed-archiver/"
+    working_dir: "/usr/local/src/feed-archiver/"
 
   pandoc:
     image: "pandoc/core"
-    user: "${PUID:-1000}:-100}"
+    user: "${PUID:-1000}:${PGID:-${PUID:-1000}}"
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
     volumes:
-      - "./:/data/"
+      - "${CHECKOUT_DIR}/:/data/"
     command: >-
       "./README.rst" -f "rst" -t "markdown" -o "./README.md"
 
@@ -75,24 +99,35 @@ services:
       pandoc:
         condition: "service_completed_successfully"
     environment:
+      TZ: "${TZ:-Etc/UTC}"
       DOCKER_USER: "${DOCKER_USER:-merpatterson}"
       DOCKER_PASS: "${DOCKER_PASS}"
     volumes:
-      - "./:/data/"
+      - "${CHECKOUT_DIR}/:/data/"
     command: >-
       --file "/data/README.md" --short "feed archiver foundation or template"
       --debug "merpatterson/feed-archiver"
 
   ## Container for use by end users
-  dind:
-    image: "docker:dind"
+  build-host:
+    image: "merpatterson/feed-archiver:build-host"
+    build: "${CHECKOUT_DIR}/build-host/"
     privileged: true
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./:/usr/local/src/feed-archiver/"
-      - "./var-dind/:/usr/local/src/feed-archiver/var/"
-      - "./.tox-dind/:/usr/local/src/feed-archiver/.tox/"
-    working_dir: "/usr/local/src/feed-archiver/"
+      - "${CHECKOUT_DIR}/:${CHECKOUT_DIR}"
+      - "${CHECKOUT_DIR}/build-host/bin/entrypoint:/usr/local/bin/entrypoint"
+      # Share local SSH authentication to repository remotes
+      - "~/.ssh/:/home/runner/.ssh/"
+    env_file: "./.env"
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+      PUID: "${PUID:-1000}"
+      PGID: "${DOCKER_GID:-${PGID:-${PUID:-1000}}}"
+      # DEBUG: "true"
+    working_dir: "${CHECKOUT_DIR}"
+    command: >-
+      make -e build-docker test-docker release
 
   gitlab-release-cli:
     image: "registry.gitlab.com/gitlab-org/release-cli:latest"
