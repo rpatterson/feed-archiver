@@ -754,7 +754,7 @@ class ArchiveFeed:
         link_path_plugin = kwargs["link_path_plugin"]
         kwargs["self"] = self
         try:
-            match_string = eval(  # pylint: disable=eval-used
+            match_string = eval(  # nosec B307, pylint: disable=eval-used
                 f"f{link_path_plugin.config['match-string']!r}",
                 globals(),
                 kwargs,
