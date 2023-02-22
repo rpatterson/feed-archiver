@@ -561,9 +561,9 @@ test-docker-pyminor: build-docker-$(PYTHON_MINOR)
 	    docker_run_args+=" -T"
 	fi
 # Ensure the dist/package has been correctly installed in the image
-	docker compose run $${docker_run_args} feed-archiver \
+	docker compose run --no-deps $${docker_run_args} feed-archiver \
 	    python -m feedarchiver --help
-	docker compose run $${docker_run_args} feed-archiver \
+	docker compose run --no-deps $${docker_run_args} feed-archiver \
 	    feed-archiver --help
 # Run from the development Docker container for consistency
 	docker compose run $${docker_run_args} feed-archiver-devel \
