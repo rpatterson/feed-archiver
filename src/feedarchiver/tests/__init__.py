@@ -21,12 +21,12 @@ from ..utils import mimetypes
 
 class FeedarchiverTestCase(
     unittest.TestCase,
-):  # pylint: disable=too-many-instance-attributes
+):
     """
     Constants and set-up used in all feed-archiver tests.
     """
 
-    maxDiff = None
+    maxDiff = None  # noqa: F841
 
     # A date and time in the past all but guaranteed not to exist naturally in the
     # checkout.
@@ -80,7 +80,6 @@ class FeedarchiverTestCase(
 
         # Use the example/sample test data basename to assemble the rest of the
         # filesystem paths used by the tests.
-        self.remotes_path = self.REMOTES_PATH / self.EXAMPLE_RELATIVE
         self.archive_path = self.ARCHIVES_PATH / self.EXAMPLE_RELATIVE
 
         # Copy the testing example feeds archive
@@ -94,7 +93,7 @@ class FeedarchiverTestCase(
         # Mock the Sonarr request that is sent when the config is loaded
         self.requests_mock.get(
             f"{self.SONARR_URL}/api/v3/system/status?apikey=secret",
-            json=dict(version="3.0.6.1342"),
+            json={"version": "3.0.6.1342"},
         )
         self.archive.load_config()
         self.archive_feed = self.archive.archive_feeds[0]

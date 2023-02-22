@@ -25,16 +25,16 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         / tests.FeedarchiverTestCase.FEED_ARCHIVE_RELATIVE
     )
     FEED_FORMAT_PARAMS = [
-        dict(
-            feed_format_class=formats.RssFeedFormat,
-            relative_path=FEED_MOCK_RELATIVE,
-            items_parent_tag="channel",
-            item_tag="item",
-            item_id="7bd204c6-1655-4c27-aeee-53f933c5395f",
-        ),
-        dict(
-            feed_format_class=formats.AtomFeedFormat,
-            relative_path=(
+        {
+            "feed_format_class": formats.RssFeedFormat,
+            "relative_path": FEED_MOCK_RELATIVE,
+            "items_parent_tag": "channel",
+            "item_tag": "item",
+            "item_id": "7bd204c6-1655-4c27-aeee-53f933c5395f",
+        },
+        {
+            "feed_format_class": formats.AtomFeedFormat,
+            "relative_path": (
                 tests.FeedarchiverTestCase.EXAMPLE_RELATIVE
                 / tests.FeedarchiverTestCase.REMOTE_MOCK
                 / "https"
@@ -42,12 +42,12 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
                 / "feeds"
                 / "waldo"
             ),
-            items_parent_tag=(
+            "items_parent_tag": (
                 f"{{http://www.w3.org/2005/Atom}}{formats.AtomFeedFormat.ROOT_TAG}"
             ),
-            item_tag="entry",
-            item_id="urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a",
-        ),
+            "item_tag": "entry",
+            "item_id": "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a",
+        },
     ]
 
     def test_feed_configs_requested(self):
@@ -261,7 +261,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
 
     def test_feed_empty(self):
         """
-        Updating an empty feed works without any errors
+        Updating an empty feed works without any errors.
         """
         # Populate with a feed containing multiple items
         self.update_feed(

@@ -54,7 +54,7 @@ class FeedarchiverURLsTests(tests.FeedarchiverTestCase):
 
     def test_url_dir_index(self):
         """
-        URLs with trailing slashes are escaped to an index file: e.g. `index.html`.
+        Trailing slashes in URLs are escaped to an index file: e.g. `index.html`.
         """
         index_path = self.feed_path.parent / "index.html"
         dir_url = self.feed_url.rsplit("/", 1)[0] + "/"

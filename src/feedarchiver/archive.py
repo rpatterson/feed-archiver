@@ -47,9 +47,8 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         self.root_path = pathlib.Path(root_dir)
         self.root_stat = os.statvfs(self.root_path)
         self.config_path = self.root_path / self.FEED_CONFIGS_BASENAME
-        assert (
-            self.config_path.is_file()
-        ), f"Feeds definition path is not a file: {self.config_path}"
+        if not self.config_path.is_file():  # pragma: no cover
+            raise ValueError(f"Feeds definition path is not a file: {self.config_path}")
 
         self.recreate = recreate
 
@@ -65,7 +64,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             "Retrieving feed configurations: %r",
             str(self.config_path),
         )
-        with self.config_path.open() as feeds_opened:
+        with self.config_path.open(encoding="utf-8") as feeds_opened:
             archive_config = yaml.safe_load(feeds_opened)
 
         # The first row after the header defines defaults and/or global options

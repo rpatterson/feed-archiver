@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """
 An RSS/Atom syndication feed in an archive.
 """
@@ -397,7 +396,7 @@ class ArchiveFeed:
 
     def get_archive_tree(self, remote_tree, download_paths, remote_format=None):
         """
-        Parse the archive feed XML if it exists or initialize an empty archive feed.x
+        Parse the archive feed XML if it exists or initialize an empty archive feed.
 
         If there is no local feed XML in the archive, such as the first time the feed is
         updated, then initialize the archive tree from the remote tree.
@@ -659,7 +658,7 @@ class ArchiveFeed:
         feed_elem,
         item_elem,
         item_content_paths,
-    ):  # pylint: disable=too-many-branches
+    ):
         """
         Link item content/enclosures into media library hierarchies using plugins.
         """
