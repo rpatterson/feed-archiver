@@ -5,7 +5,10 @@ Plugins for linking feed item enclosures/content into media libraries.
 import re
 import pprint
 
-from importlib.metadata import entry_points
+try:
+    from importlib.metadata import entry_points  # type: ignore
+except ImportError:  # pragma: no cover
+    from importlib_metadata import entry_points  # type: ignore
 
 
 def load_plugins(parent, parent_config):
@@ -19,11 +22,13 @@ def load_plugins(parent, parent_config):
         raise ValueError(
             f"Link paths must be a list/array:\n{pprint.pformat(link_path_configs)}"
         )
-    link_path_entrypoints = entry_points(group="feedarchiver.linkpaths")
+    link_path_entrypoints = {
+        ep.name: ep for ep in entry_points()["feedarchiver.linkpaths"]
+    }
     for link_path_config in link_path_configs:
         # Perform any validation as early as possible
         link_path_plugin_name = link_path_config.get("plugin", "default")
-        if link_path_plugin_name not in link_path_entrypoints.names:  # pragma: no cover
+        if link_path_plugin_name not in link_path_entrypoints:  # pragma: no cover
             raise ValueError(
                 f"Link path plugin name not registered: {link_path_plugin_name}",
             )

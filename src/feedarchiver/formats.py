@@ -57,8 +57,9 @@ class FeedFormat:
     # Used to match a parsed feed XML tree to the corresponding format.
     FEED_FORMATS: typing.Dict[typing.Type, typing.Type] = {}
 
-    def __init_subclass__(cls, /, **kwargs):
-        """Assemble the XPath components from the format constants.
+    def __init_subclass__(cls, **kwargs):
+        """
+        Assemble the XPath components from the format constants.
 
         Done here so that the resulting XPaths are import-time constants that can be
         overridden by power users, either in their own subclasses or in some future

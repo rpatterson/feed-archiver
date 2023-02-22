@@ -56,8 +56,8 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             os.path.relpath(enclosure_archive_path, download_content_path.parent),
         )
         self.assertEqual(
-            download_content_path.readlink(),
-            item_content_target,
+            os.readlink(download_content_path),
+            str(item_content_target),
             "Item enclosure symlink to wrong target",
         )
 

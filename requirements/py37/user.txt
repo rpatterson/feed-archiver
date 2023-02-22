@@ -16,8 +16,10 @@ charset-normalizer==3.0.1
     # via requests
 idna==3.4
     # via requests
-importlib-metadata==4.13.0
-    # via argcomplete
+importlib-metadata==4.13.0 ; python_version < "3.8"
+    # via
+    #   argcomplete
+    #   feed-archiver (pyproject.toml)
 lxml==4.9.2
     # via feed-archiver (pyproject.toml)
 pyyaml==6.0

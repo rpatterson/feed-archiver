@@ -79,7 +79,7 @@ parser_update.add_argument(
     "--recreate",
     "-r",
     help="ignore existing feed XML in the archive and rewrite it",
-    action=argparse.BooleanOptionalAction,
+    action="store_true",
 )
 
 # Register shell tab completion

@@ -71,7 +71,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
     # NOTE: These functions will cache globally, for the life of the process.  This
     # should be fine as `$ feedarchiver update` is expected to be run periodically, such
     # as by `# cron`.
-    @functools.cache  # pylint: disable=method-cache-max-size-none
+    @functools.lru_cache(maxsize=None)  # pylint: disable=method-cache-max-size-none
     def get_episode_files_seasons(self, series_id):
         """
         Request, correlate and cache episode file DB ids to season and episode numbers.
@@ -83,7 +83,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
             )
         return episode_files_episodes
 
-    @functools.cache  # pylint: disable=method-cache-max-size-none
+    @functools.lru_cache(maxsize=None)  # pylint: disable=method-cache-max-size-none
     def get_episode_paths(self, series_id):
         """
         Request, collate and cache series episode file paths by season and episode.
@@ -138,8 +138,8 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
                     f"{series['title']} S{season_number}E{episode_number:02d}.mkv",
                 )
             episodes_file_paths.append(
-                episode_path.with_stem(f"{episode_path.stem}{stem_append}").with_suffix(
-                    pathlib.Path(basename).suffix,
+                episode_path.with_name(
+                    f"{episode_path.stem}{stem_append}" + pathlib.Path(basename).suffix,
                 ),
             )
 

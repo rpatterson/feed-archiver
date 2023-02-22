@@ -233,7 +233,7 @@ class ArchiveFeed:
                         logger.info(
                             "Deleting existing content link: %r -> %r",
                             str(content_link_path),
-                            str(content_link_path.readlink()),
+                            str(os.readlink(content_link_path)),
                         )
                         content_link_path.unlink()
                     elif content_link_path.exists():  # pragma: no cover
@@ -805,9 +805,8 @@ class ArchiveFeed:
         content_link_stem = content_link_path.stem
         content_index = 0
         while os.path.lexists(content_link_path):
-            if (
-                content_link_path.is_symlink()
-                and content_link_path.readlink() == content_link_target
+            if content_link_path.is_symlink() and os.readlink(content_link_path) == str(
+                content_link_target
             ):
                 logger.debug(
                     "Duplicate item URL, skip content link: %r -> %r",
@@ -816,12 +815,13 @@ class ArchiveFeed:
                 )
                 break
             content_index += 1
-            content_link_path = content_link_path.with_stem(
+            content_link_path = content_link_path.with_name(
                 content_link_stem[
                     : self.archive.root_stat.f_namemax
                     - (len(content_link_path.suffix) + len(str(content_index)))
                 ]
-                + str(content_index),
+                + str(content_index)
+                + content_link_path.suffix,
             )
         else:
             logger.info(

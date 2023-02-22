@@ -84,10 +84,11 @@ class FeedarchiverTestCase(
         self.archive_path = self.ARCHIVES_PATH / self.EXAMPLE_RELATIVE
 
         # Copy the testing example feeds archive
+        if pathlib.Path(self.tmp_dir.name).exists():  # pragma: no cover
+            shutil.rmtree(self.tmp_dir.name)
         shutil.copytree(
             src=self.archive_path,
             dst=self.tmp_dir.name,
-            dirs_exist_ok=True,
         )
         self.archive = archive.Archive(self.tmp_dir.name)
         # Mock the Sonarr request that is sent when the config is loaded

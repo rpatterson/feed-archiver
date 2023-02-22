@@ -162,15 +162,18 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             / pathlib.Path(
                 *(utils.quote_basename(part) for part in url_path.parent.parts),
             )
-            / url_path.with_stem(
-                # Place the query and fragment from the URL before the extension/suffix
-                # in the path
+            # Place the query and fragment from the URL before the extension/suffix in
+            # the path
+            / (
                 utils.quote_basename(
                     split_url._replace(
-                        scheme="", netloc="", path=url_path.stem
+                        scheme="",
+                        netloc="",
+                        path=url_path.stem,
                     ).geturl(),
                 )
-            ).name
+                + url_path.suffix
+            )
         )
         # Translate back to platform-native filesystem path separators/slashes
         return self.truncate_path_parts(archive_path)
@@ -182,11 +185,9 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         truncated_path = pathlib.Path()
         for part in path.parts:
             part_path = pathlib.Path(part)
-            truncated_path = (
-                truncated_path
-                / part_path.with_stem(
-                    part_path.stem[: self.root_stat.f_namemax - len(part_path.suffix)],
-                ).name
+            truncated_path = truncated_path / (
+                part_path.stem[: self.root_stat.f_namemax - len(part_path.suffix)]
+                + part_path.suffix
             )
         return truncated_path
 

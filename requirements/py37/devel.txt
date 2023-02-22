@@ -88,11 +88,12 @@ identify==2.5.18
     # via pre-commit
 idna==3.4
     # via requests
-importlib-metadata==4.13.0
+importlib-metadata==4.13.0 ; python_version < "3.8"
     # via
     #   argcomplete
     #   build
     #   click
+    #   feed-archiver (pyproject.toml)
     #   pep517
     #   pluggy
     #   pre-commit
