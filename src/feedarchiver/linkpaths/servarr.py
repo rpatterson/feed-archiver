@@ -145,7 +145,8 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
 
         return [str(episode_file_path) for episode_file_path in episodes_file_paths]
 
-    def validate_params(self, match):
+    # TODO: Refactor to reduce complexity and improve readability and testibility
+    def validate_params(self, match):  # noqa: MC0001
         """
         Combine plugin config and regex match groups, extract and validate parameters.
         """

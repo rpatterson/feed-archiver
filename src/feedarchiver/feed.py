@@ -59,7 +59,8 @@ class ArchiveFeed:
 
     # Sub-commands
 
-    def update(
+    # TODO: Refactor to reduce complexity and improve readability and testibility
+    def update(  # noqa: MC0001
         self,
     ):  # pylint: disable=too-many-locals,too-many-statements,too-many-branches
         """
@@ -199,7 +200,8 @@ class ArchiveFeed:
             }
         return None
 
-    def relink(self):
+    # TODO: Refactor to reduce complexity and improve readability and testibility
+    def relink(self):  # noqa: MC0001
         """
         Re-link enclosures to the correct locations for this feed.
         """
@@ -464,7 +466,11 @@ class ArchiveFeed:
 
         return archive_tree
 
-    def download_urls(self, url_results):  # pylint: disable=too-many-branches
+    # TODO: Refactor to reduce complexity and improve readability and testibility
+    def download_urls(  # noqa: MC0001
+        self,
+        url_results,
+    ):  # pylint: disable=too-many-branches
         """
         Escape URLs to archive paths, download if new, and update URLs.
         """
