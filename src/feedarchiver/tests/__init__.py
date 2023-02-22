@@ -10,7 +10,7 @@ import shutil
 import email.utils
 import unittest
 
-from lxml import etree
+from lxml import etree  # nosec: B410
 
 import requests_mock
 
@@ -216,7 +216,7 @@ def get_feed_items(feed_path):
     Map item ID to item element for all the items in the given feed XML.
     """
     with feed_path.open() as feed_opened:
-        tree = etree.parse(feed_opened)
+        tree = etree.parse(feed_opened, parser=utils.XML_PARSER)  # nosec: B320
     channel = tree.getroot().find("channel")
     return {
         item_elem.find("guid").text: item_elem for item_elem in channel.iter("item")

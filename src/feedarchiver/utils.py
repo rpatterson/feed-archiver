@@ -12,7 +12,14 @@ import email
 import logging
 import tracemalloc
 
+from lxml import etree  # nosec B410
+
 logger = logging.getLogger(__name__)
+
+# Configure the XML parser as securely as possible since we're parsing XML from
+# untrusted sources:
+# https://lxml.de/FAQ.html#how-do-i-use-lxml-safely-as-a-web-service-endpoint
+XML_PARSER = etree.XMLParser(resolve_entities=False)
 
 TRUE_STRS = {"1", "true", "yes", "on"}
 DEBUG = (  # noqa: F841

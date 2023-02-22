@@ -7,9 +7,10 @@ import datetime
 import pathlib
 import urllib
 
-from lxml import etree
+from lxml import etree  # nosec: B410
 import requests_mock
 
+from .. import utils
 from .. import tests
 
 
@@ -171,7 +172,10 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         )
 
         # Assert archive URLs updated
-        archive_tree = etree.parse(self.archive_feed.path.open())
+        archive_tree = etree.parse(  # nosec: B320
+            self.archive_feed.path.open(),
+            parser=utils.XML_PARSER,
+        )
         feed_link_split = urllib.parse.urlsplit(
             archive_tree.find("channel").find("link").text,
         )

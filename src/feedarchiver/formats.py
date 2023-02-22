@@ -5,7 +5,7 @@ Handle different feed XML formats.
 import typing
 import logging
 
-from lxml import etree
+from lxml import etree  # nosec: B410
 
 logger = logging.getLogger(__name__)
 

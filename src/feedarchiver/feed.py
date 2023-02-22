@@ -11,7 +11,7 @@ import email.utils
 import pathlib
 import logging
 
-from lxml import etree
+from lxml import etree  # nosec B410
 from requests_toolbelt.downloadutils import stream
 
 from . import utils
@@ -333,9 +333,10 @@ class ArchiveFeed:
         Also do any pre-processing needed to start updating the archive.
         """
         logger.debug("Parsing remote XML: %r", self.url)
-        remote_root = etree.fromstring(
+        remote_root = etree.fromstring(  # nosec: B320
             remote_response.content,
             base_url=remote_response.url,
+            parser=utils.XML_PARSER,
         )
         return etree.ElementTree(remote_root)
 
@@ -379,7 +380,10 @@ class ArchiveFeed:
                 # there are errors parsing it, then treat it as if it's the first time
                 # archiving this feed.
                 try:
-                    archive_tree = etree.parse(feed_archive_opened)
+                    archive_tree = etree.parse(  # nosec B320
+                        feed_archive_opened,
+                        parser=utils.XML_PARSER,
+                    )
                 except SyntaxError:
                     logger.exception(
                         "Unhandled exception parsing archive feed: %r",
