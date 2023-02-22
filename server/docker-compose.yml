@@ -65,7 +65,7 @@ services:
     image: "nginx"
     container_name: "nginx"
     restart: "unless-stopped"
-    volumes:
+    # volumes:
       # Uncomment to use the default configuration:
       # - "./nginx/templates/:/etc/nginx/templates/"
       # Add the appropriate volume for your environment that will make `${NGINX_ROOT}`
