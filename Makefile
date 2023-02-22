@@ -902,7 +902,7 @@ $(PYTHON_ALL_ENVS:%=./var/docker/%/.tox/%/bin/activate):
 	htpasswd -c "$(@)" "feed-archiver"
 
 # Extract the Sonarr API key
-./sonarr/config/config.xml: ./var/log/docker-build.log
+./sonarr/config/config.xml: ./var/docker/$(PYTHON_ENV)/log/build.log
 	mkdir -pv "$(dir $(@))"
 	docker compose rm -sf sonarr
 	docker compose up -d sonarr
