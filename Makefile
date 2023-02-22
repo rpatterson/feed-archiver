@@ -161,6 +161,9 @@ VCS_REMOTE_PUSH_URL=
 CODECOV_TOKEN=
 PROJECT_GITHUB_PAT=
 
+# Defaults specific to this project:
+export NGINX_PORT=80
+
 # Done with `$(shell ...)`, echo recipe commands going forward
 .SHELLFLAGS+= -x
 
