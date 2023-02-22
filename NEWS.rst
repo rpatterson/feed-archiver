@@ -1,3 +1,12 @@
+Feedarchiver 1.0.0b9 (2023-02-22)
+=================================
+
+Features
+--------
+
+- Support all currently maintained versions of Python. (python-versions)
+
+
 Feedarchiver 1.0.0b8 (2023-01-23)
 =================================
 
