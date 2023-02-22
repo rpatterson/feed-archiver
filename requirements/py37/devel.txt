@@ -22,6 +22,8 @@ autoflake==1.7.8
     # via feed-archiver (pyproject.toml)
 autopep8==2.0.1
     # via feed-archiver (pyproject.toml)
+backports-cached-property==1.0.2 ; python_version < "3.8"
+    # via feed-archiver (pyproject.toml)
 bandit==1.7.4
     # via prospector
 black==23.1.0

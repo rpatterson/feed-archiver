@@ -8,6 +8,12 @@ import re
 import socket
 import logging
 
+try:
+    from functools import cached_property  # type: ignore
+except ImportError:  # pragma: no cover
+    # BBB: Python <3.8 compatibility
+    from backports.cached_property import cached_property  # type: ignore
+
 import arrapi
 import tenacity
 
@@ -55,7 +61,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):
         self.client = arrapi.SonarrAPI(self.url, api_key)
         self.client_get = self.client._raw._get  # pylint: disable=protected-access
 
-    @functools.cached_property
+    @cached_property
     def series_by_title(self):
         """
         Request, collate and cache the full list of series titles to share across calls.
