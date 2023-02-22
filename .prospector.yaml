@@ -58,3 +58,5 @@ ignore-paths:
   # Prospector's file finding process seems quite expensive, best to aggressively
   # exclude directories it should never have to check:
   - "src/prunerr/newsfragments"
+  - "src/feedarchiver/tests/remotes"
+  - "src/feedarchiver/tests/archives"
