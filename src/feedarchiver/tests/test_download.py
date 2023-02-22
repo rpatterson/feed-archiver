@@ -255,7 +255,6 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
                 msg="Test one feed download",
                 archive_relative=str(archive_relative),
             ):
-
                 # Assert that the request mock was called correctly
                 download_url, mock_path = self.archive_relative_to_remote_url(
                     archive_relative,
