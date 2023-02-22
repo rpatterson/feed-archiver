@@ -5,4 +5,31 @@
 #    pip-compile --output-file=requirements/py311/user.txt --resolver=backtracking pyproject.toml
 #
 argcomplete==2.0.0
-    # via python-project-structure (pyproject.toml)
+    # via feed-archiver (pyproject.toml)
+arrapi==1.4.2
+    # via feed-archiver (pyproject.toml)
+certifi==2022.12.7
+    # via requests
+charset-normalizer==3.0.1
+    # via requests
+idna==3.4
+    # via requests
+lxml==4.9.2
+    # via feed-archiver (pyproject.toml)
+pyyaml==6.0
+    # via feed-archiver (pyproject.toml)
+requests==2.28.2
+    # via
+    #   arrapi
+    #   feed-archiver (pyproject.toml)
+    #   requests-toolbelt
+requests-toolbelt==0.10.1
+    # via feed-archiver (pyproject.toml)
+six==1.16.0
+    # via user-agent
+tenacity==8.2.1
+    # via feed-archiver (pyproject.toml)
+urllib3==1.26.14
+    # via requests
+user-agent==0.1.10
+    # via feed-archiver (pyproject.toml)
