@@ -69,7 +69,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             self.feed_path.is_file(),
             "Archive of feed XML does not exist after updating",
         )
-        with feed_path.open() as remote_opened:
+        with feed_path.open(encoding="utf-8") as remote_opened:
             remote_tree = etree.parse(  # nosec: B320
                 remote_opened,
                 parser=utils.XML_PARSER,
@@ -78,7 +78,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         remote_item_ids = [
             remote_item.find("guid").text for remote_item in remote_items
         ]
-        with self.feed_path.open() as archive_opened:
+        with self.feed_path.open(encoding="utf-8") as archive_opened:
             archive_tree = etree.parse(  # nosec: B320
                 archive_opened,
                 parser=utils.XML_PARSER,
@@ -114,7 +114,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             2,
             "Wrong number of original feed URL requests",
         )
-        with feed_path.open() as remote_opened:
+        with feed_path.open(encoding="utf-8") as remote_opened:
             remote_tree = etree.parse(  # nosec: B320
                 remote_opened,
                 parser=utils.XML_PARSER,
@@ -123,7 +123,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         remote_item_ids = [
             remote_item.find("guid").text for remote_item in remote_items
         ]
-        with self.feed_path.open() as archive_opened:
+        with self.feed_path.open(encoding="utf-8") as archive_opened:
             archive_tree = etree.parse(  # nosec: B320
                 archive_opened,
                 parser=utils.XML_PARSER,
@@ -234,14 +234,15 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         reordered_item_feed_path, _ = reordered_item_request_mocks[self.feed_url]
 
         remote_tree = etree.parse(  # nosec: B320
-            reordered_item_feed_path.open(),
+            reordered_item_feed_path.open(encoding="utf-8"),
             parser=utils.XML_PARSER,
         )
         remote_items = remote_tree.find("channel").findall("item")
-        archive_tree = etree.parse(  # nosec: B320
-            self.feed_path.open(),
-            parser=utils.XML_PARSER,
-        )
+        with self.feed_path.open(encoding="utf-8") as feed_opened:
+            archive_tree = etree.parse(  # nosec: B320
+                feed_opened,
+                parser=utils.XML_PARSER,
+            )
         archive_items = archive_tree.find("channel").findall("item")
         self.assertEqual(
             archive_items[0].find("guid").text,
@@ -268,10 +269,11 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             archive_feed=self.archive_feed,
             remote_mock="empty",
         )
-        archive_tree = etree.parse(  # nosec: B320
-            self.feed_path.open(),
-            parser=utils.XML_PARSER,
-        )
+        with self.feed_path.open(encoding="utf-8") as feed_opened:
+            archive_tree = etree.parse(  # nosec: B320
+                feed_opened,
+                parser=utils.XML_PARSER,
+            )
         archive_items = archive_tree.find("channel").findall("item")
         self.assertEqual(
             archive_items,
@@ -290,7 +292,9 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
                 msg="Test one XML feed format",
                 feed_format_class=feed_format_class,
             ):
-                with (self.REMOTES_PATH / relative_path).open() as feed_opened:
+                with (self.REMOTES_PATH / relative_path).open(
+                    encoding="utf-8"
+                ) as feed_opened:
                     feed_tree = etree.parse(  # nosec: B320
                         feed_opened,
                         parser=utils.XML_PARSER,
@@ -381,7 +385,10 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         )
 
         # The archive version of the feed was somehow written as an empty file.
-        self.feed_path.write_text("{'status': 'Got JSON instead of RSS'")
+        self.feed_path.write_text(
+            "{'status': 'Got JSON instead of RSS'",
+            encoding="utf-8",
+        )
         with self.assertLogs(
             feed.logger,
             level=logging.ERROR,

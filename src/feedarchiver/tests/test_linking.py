@@ -81,7 +81,10 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         updated_config_path = (
             self.ARCHIVES_PATH / "relink" / self.archive.config_path.name
         )
-        self.archive.config_path.write_text(updated_config_path.read_text())
+        self.archive.config_path.write_text(
+            updated_config_path.read_text(),
+            encoding="utf-8",
+        )
 
         # Run the `$ feedarchiver relink` sub-command with a configuration that changes
         # the path downloaded files should be linked to.
@@ -116,7 +119,10 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         updated_config_path = (
             self.ARCHIVES_PATH / "relink-wo-suffix" / self.archive.config_path.name
         )
-        self.archive.config_path.write_text(updated_config_path.read_text())
+        self.archive.config_path.write_text(
+            updated_config_path.read_text(),
+            encoding="utf-8",
+        )
         # Excercise logic to locate feed XML file in archive
         self.feed_path.with_suffix(".txt").write_text("Not actual feed XML")
 
