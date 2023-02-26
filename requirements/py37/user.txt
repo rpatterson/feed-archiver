@@ -41,5 +41,5 @@ urllib3==1.26.14
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)
-zipp==3.14.0
+zipp==3.15.0
     # via importlib-metadata
