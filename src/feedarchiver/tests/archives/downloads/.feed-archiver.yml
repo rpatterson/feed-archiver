@@ -7,7 +7,7 @@ defaults:
         api-key: "secret"
   link-paths:
     - template:
-        "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}"
+        "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
 feeds:
   - remote-url:
       "https://foo.example.com/podcast/feed.rss"

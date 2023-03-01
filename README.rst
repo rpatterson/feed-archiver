@@ -292,7 +292,7 @@ and whose instances must be callable and accept the following arguments when cal
    enclosure will not be linked.  If no ``match-string`` is provided a default is used
    combining the feed title, item title, and enclosure basename with extension::
 
-     {feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}
+     {feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}
 
 If the plugin returns a value, it must be a list of strings and will be used as the
 target paths at which to link the enclosure.  Relative paths are resolved against the
@@ -308,7 +308,7 @@ of the plugin configuration.  Here's an example ``link-paths`` definition::
 	  api-key: "????????????????????????????????"
     link-paths:
       # Link all feed item enclosures into the media library under the podcasts directory
-      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}"
+      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
   feeds:
     - remote-url:
 	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
@@ -330,7 +330,7 @@ path config may include the ``template`` key containing a `Python format string`
 will be expanded to determine where the feed item enclosure should be linked to.  The
 default ``template`` is::
 
-  ./Feeds/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}
+  ./Feeds/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}
 
 The format strings may reference any of `the arguments passed into link path plugins`_.
 

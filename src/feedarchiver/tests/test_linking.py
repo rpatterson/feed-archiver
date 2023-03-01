@@ -16,7 +16,9 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
 
     FEED_BASENAME = "Foo Podcast Title"
     ITEM_BASENAME = "El Ni%C3%B1o Episode Title (Qux Series Title 106 & 07)"
-    DOWNLOAD_BASENAME = "download.mp3"
+    DOWNLOAD_SUFFIX = ".mp3"
+    ITEM_DOWNLOAD_BASENAME = f"{ITEM_BASENAME}{DOWNLOAD_SUFFIX}"
+    DOWNLOAD_BASENAME = f"download{DOWNLOAD_SUFFIX}"
 
     def test_basic_feed_item_linking(self):
         """
@@ -39,12 +41,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             feed_content_path.is_dir(),
             "Feed missing from symlinks hierarchy",
         )
-        item_content_path = feed_content_path / self.ITEM_BASENAME
-        self.assertTrue(
-            item_content_path.is_dir(),
-            "Item missing from symlinks hierarchy",
-        )
-        download_content_path = item_content_path / self.DOWNLOAD_BASENAME
+        download_content_path = feed_content_path / self.ITEM_DOWNLOAD_BASENAME
         self.assertTrue(
             download_content_path.is_symlink(),
             "Item enclosure missing from symlinks hierarchy",
@@ -69,8 +66,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         self.update_feed(self.archive_feed)
         feeds_content_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
         feed_content_path = feeds_content_path / self.FEED_BASENAME
-        item_content_path = feed_content_path / self.ITEM_BASENAME
-        download_content_path = item_content_path / self.DOWNLOAD_BASENAME
+        download_content_path = feed_content_path / self.ITEM_DOWNLOAD_BASENAME
         self.assertTrue(
             download_content_path.is_symlink(),
             "Item enclosure missing from symlinks hierarchy",
@@ -110,8 +106,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         self.update_feed(self.archive_feed)
         feeds_content_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
         feed_content_path = feeds_content_path / self.FEED_BASENAME
-        item_content_path = feed_content_path / self.ITEM_BASENAME
-        download_content_path = item_content_path / self.DOWNLOAD_BASENAME
+        download_content_path = feed_content_path / self.ITEM_DOWNLOAD_BASENAME
         download_content_path.unlink()
 
         # Change the archive configuration such that downloaded files are symlinked to
