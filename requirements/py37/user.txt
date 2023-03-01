@@ -33,7 +33,7 @@ requests-toolbelt==0.10.1
     # via feed-archiver (pyproject.toml)
 six==1.16.0
     # via user-agent
-tenacity==8.2.1
+tenacity==8.2.2
     # via feed-archiver (pyproject.toml)
 typing-extensions==4.5.0
     # via importlib-metadata
