@@ -665,23 +665,21 @@ class ArchiveFeed:
         content_link_paths = {}
         for (
             url_result,
-            content_archive_relative,
+            enclosure_path,
         ) in item_content_paths.items():
-            basename = content_archive_relative.name
             link_idx = 0
             for link_path_plugin in self.link_path_plugins:
                 for content_link_path in self.list_item_content_link_plugin_paths(
                     feed_elem,
                     item_elem,
                     url_result,
-                    basename,
-                    content_archive_relative,
+                    enclosure_path,
                     link_path_plugin,
                 ):
                     content_link_paths.setdefault(url_result, []).append(
                         self.link_plugin_file(
                             url_result,
-                            content_archive_relative,
+                            enclosure_path,
                             content_link_path,
                             link_idx,
                         )
@@ -694,8 +692,7 @@ class ArchiveFeed:
         feed_elem,
         item_elem,
         url_result,
-        basename,
-        content_archive_relative,
+        enclosure_path,
         link_path_plugin,
     ):  # pylint: disable=too-many-arguments
         """
@@ -713,7 +710,7 @@ class ArchiveFeed:
         logger.debug(
             "Linking item content with %r plugin: %s",
             type(link_path_plugin),
-            str(content_archive_relative),
+            str(enclosure_path),
         )
         try:
             content_link_strs = link_path_plugin(
@@ -721,14 +718,14 @@ class ArchiveFeed:
                 feed_elem=feed_elem,
                 item_elem=item_elem,
                 url_result=url_result,
-                basename=basename,
+                enclosure_path=enclosure_path,
                 match=match,
             )
         except Exception:  # pragma: no cover, pylint: disable=broad-except
             logger.exception(
                 "Problem linking item content with %r, continuing to next: %s",
                 type(link_path_plugin),
-                str(content_archive_relative),
+                str(enclosure_path),
             )
             if utils.POST_MORTEM:  # pragma: no cover
                 raise

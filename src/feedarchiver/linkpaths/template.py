@@ -19,7 +19,7 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
             "Feeds",
             "{feed_elem.find('title').text.strip()}",
             "{item_elem.find('title').text.strip()}",
-            "{basename}",
+            "{enclosure_path.name}",
         )
     )
 
@@ -39,7 +39,7 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
         feed_elem,
         item_elem,
         url_result,
-        basename,
+        enclosure_path,
         *args,
         **kwargs,
     ):  # pylint: disable=too-many-arguments

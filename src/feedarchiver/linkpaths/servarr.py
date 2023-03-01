@@ -99,7 +99,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
                 ] = episode_file["path"]
         return episode_paths
 
-    def __call__(self, basename, match, *args, **kwargs):
+    def __call__(self, enclosure_path, match, *args, **kwargs):
         """
         Lookup the episode and link the enclosure/content next to the video file.
         """
@@ -139,7 +139,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
                 )
             episodes_file_paths.append(
                 episode_path.with_name(
-                    f"{episode_path.stem}{stem_append}" + pathlib.Path(basename).suffix,
+                    f"{episode_path.stem}{stem_append}" + enclosure_path.suffix,
                 ),
             )
 

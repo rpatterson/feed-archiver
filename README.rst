@@ -274,12 +274,13 @@ and whose instances must be callable and accept the following arguments when cal
    The `lmxl special string object`_ that contains the URL of the specific enclosure.
    Can be used to access the specific enclosure element.
 
-#. ``basename=str``
+#. ``enclosure_path=pathlib.Path``
 
-  The best guess at the most correct file basename, including the suffix or extension,
-  for the given enclosure.  This suffix takes into account the suffix from the enclosure
-  URL, the ``Content-Type`` header of the response to the enclosure URL request, and
-  finally the value of any ``type`` attribute of the enclosure element XML.
+   The path to the enclosure in the archive as a `Python pathlib.Path`_ object with the
+   best guess at the most correct file basename, including the suffix or extension, for
+   the given enclosure.  This suffix takes into account the suffix from the enclosure
+   URL, the ``Content-Type`` header of the response to the enclosure URL request, and
+   finally the value of any ``type`` attribute of the enclosure element XML.
 
 #. ``match=re.Match``
 
@@ -291,7 +292,7 @@ and whose instances must be callable and accept the following arguments when cal
    enclosure will not be linked.  If no ``match-string`` is provided a default is used
    combining the feed title, item title, and enclosure basename with extension::
 
-     {feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}
+     {feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}
 
 If the plugin returns a value, it must be a list of strings and will be used as the
 target paths at which to link the enclosure.  Relative paths are resolved against the
@@ -307,7 +308,7 @@ of the plugin configuration.  Here's an example ``link-paths`` definition::
 	  api-key: "????????????????????????????????"
     link-paths:
       # Link all feed item enclosures into the media library under the podcasts directory
-      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()})/{basename}"
+      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}"
   feeds:
     - remote-url:
 	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
@@ -329,7 +330,7 @@ path config may include the ``template`` key containing a `Python format string`
 will be expanded to determine where the feed item enclosure should be linked to.  The
 default ``template`` is::
 
-  ./Feeds/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}
+  ./Feeds/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}
 
 The format strings may reference any of `the arguments passed into link path plugins`_.
 
@@ -381,6 +382,8 @@ development.
 .. _regular expression groups: https://docs.python.org/3/library/re.html#index-17
 .. _Python's urllib.parse.quote:
    https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote
+.. _Python pathlib.path:
+   https://docs.python.org/3/library/pathlib.html#accessing-individual-parts
 .. _Python XML element object:
     https://docs.python.org/3/library/xml.etree.elementtree.html#element-objects
 .. _lmxl special string object: https://lxml.de/xpathxslt.html#xpath-return-values

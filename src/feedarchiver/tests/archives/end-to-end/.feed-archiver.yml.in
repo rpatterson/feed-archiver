@@ -6,7 +6,7 @@ defaults:
         url: "http://sonarr:8989"
         api-key: "${SONARR_API_KEY}"
   link-paths:
-    - template: "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{basename}"
+    - template: "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}/{enclosure_path.name}"
 feeds:
   # A Creative Commons licensed feed
   - remote-url: "https://www.democracynow.org/podcast.xml"
