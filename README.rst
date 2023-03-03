@@ -182,8 +182,9 @@ simplest form, this can just be a file like so::
   defaults:
     base-url: "https://feeds.example.com"
   feeds:
-    - remote-url:
-	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
+    - remote-url: "\
+      https://foo-username:secret@grault.example.com\
+      /feeds/garply.rss?bar=qux%2Fbaz#corge"
   ...
 
 Then simple run the ``$ feed-archiver`` command in that directory to update the archive
@@ -307,18 +308,25 @@ of the plugin configuration.  Here's an example ``link-paths`` definition::
 	  url: "http://localhost:8989"
 	  api-key: "????????????????????????????????"
     link-paths:
-      # Link all feed item enclosures into the media library under the podcasts directory
-      - template: "/media/Library/Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+      # Link all feed item enclosures into the media library under the podcasts
+      # directory
+      - template: "\
+	/media/Library/Music/Podcasts\
+	/{feed_elem.find('title').text.strip()}\
+	/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
   feeds:
-    - remote-url:
-	"https://foo-username:secret@grault.example.com/feeds/garply.rss?bar=qux%2Fbaz#corge"
+    - remote-url: "\
+      https://foo-username:secret@grault.example.com\
+      /feeds/garply.rss?bar=qux%2Fbaz#corge"
       link-paths:
 	# This particular feed is a podcast about a TV series/show.  Link enclosures
 	# from feed items about an individual episode next to the episode video file as
 	# an external audio track using a non-default plugin.
 	- plugin: "sonarr"
 	  match-string: "{item_elem.find('title').text.strip()}"
-	  match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
+	  match-pattern: "\
+	  (?P<item_title>.+) \\((?P<series_title>.+) \
+	  (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
 	  stem-append: "-garply"
   ...
 

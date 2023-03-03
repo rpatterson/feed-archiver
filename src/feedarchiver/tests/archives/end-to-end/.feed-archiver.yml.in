@@ -6,7 +6,9 @@ defaults:
         url: "http://sonarr:8989"
         api-key: "${SONARR_API_KEY}"
   link-paths:
-    - template: "./Music/Podcasts/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+    - template: "\
+      ./Music/Podcasts/{feed_elem.find('title').text.strip()}\
+      /{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
 feeds:
   # A Creative Commons licensed feed
   - remote-url: "https://www.democracynow.org/podcast.xml"
@@ -16,5 +18,7 @@ feeds:
       # an alternate audio track using a non-default plugin.
       - plugin: "sonarr"
         match-string: "{item_elem.find('title').text.strip()}"
-        match-pattern: "(?P<item_title>.+) \\((?P<series_title>.+) (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+)\\)"
+        match-pattern: "\
+        (?P<item_title>.+) \\((?P<series_title>.+) \
+        (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+)\\)"
         stem-append: "-garply"
