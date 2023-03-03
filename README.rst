@@ -298,7 +298,9 @@ and whose instances must be callable and accept the following arguments when cal
 If the plugin returns a value, it must be a list of strings and will be used as the
 target paths at which to link the enclosure.  Relative paths are resolved against the
 archive root.  These paths are not escaped, so if escaping is needed it must be a part
-of the plugin configuration.  Here's an example ``link-paths`` definition::
+of the plugin configuration. If no plugins link a given enclosure, then any plugins
+whose ``fallback`` key is ``true`` will be applied. Here's an example ``link-paths``
+definition::
 
   defaults:
     base-url: "https://feeds.example.com"
@@ -309,11 +311,25 @@ of the plugin configuration.  Here's an example ``link-paths`` definition::
 	  api-key: "????????????????????????????????"
     link-paths:
       # Link all feed item enclosures into the media library under the podcasts
-      # directory
+      # directory.  Link items into an album directory named by series title if
+      # matching.
       - template: "\
 	/media/Library/Music/Podcasts\
 	/{feed_elem.find('title').text.strip()}\
+	/{match.group("series_title")}\
 	/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+	match-string: "{item_elem.find('title').text.strip()}"
+	match-pattern: "\
+	(?P<item_title>.+) \\((?P<series_title>.+) \
+	(?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
+      # Otherwise link into "self-titled" album directories of the same name as the
+      # feed.
+      - template: "\
+        /media/Library/Music/Podcasts\
+        /{feed_elem.find('title').text.strip()}\
+        /{feed_elem.find('title').text.strip()}\
+        /{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+	fallback: true
   feeds:
     - remote-url: "\
       https://foo-username:secret@grault.example.com\

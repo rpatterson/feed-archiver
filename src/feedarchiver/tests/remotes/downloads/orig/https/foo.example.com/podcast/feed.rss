@@ -85,5 +85,12 @@
 	  url="https://foo.example.com/podcast/episodes/fred-episode-title/download"
 	  type="application/x-no-extension" length="52079"/>
     </item>
+    <item>
+      <guid isPermaLink="false">foo_f58d2179-d398-4a86-bd60-5b2881aed686</guid>
+      <title>Garply Bonus Episode</title>
+      <enclosure
+	  url="https://foo.example.com/podcast/episodes/garply-bonus-episode/download.mp3"
+	  type="audio/mpeg" length="52079"/>
+    </item>
   </channel>
 </rss>

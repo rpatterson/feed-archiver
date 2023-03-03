@@ -9,6 +9,10 @@ defaults:
     - template: "\
       ./Music/Podcasts/{feed_elem.find('title').text.strip()}\
       /{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+      match-string: "{item_elem.find('title').text.strip()}"
+      match-pattern: "\
+      (?P<item_title>.+) \\((?P<series_title>.+?) \
+      (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
 feeds:
   - remote-url:
       "https://foo.example.com/podcast/feed.rss"
@@ -22,3 +26,7 @@ feeds:
         (?P<item_title>.+) \\((?P<series_title>.+?) \
         (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
         stem-append: "-garply"
+      - template: "\
+        ./Music/Podcasts/{feed_elem.find('title').text.strip()}\
+        /{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+        fallback: true

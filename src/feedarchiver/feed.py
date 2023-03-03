@@ -32,6 +32,7 @@ class ArchiveFeed:
     # Initialized when the configuration is loaded prior to update
     url = None
     link_path_plugins = None
+    link_path_fallack_plugins = None
     # Initialized on update from the response to the request for the URL from the feed
     # config in order to use response headers to derrive the best path.
     path = None
@@ -52,9 +53,14 @@ class ArchiveFeed:
         Pre-process and validate the feed config prior to running the actual update.
         """
         self.url = self.config["remote-url"]
-        self.link_path_plugins = self.archive.link_path_plugins + list(
-            linkpaths.load_plugins(self, self.config),
+        self.link_path_plugins = self.archive.link_path_plugins[:]
+        self.link_path_fallack_plugins = self.archive.link_path_fallack_plugins[:]
+        link_path_plugins, link_path_fallack_plugins = linkpaths.load_plugins(
+            self,
+            self.config,
         )
+        self.link_path_plugins.extend(link_path_plugins)
+        self.link_path_fallack_plugins.extend(link_path_fallack_plugins)
 
     # Sub-commands
 
@@ -669,6 +675,27 @@ class ArchiveFeed:
         ) in item_content_paths.items():
             link_idx = 0
             for link_path_plugin in self.link_path_plugins:
+                for content_link_path in self.list_item_content_link_plugin_paths(
+                    feed_elem,
+                    item_elem,
+                    url_result,
+                    enclosure_path,
+                    link_path_plugin,
+                ):
+                    content_link_paths.setdefault(url_result, []).append(
+                        self.link_plugin_file(
+                            url_result,
+                            enclosure_path,
+                            content_link_path,
+                            link_idx,
+                        )
+                    )
+                    link_idx += 1
+            if link_idx > 0:
+                # At least one plugin linked the content, skip the fallbacks
+                continue
+            # Link and fallback configurations for this content
+            for link_path_plugin in self.link_path_fallack_plugins:
                 for content_link_path in self.list_item_content_link_plugin_paths(
                     feed_elem,
                     item_elem,

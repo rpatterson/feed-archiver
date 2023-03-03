@@ -25,6 +25,8 @@ def load_plugins(parent, parent_config):
     link_path_entrypoints = {
         ep.name: ep for ep in entry_points()["feedarchiver.linkpaths"]
     }
+    link_path_plugins = []
+    link_path_fallack_plugins = []
     for link_path_config in link_path_configs:
         # Perform any validation as early as possible
         link_path_plugin_name = link_path_config.get("plugin", "default")
@@ -56,7 +58,13 @@ def load_plugins(parent, parent_config):
         )
         link_path_plugin = link_path_plugin_class(parent, link_path_config)
         link_path_plugin.load_config()
-        yield link_path_plugin
+
+        if link_path_plugin.config.get("fallback", False):
+            link_path_fallack_plugins.append(link_path_plugin)
+        else:
+            link_path_plugins.append(link_path_plugin)
+
+    return link_path_plugins, link_path_fallack_plugins
 
 
 class LinkPathPlugin:
