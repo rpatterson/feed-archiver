@@ -7,8 +7,8 @@ defaults:
         api-key: "secret"
   link-paths:
     - template: "\
-      ./Music/Podcasts/{feed_elem.find('title').text.strip()}\
-      /{item_elem.find('title').text.strip()} - {enclosure_path.name}"
+      ./Music/Podcasts/{feed_parsed.feed.title.strip()}\
+      /{item_parsed.title.strip()} - {enclosure_path.name}"
 feeds:
   - remote-url:
       "https://foo.example.com/podcast/feed"
@@ -17,7 +17,7 @@ feeds:
       # from feed items about an individual episode next to the episode video file as
       # an alternate audio track using a non-default plugin.
       - plugin: "sonarr"
-        match-string: "{item_elem.find('title').text.strip()}"
+        match-string: "{item_parsed.title.strip()}"
         match-pattern: "\
         (?P<item_title>.+) \\((?P<series_title>.+?) \
         (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"

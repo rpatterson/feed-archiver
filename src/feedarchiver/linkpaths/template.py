@@ -17,8 +17,8 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
     template = str(
         pathlib.Path(
             "Feeds",
-            "{feed_elem.find('title').text.strip()}",
-            "{item_elem.find('title').text.strip()}{enclosure_path.suffix}",
+            "{feed_parsed.feed.title.strip()}",
+            "{item_parsed.title.strip()}{enclosure_path.suffix}",
         )
     )
 
@@ -36,7 +36,9 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
         self,
         archive_feed,
         feed_elem,
+        feed_parsed,
         item_elem,
+        item_parsed,
         url_result,
         enclosure_path,
         *args,

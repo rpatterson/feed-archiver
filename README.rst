@@ -261,14 +261,17 @@ and whose instances must be callable and accept the following arguments when cal
    The object ``feedarchiver`` uses internally to represent an individual feed in the
    archive.
 
-#. ``feed_elem=xml.etree.ElementTree.Element``
+#. ``feed_elem=xml.etree.ElementTree.Element``,
+   ``item_elem=xml.etree.ElementTree.Element``
 
-   The `Python XML element object`_ representing the whole feed.  For RSS this is the
-   ``<channel>`` child element while for Atom this is the root ``<feed>`` element.
+   The `Python XML element object`_ representing the whole feed, for RSS this is the
+   ``<channel>`` child element while for Atom this is the root ``<feed>`` element, and
+   the a similar object representing the specific feed item.
 
-#. ``item_elem=xml.etree.ElementTree.Element``
+#. ``feed_parsed=feedparser.util.FeedParserDict``,
+   ``item_parsed=feedparser.util.FeedParserDict``
 
-   The `Python XML element object`_ representing the specific feed item.
+   The `feedparser`_ object representing the whole feed and the specific feed item.
 
 #. ``url_result=lxml.etree._ElementUnicodeResult``
 
@@ -293,7 +296,7 @@ and whose instances must be callable and accept the following arguments when cal
    enclosure will not be linked.  If no ``match-string`` is provided a default is used
    combining the feed title, item title, and enclosure basename with extension::
 
-     {feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}
+     {feed_parsed.feed.title.strip()}/{item_parsed.title.strip()}{enclosure_path.suffix}
 
 If the plugin returns a value, it must be a list of strings and will be used as the
 target paths at which to link the enclosure.  Relative paths are resolved against the
@@ -315,10 +318,10 @@ definition::
       # matching.
       - template: "\
 	/media/Library/Music/Podcasts\
-	/{feed_elem.find('title').text.strip()}\
+	/{feed_parsed.feed.title.strip()}\
 	/{match.group("series_title")}\
-	/{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
-	match-string: "{item_elem.find('title').text.strip()}"
+	/{item_parsed.title.strip()}{enclosure_path.suffix}"
+	match-string: "{item_parsed.title.strip()}"
 	match-pattern: "\
 	(?P<item_title>.+) \\((?P<series_title>.+) \
 	(?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
@@ -326,9 +329,9 @@ definition::
       # feed.
       - template: "\
         /media/Library/Music/Podcasts\
-        /{feed_elem.find('title').text.strip()}\
-        /{feed_elem.find('title').text.strip()}\
-        /{item_elem.find('title').text.strip()}{enclosure_path.suffix}"
+        /{feed_parsed.feed.title.strip()}\
+        /{feed_parsed.feed.title.strip()}\
+        /{item_parsed.title.strip()}{enclosure_path.suffix}"
 	fallback: true
   feeds:
     - remote-url: "\
@@ -339,7 +342,7 @@ definition::
 	# from feed items about an individual episode next to the episode video file as
 	# an external audio track using a non-default plugin.
 	- plugin: "sonarr"
-	  match-string: "{item_elem.find('title').text.strip()}"
+	  match-string: "{item_parsed.title.strip()}"
 	  match-pattern: "\
 	  (?P<item_title>.+) \\((?P<series_title>.+) \
 	  (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
@@ -354,7 +357,7 @@ path config may include the ``template`` key containing a `Python format string`
 will be expanded to determine where the feed item enclosure should be linked to.  The
 default ``template`` is::
 
-  ./Feeds/{feed_elem.find('title').text.strip()}/{item_elem.find('title').text.strip()}{enclosure_path.suffix}
+  ./Feeds/{feed_parsed.feed.title.strip()}/{item_parsed.title.strip()}{enclosure_path.suffix}
 
 The format strings may reference any of `the arguments passed into link path plugins`_.
 
@@ -411,6 +414,7 @@ development.
 .. _Python XML element object:
     https://docs.python.org/3/library/xml.etree.elementtree.html#element-objects
 .. _lmxl special string object: https://lxml.de/xpathxslt.html#xpath-return-values
+.. _feedparser: https://pythonhosted.org/feedparser/index.html
 
 .. _nginx: https://nginx.org/en/docs/
 .. _nginx server_name: https://www.nginx.com/resources/wiki/start/topics/examples/server_blocks/

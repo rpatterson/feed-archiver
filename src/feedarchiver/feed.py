@@ -183,6 +183,7 @@ class ArchiveFeed:
                 updated_items[remote_item_id] = remote_item_elem
 
                 self.link_item_content(
+                    remote_format=remote_format,
                     feed_elem=archived_items_parent,
                     item_elem=remote_item_elem,
                     item_content_paths=item_download_content_paths,
@@ -256,6 +257,7 @@ class ArchiveFeed:
                     ),
                 )
             item_link_paths = self.link_item_content(
+                remote_format=archive_format,
                 feed_elem=archive_format.get_items_parent(archive_tree.getroot()),
                 item_elem=archive_item_elem,
                 item_content_paths=item_content_paths,
@@ -661,6 +663,7 @@ class ArchiveFeed:
 
     def link_item_content(
         self,
+        remote_format,
         feed_elem,
         item_elem,
         item_content_paths,
@@ -669,6 +672,13 @@ class ArchiveFeed:
         Link item content/enclosures into media library hierarchies using plugins.
         """
         content_link_paths = {}
+        if not self.link_path_plugins and not self.link_path_fallack_plugins:
+            # Avoid unnecessary work when no link plugins are configured, particularly
+            # parsing the item with `feedparser`.
+            return content_link_paths
+
+        feed_parsed = utils.parse_item_feed(remote_format, feed_elem, item_elem)
+        (item_parsed,) = feed_parsed.entries
         for (
             url_result,
             enclosure_path,
@@ -677,7 +687,9 @@ class ArchiveFeed:
             for link_path_plugin in self.link_path_plugins:
                 for content_link_path in self.list_item_content_link_plugin_paths(
                     feed_elem,
+                    feed_parsed,
                     item_elem,
+                    item_parsed,
                     url_result,
                     enclosure_path,
                     link_path_plugin,
@@ -698,7 +710,9 @@ class ArchiveFeed:
             for link_path_plugin in self.link_path_fallack_plugins:
                 for content_link_path in self.list_item_content_link_plugin_paths(
                     feed_elem,
+                    feed_parsed,
                     item_elem,
+                    item_parsed,
                     url_result,
                     enclosure_path,
                     link_path_plugin,
@@ -717,7 +731,9 @@ class ArchiveFeed:
     def list_item_content_link_plugin_paths(
         self,
         feed_elem,
+        feed_parsed,
         item_elem,
+        item_parsed,
         url_result,
         enclosure_path,
         link_path_plugin,
@@ -743,7 +759,9 @@ class ArchiveFeed:
             content_link_strs = link_path_plugin(
                 archive_feed=self,
                 feed_elem=feed_elem,
+                feed_parsed=feed_parsed,
                 item_elem=item_elem,
+                item_parsed=item_parsed,
                 url_result=url_result,
                 enclosure_path=enclosure_path,
                 match=match,

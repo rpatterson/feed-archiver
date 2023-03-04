@@ -64,6 +64,8 @@ docutils==0.19
     #   rstcheck-core
 dodgy==0.2.1
     # via prospector
+feedparser==6.0.10
+    # via feed-archiver (pyproject.toml)
 filelock==3.9.0
     # via virtualenv
 flake8==2.3.0
@@ -187,7 +189,7 @@ pyproject-hooks==1.0.0
     # via build
 pyroma==4.2
     # via prospector
-pytest==7.2.1
+pytest==7.2.2
     # via
     #   feed-archiver (pyproject.toml)
     #   pytest-subtests
@@ -226,6 +228,8 @@ setoptconf-tmp==0.3.1
     # via prospector
 setuptools-scm==7.1.0
     # via feed-archiver (pyproject.toml)
+sgmllib3k==1.0.0
+    # via feedparser
 shellingham==1.5.0.post1
     # via typer
 six==1.16.0

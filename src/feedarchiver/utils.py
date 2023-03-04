@@ -6,11 +6,14 @@ Particularly useful to avoid circular imports.
 
 import os
 import functools
+import copy
 import mimetypes
 import urllib.parse
 import email
 import logging
 import tracemalloc
+
+import feedparser
 
 from lxml import etree  # nosec B410
 
@@ -150,3 +153,38 @@ def parse_content_type(content_type):
     message = email.message.Message()
     message["Content-Type"] = content_type
     return message.get_params()[0][0]
+
+
+def copy_empty_items_parent(feed_format, items_parent):
+    """
+    Create an `etree` copy of the feed items parent without any items.
+
+    Useful for richer parsing of single items at a time.
+    """
+    items_parent_copy = etree.Element(items_parent.tag, items_parent.attrib)
+    for child in items_parent:
+        if child.tag == feed_format.ITEM_TAG:
+            # Optimization: This is not strictly correct as feed XML may contain
+            # non-item elements after feed item elements, either interspersed or at the
+            # end.  This is rare, however, in fact I've never seen an instance of it,
+            # items are *most* of a feed's elements and use of the items parent other
+            # elements in link path plugin configurations is rare, so avoid unnecessary
+            # iteration until someone reports an issue with this.
+            break
+        items_parent_copy.append(copy.deepcopy(child))
+    return items_parent_copy
+
+
+# We need to parse the archive and remote feed XML using `etree` because we need to be
+# able to modify the XML and write it to the archive, something that `feedparser`
+# doesn't provide.  Link path plugins, however, frequently need the richer parsing
+# support that `feedparser` *does* provide, such as parsing dates and times.  That rich
+# parsing is only needed in the rare case of new items being added to the archive's
+# version of the feed, so only do the rich parsing on a per-item basis.
+def parse_item_feed(feed_format, feed_elem, item_elem):
+    """
+    Reconstruct a "feed" of just one item and return the richly parsed version.
+    """
+    item_feed_elem = copy_empty_items_parent(feed_format, feed_elem)
+    item_feed_elem.append(copy.deepcopy(item_elem))
+    return feedparser.parse(etree.tostring(item_feed_elem))
