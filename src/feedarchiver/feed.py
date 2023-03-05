@@ -9,6 +9,7 @@ import urllib
 import email.utils
 import pathlib
 import logging
+import pdb
 
 from lxml import etree  # nosec B410
 from requests_toolbelt.downloadutils import stream
@@ -312,7 +313,7 @@ class ArchiveFeed:
                 remote_item_id,
             )
             if utils.POST_MORTEM:
-                raise
+                pdb.post_mortem()
             return None
         return item_download_asset_paths, item_download_content_paths
 
@@ -401,7 +402,7 @@ class ArchiveFeed:
                         self.url,
                     )
                     if utils.POST_MORTEM:  # pragma: no cover
-                        raise
+                        pdb.post_mortem()
         return archive_tree
 
     def get_archive_tree(self, remote_tree, download_paths, remote_format=None):
@@ -512,7 +513,7 @@ class ArchiveFeed:
                     if download_path is not None:
                         download_path.unlink()
                     if utils.POST_MORTEM:  # pragma: no cover
-                        raise
+                        pdb.post_mortem()
                     continue
                 downloaded_paths[url_result] = download_path.relative_to(
                     self.archive.root_path,
@@ -778,7 +779,7 @@ class ArchiveFeed:
                 str(enclosure_path),
             )
             if utils.POST_MORTEM:  # pragma: no cover
-                raise
+                pdb.post_mortem()
             content_link_strs = []
         if content_link_strs is None:  # pragma: no cover
             # Plugin handled any linking itself
@@ -812,7 +813,7 @@ class ArchiveFeed:
                 link_path_plugin.config["match-string"],
             )
             if utils.POST_MORTEM:  # pragma: no cover
-                raise
+                pdb.post_mortem()
             return None
         try:
             match = link_path_plugin.config["match-re"].match(match_string)
@@ -823,7 +824,7 @@ class ArchiveFeed:
                 link_path_plugin.config["match-string"],
             )
             if utils.POST_MORTEM:  # pragma: no cover
-                raise
+                pdb.post_mortem()
             return None
         if match is None:  # pragma: no cover
             logger.debug(

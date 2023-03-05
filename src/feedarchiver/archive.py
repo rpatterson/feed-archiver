@@ -7,6 +7,7 @@ import pathlib
 import urllib.parse
 import logging
 import tracemalloc
+import pdb
 
 import yaml
 import requests
@@ -244,7 +245,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                     archive_feed.url,
                 )
                 if utils.POST_MORTEM:  # pragma: no cover
-                    raise
+                    pdb.post_mortem()
                 continue
             if feed_results:  # pragma: no cover
                 results[archive_feed.url] = feed_results
