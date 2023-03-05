@@ -743,6 +743,7 @@ class ArchiveFeed:
         """
         Return the content link paths for an individual download and plugin.
         """
+        kwargs = {}
         match = None
         if "match-re" in link_path_plugin.config:
             match_kwargs = locals().copy()
@@ -750,6 +751,7 @@ class ArchiveFeed:
             match = self.link_item_plugin_match(**match_kwargs)
             if match is None:
                 return []
+            kwargs.update(match.groupdict())
 
         # Delegate to the plugin
         logger.debug(
@@ -767,6 +769,7 @@ class ArchiveFeed:
                 url_result=url_result,
                 enclosure_path=enclosure_path,
                 match=match,
+                **kwargs,
             )
         except Exception:  # pragma: no cover, pylint: disable=broad-except
             logger.exception(

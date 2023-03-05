@@ -34,13 +34,6 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
 
     def __call__(
         self,
-        archive_feed,
-        feed_elem,
-        feed_parsed,
-        item_elem,
-        item_parsed,
-        url_result,
-        enclosure_path,
         *args,
         **kwargs,
     ):  # pylint: disable=too-many-arguments
@@ -54,4 +47,10 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
         # problem since anyone that can run `$ feedarchiver` can also run `$ python`.
         # But still, this has a bad code smell.
         # https://python-forum.io/thread-24481.html
-        return [eval(f"f{self.template!r}")]  # nosec: B307, pylint: disable=eval-used
+        return [
+            eval(  # nosec: B307, pylint: disable=eval-used
+                f"f{self.template!r}",
+                globals(),
+                dict(locals(), **kwargs),
+            )
+        ]

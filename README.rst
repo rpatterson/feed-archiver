@@ -293,8 +293,11 @@ and whose instances must be callable and accept the following arguments when cal
    Particularly useful to designate `regular expression groups`_ in the
    ``match-pattern`` and then use the parts of ``match-string`` that matched those
    groups in the format ``template``.  If the ``match-pattern`` doesn't match then the
-   enclosure will not be linked.  If no ``match-string`` is provided a default is used
-   combining the feed title, item title, and enclosure basename with extension::
+   enclosure will not be linked. If there are `symbolic group names`_,
+   e.g. ``(?P<foo_group_name>.*)`` in the pattern, then they are also available by name
+   in the format string, e.g ``{foo_group_name.lower()}``.  If no ``match-string`` is
+   provided a default is used combining the feed title, item title, and enclosure
+   basename with extension::
 
      {feed_parsed.feed.title.strip()}/{item_parsed.title.strip()}{enclosure_path.suffix}
 
@@ -319,7 +322,7 @@ definition::
       - template: "\
 	/media/Library/Music/Podcasts\
 	/{feed_parsed.feed.title.strip()}\
-	/{match.group("series_title")}\
+	/{series_title}\
 	/{item_parsed.title.strip()}{enclosure_path.suffix}"
 	match-string: "{item_parsed.title.strip()}"
 	match-pattern: "\
@@ -407,6 +410,7 @@ development.
 .. _Python regular expression match object:
    https://docs.python.org/3/library/re.html#match-objects
 .. _regular expression groups: https://docs.python.org/3/library/re.html#index-17
+.. _symbolic group names: https://docs.python.org/3/library/re.html#index-18
 .. _Python's urllib.parse.quote:
    https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote
 .. _Python pathlib.path:
