@@ -358,7 +358,9 @@ class ArchiveFeed:
             archive_files = []
             for archive_file in path.parent.glob(f"{path.name}.*"):
                 guessed_type, _ = mimetypes.guess_type(archive_file)
-                if guessed_type.endswith("/xml") or guessed_type.endswith("+xml"):
+                if guessed_type is not None and (
+                    guessed_type.endswith("/xml") or guessed_type.endswith("+xml")
+                ):
                     archive_files.append(archive_file)
             if not archive_files:
                 raise ValueError(
