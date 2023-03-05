@@ -362,7 +362,7 @@ class ArchiveFeed:
                     archive_files.append(archive_file)
             if not archive_files:
                 raise ValueError(
-                    "Could not locate feed in archive: {self.url}"
+                    f"Could not locate feed in archive: {self.url}"
                 )  # pragma: no cover
             if len(archive_files) > 1:
                 logger.warning(
