@@ -14,6 +14,8 @@ Required
 High Priority
 *************
 
+#. Playlist creation for media enclosures using the same plugin system as for linking.
+
 #. Any documentation improvements!
 
    Documentation benefits perhaps most from the attention of fresh eyes.  If you find
@@ -66,8 +68,6 @@ Nice to Have
 
 #. Extension point (setuptools entry points?) for selecting specialized download
    handlers based on MIME type (e.g. HTML page assets/resources below).
-
-#. Playlist creation for media enclosures.
 
 #. Also download all assets/resources for HTML downloads, possibly with `pywebcopy
    <https://stackoverflow.com/a/51544575/624787>`_.
