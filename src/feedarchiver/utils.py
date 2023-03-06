@@ -120,11 +120,28 @@ init()
 # Please do report any additional cases that cause issues in any other
 # common filesystems.
 SAFE_CHARS_WIN10_SAMBA = " !#$&'()+,;=@[]^`{}"
+QUOTED_SEP = urllib.parse.quote(os.sep, safe="")
+QUOTED_ALTSEP = None
+if os.altsep is not None:  # pragma: no cover
+    QUOTED_ALTSEP = urllib.parse.quote(os.altsep)
 quote_basename = functools.partial(urllib.parse.quote, safe=SAFE_CHARS_WIN10_SAMBA)
 quote_path = functools.partial(
     urllib.parse.quote,
     safe=f"{SAFE_CHARS_WIN10_SAMBA}{os.sep}{os.altsep}",
 )
+
+
+def quote_sep(string_):  # noqa: V103
+    """
+    Return the string with all occurrences of path separators, slashes, quoted.
+
+    Useful to sanitize input from feed XML when used in link path template plugin string
+    formats from adding unintended path parts.
+    """
+    quoted = string_.replace(os.sep, QUOTED_SEP)
+    if os.altsep is not None:  # pragma: no cover
+        quoted = quoted.replace(os.altsep, QUOTED_ALTSEP)
+    return quoted
 
 
 def compare_memory_snapshots(parent):  # pragma: no cover

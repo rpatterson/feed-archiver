@@ -299,7 +299,7 @@ and whose instances must be callable and accept the following arguments when cal
    provided a default is used combining the feed title, item title, and enclosure
    basename with extension::
 
-     {feed_parsed.feed.title.strip()}/{item_parsed.title.strip()}{enclosure_path.suffix}
+     {utils.quote_sep(feed_parsed.feed.title).strip()}/{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}
 
 If the plugin returns a value, it must be a list of strings and will be used as the
 target paths at which to link the enclosure.  Relative paths are resolved against the
@@ -321,10 +321,10 @@ definition::
       # matching.
       - template: "\
 	/media/Library/Music/Podcasts\
-	/{feed_parsed.feed.title.strip()}\
+	/{utils.quote_sep(feed_parsed.feed.title).strip()}\
 	/{series_title}\
-	/{item_parsed.title.strip()}{enclosure_path.suffix}"
-	match-string: "{item_parsed.title.strip()}"
+	/{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}"
+	match-string: "{utils.quote_sep(item_parsed.title).strip()}"
 	match-pattern: "\
 	(?P<item_title>.+) \\((?P<series_title>.+) \
 	(?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
@@ -332,9 +332,9 @@ definition::
       # feed.
       - template: "\
         /media/Library/Music/Podcasts\
-        /{feed_parsed.feed.title.strip()}\
-        /{feed_parsed.feed.title.strip()}\
-        /{item_parsed.title.strip()}{enclosure_path.suffix}"
+        /{utils.quote_sep(feed_parsed.feed.title).strip()}\
+        /{utils.quote_sep(feed_parsed.feed.title).strip()}\
+        /{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}"
 	fallback: true
   feeds:
     - remote-url: "\
@@ -345,7 +345,7 @@ definition::
 	# from feed items about an individual episode next to the episode video file as
 	# an external audio track using a non-default plugin.
 	- plugin: "sonarr"
-	  match-string: "{item_parsed.title.strip()}"
+	  match-string: "{utils.quote_sep(item_parsed.title).strip()}"
 	  match-pattern: "\
 	  (?P<item_title>.+) \\((?P<series_title>.+) \
 	  (?P<season_number>[0-9])(?P<episode_numbers>[0-9]+[0-9Ee& -]*)\\)"
@@ -360,7 +360,7 @@ path config may include the ``template`` key containing a `Python format string`
 will be expanded to determine where the feed item enclosure should be linked to.  The
 default ``template`` is::
 
-  ./Feeds/{feed_parsed.feed.title.strip()}/{item_parsed.title.strip()}{enclosure_path.suffix}
+  ./Feeds/{utils.quote_sep(feed_parsed.feed.title).strip()}/{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}
 
 The format strings may reference any of `the arguments passed into link path plugins`_.
 
