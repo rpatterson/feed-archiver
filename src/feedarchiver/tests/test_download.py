@@ -207,7 +207,8 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             "Wrong feed image absolute URL in feed",
         )
         archive_items = archive_tree.find("channel").findall("item")
-        item_link_split = urllib.parse.urlsplit(archive_items[0].find("link").text)
+        archive_item = archive_items[1]
+        item_link_split = urllib.parse.urlsplit(archive_item.find("link").text)
         item_link_path = (
             pathlib.PurePosixPath(
                 urllib.parse.unquote(item_link_split.path).lstrip("/")
@@ -219,7 +220,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             "Wrong item link index HTML absolute URL in feed",
         )
         item_enclosure_split = urllib.parse.urlsplit(
-            archive_items[0].find("enclosure").attrib["url"],
+            archive_item.find("enclosure").attrib["url"],
         )
         item_enclosure_path = pathlib.PurePosixPath(
             urllib.parse.unquote(item_enclosure_split.path).lstrip("/"),
@@ -229,7 +230,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             "Wrong item enclosure absolute URL in feed",
         )
         item_media_content_split = urllib.parse.urlsplit(
-            archive_items[0].find("{*}content").attrib["url"],
+            archive_item.find("{*}content").attrib["url"],
         )
         item_media_content_path = pathlib.PurePosixPath(
             urllib.parse.unquote(item_media_content_split.path).lstrip("/"),
@@ -240,7 +241,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             "Wrong item media content absolute URL in feed",
         )
         item_image_split = urllib.parse.urlsplit(
-            archive_items[0].find("{*}image").attrib["href"],
+            archive_item.find("{*}image").attrib["href"],
         )
         item_image_path = pathlib.PurePosixPath(
             urllib.parse.unquote(item_image_split.path).lstrip("/"),

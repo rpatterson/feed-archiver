@@ -119,7 +119,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
 
         episodes_file_paths = []
         for episode_number in episode_numbers:
-            if episode_number in season_episode_paths:  # pragma: no cover
+            if episode_number in season_episode_paths:
                 # Assemble a path next to the episode file
                 episode_path = pathlib.Path(season_episode_paths[episode_number])
             else:

@@ -786,12 +786,17 @@ class ArchiveFeed:
             content_link_strs = []
         if isinstance(content_link_strs, str):  # pragma: no cover
             content_link_strs = [content_link_strs]
+        # Filter out duplicate paths but preserve order
+        uniq_link_strs = []
+        for content_link_str in content_link_strs:
+            if content_link_str not in uniq_link_strs:
+                uniq_link_strs.append(content_link_str)
         return [
             self.archive.root_path
             / pathlib.Path(
                 utils.quote_path(content_link_str),
             )
-            for content_link_str in content_link_strs
+            for content_link_str in uniq_link_strs
         ]
 
     def link_item_plugin_match(self, **kwargs):
