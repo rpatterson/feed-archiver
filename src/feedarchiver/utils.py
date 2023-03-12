@@ -79,7 +79,7 @@ def init(files=None, priority_types=None):
     # Manually promote the priority extensions to the front of the list
     for priority_type, priority_ext in priority_types.items():
         priority_type = priority_type.lower()
-        if priority_type not in strict_types_map_inv:  # pragma: no cover
+        if priority_type not in strict_types_map_inv:
             # Must re-register as a strict type first
             mimetypes.add_type(priority_type, priority_ext)
         for types_map_inv in (strict_types_map_inv, loose_types_map_inv):

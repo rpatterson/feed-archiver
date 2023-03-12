@@ -772,7 +772,7 @@ class ArchiveFeed:
                 match=match,
                 **kwargs,
             )
-        except Exception:  # pragma: no cover, pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Problem linking item content with %r, continuing to next: %s",
                 type(link_path_plugin),
@@ -811,7 +811,7 @@ class ArchiveFeed:
                 globals(),
                 kwargs,
             )
-        except Exception:  # pragma: no cover, pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Problem expanding `match-string` template for %r: %r",
                 type(link_path_plugin),
@@ -831,7 +831,7 @@ class ArchiveFeed:
             if utils.POST_MORTEM:  # pragma: no cover
                 pdb.post_mortem()
             return None
-        if match is None:  # pragma: no cover
+        if match is None:
             logger.debug(
                 "The %r plugin `match-pattern` did not match: %r",
                 type(link_path_plugin),

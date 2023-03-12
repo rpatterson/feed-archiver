@@ -61,7 +61,7 @@ subparsers = parser.add_subparsers(
 def update(
     archive_dir=parser.get_default("--archive-dir"),
     recreate=parser.get_default("--recreate"),
-):  # pragma: no cover, pylint: disable=missing-function-docstring
+):  # pylint: disable=missing-function-docstring
     feed_archive = archive.Archive(archive_dir, recreate)
     return feed_archive.update()
 
@@ -88,7 +88,7 @@ argcomplete.autocomplete(parser)
 
 def relink(
     archive_dir=parser.get_default("--archive-dir"),
-):  # pragma: no cover, pylint: disable=missing-function-docstring
+):  # pylint: disable=missing-function-docstring
     feed_archive = archive.Archive(archive_dir)
     return feed_archive.relink()
 
@@ -156,7 +156,7 @@ def _main(args=None):
     shared_kwargs = dict(cli_kwargs)
     command_kwargs = {}
     for dest, value in list(shared_kwargs.items()):
-        if dest not in prunerr_dests:  # pragma: no cover
+        if dest not in prunerr_dests:
             command_kwargs[dest] = value
             del shared_kwargs[dest]
 
@@ -169,7 +169,7 @@ def _main(args=None):
     # Sub-commands may return a result to be pretty printed, or handle output themselves
     # and return nothing.
     result = parsed_args.command(**shared_kwargs, **command_kwargs)
-    if result is not None:  # pragma: no cover
+    if result is not None:
         json.dump(result, sys.stdout, indent=2)
 
 

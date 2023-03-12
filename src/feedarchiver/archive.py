@@ -239,7 +239,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
             feed_command = getattr(archive_feed, command)
             try:
                 feed_results = feed_command(*args, **kwargs)
-            except Exception:  # pragma: no cover, pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 logger.exception(
                     "Unhandled exception updating feed: %r",
                     archive_feed.url,
@@ -247,7 +247,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 if utils.POST_MORTEM:  # pragma: no cover
                     pdb.post_mortem()
                 continue
-            if feed_results:  # pragma: no cover
+            if feed_results:
                 results[archive_feed.url] = feed_results
             if utils.PYTHONTRACEMALLOC:  # pragma: no cover
                 # Optionally compare memory consumption
