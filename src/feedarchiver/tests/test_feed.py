@@ -402,7 +402,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         self.assertEqual(
             len(logged_msgs.records),
             1,
-            "Wrong number of download item logged records",
+            "Wrong number of logged feed records",
         )
         self.assertIn(
             "Unhandled exception parsing archive feed",

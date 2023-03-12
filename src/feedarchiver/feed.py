@@ -94,7 +94,7 @@ class ArchiveFeed:
 
         remote_item_elems = list(remote_format.iter_items(remote_root))
         archive_item_elems = list(remote_format.iter_items(archive_root))
-        if (len(remote_item_elems) - len(archive_item_elems)) > 4:  # pragma: no cover
+        if (len(remote_item_elems) - len(archive_item_elems)) > 4:
             logger.warning(
                 "Many more items in remote than archive: %s > %s",
                 len(remote_item_elems),
@@ -173,7 +173,7 @@ class ArchiveFeed:
                     remote_item_elem,
                     remote_item_id,
                 )
-                if item_download_paths is None:  # pragma: no cover
+                if item_download_paths is None:
                     continue
                 (
                     item_download_asset_paths,
@@ -191,11 +191,10 @@ class ArchiveFeed:
                 )
 
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
-                if updated_items or download_paths:  # pragma: no cover
-                    # Pretty format the feed for readability
-                    etree.indent(archive_tree)
-                    # Update the archived feed file
-                    archive_tree.write(str(self.path))
+                # Pretty format the feed for readability
+                etree.indent(archive_tree)
+                # Update the archived feed file
+                archive_tree.write(str(self.path))
 
         update_download_metadata(remote_response, self.path)
 
@@ -227,13 +226,6 @@ class ArchiveFeed:
                 archive_item_elem,
                 archive_format.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS,
             ):
-                if not (
-                    hasattr(url_result, "getparent") and hasattr(url_result, "attrname")
-                ):  # pragma: no cover
-                    raise NotImplementedError(
-                        f"Linking URLs in {type(url_result)!r} text nodes"
-                        " not implemented yet",
-                    )
                 for attr, attr_value in list(url_result.getparent().attrib.items()):
                     if not attr.startswith(attr_prefix):
                         continue
@@ -245,11 +237,6 @@ class ArchiveFeed:
                             str(os.readlink(content_link_path)),
                         )
                         content_link_path.unlink()
-                    elif content_link_path.exists():  # pragma: no cover
-                        logger.error(
-                            "Existing content link is not a symlink: %r",
-                            str(content_link_path),
-                        )
                     del url_result.getparent().attrib[attr]
                     is_modified = True
                 item_content_paths[url_result] = pathlib.Path(
@@ -283,7 +270,7 @@ class ArchiveFeed:
             )
         if link_paths:
             return link_paths
-        return None  # pragma: no cover
+        return None
 
     # Other methods
 
@@ -307,12 +294,12 @@ class ArchiveFeed:
             item_download_content_paths = self.download_urls(
                 item_download_content_urls,
             )
-        except Exception:  # pragma: no cover, pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Problem downloading item URLs, continuing to next: %r",
                 remote_item_id,
             )
-            if utils.POST_MORTEM:
+            if utils.POST_MORTEM:  # pragma: no cover
                 pdb.post_mortem()
             return None
         return item_download_asset_paths, item_download_content_paths
@@ -357,22 +344,20 @@ class ArchiveFeed:
         path = self.archive.root_path / self.archive.url_to_path(self.url)
         if not path.exists():
             archive_files = []
-            for archive_file in path.parent.glob(f"{path.name}.*"):
+            for archive_file in path.parent.glob(f"{path.stem}.*"):
                 guessed_type, _ = mimetypes.guess_type(archive_file)
                 if guessed_type is not None and (
                     guessed_type.endswith("/xml") or guessed_type.endswith("+xml")
                 ):
                     archive_files.append(archive_file)
             if not archive_files:
-                raise ValueError(
-                    f"Could not locate feed in archive: {self.url}"
-                )  # pragma: no cover
+                raise ValueError(f"Could not locate feed in archive: {self.url}")
             if len(archive_files) > 1:
                 logger.warning(
                     "Multiple XML files found for feed, using first: %s\n%s",
                     self.url,
                     "\n  ".join([str(archive_file) for archive_file in archive_files]),
-                )  # pragma: no cover
+                )
             path = archive_files[0]
         return path
 
@@ -502,15 +487,13 @@ class ArchiveFeed:
                 # Download the URL to the escaped local path in the archive
                 try:
                     download_path = self.download_url(url_result)
-                except (
-                    Exception  # pylint: disable=broad-except
-                ) as exc:  # pragma: no cover
+                except Exception as exc:  # pylint: disable=broad-except
                     excs[url_result] = exc
                     logger.exception(
                         "Problem downloading URL, removing from archive: %r",
                         url_result,
                     )
-                    if download_path is not None:
+                    if download_path is not None:  # pragma: no cover
                         download_path.unlink()
                     if utils.POST_MORTEM:  # pragma: no cover
                         pdb.post_mortem()
@@ -522,49 +505,43 @@ class ArchiveFeed:
             # Update the URL in the feed XML to the relative archive path.
             # Update only after successful download to minimize inconsistent state on
             # errors.
-            if hasattr(url_result, "getparent") and hasattr(url_result, "attrname"):
-                url_parent = url_result.getparent()
-                download_relative = downloaded_paths[url_result]
-                if download_relative.name == self.archive.INDEX_BASENAME:
-                    download_relative = download_relative.parent
-                download_url_split = self.archive.url_split._replace(
-                    # Let pathlib normalize the relative path
-                    path=str(
-                        pathlib.PurePosixPath(self.archive.url_split.path)
-                        / urllib.parse.quote(str(download_relative))
-                    ),
+            url_parent = url_result.getparent()
+            download_relative = downloaded_paths[url_result]
+            if download_relative.name == self.archive.INDEX_BASENAME:
+                download_relative = download_relative.parent
+            download_url_split = self.archive.url_split._replace(
+                # Let pathlib normalize the relative path
+                path=str(
+                    pathlib.PurePosixPath(self.archive.url_split.path)
+                    / urllib.parse.quote(str(download_relative))
+                ),
+            )
+            if url_result.attrname:
+                logger.debug(
+                    'Updating feed URL: <%s %s="%s"...>',
+                    url_result.getparent().tag,
+                    url_result.attrname,
+                    download_url_split.geturl(),
                 )
-                if url_result.attrname:
-                    logger.debug(
-                        'Updating feed URL: <%s %s="%s"...>',
-                        url_result.getparent().tag,
-                        url_result.attrname,
-                        download_url_split.geturl(),
-                    )
-                    # Store the original remote URL in a namespace attribute
-                    url_parent.attrib[
-                        f"{{{self.NAMESPACE}}}attribute-{url_result.attrname}"
-                    ] = url_result
-                    # Update the archived URL to the local, relative URL
-                    url_parent.attrib[url_result.attrname] = download_url_split.geturl()
-                else:
-                    logger.debug(
-                        "Updating feed URL: <%s>%s</%s>",
-                        url_result.getparent().tag,
-                        download_url_split.geturl(),
-                        url_result.getparent().tag,
-                    )
-                    # Store the original remote URL in a namespace attribute
-                    url_parent.attrib[f"{{{self.NAMESPACE}}}text"] = url_result
-                    # Update the URL in the archive XML to the local, relative URL
-                    url_parent.text = download_url_split.geturl()
-            else:  # pragma: no cover
-                raise NotImplementedError(
-                    f"Escaping URLs in {type(url_result)!r} text nodes"
-                    " not implemented yet",
+                # Store the original remote URL in a namespace attribute
+                url_parent.attrib[
+                    f"{{{self.NAMESPACE}}}attribute-{url_result.attrname}"
+                ] = url_result
+                # Update the archived URL to the local, relative URL
+                url_parent.attrib[url_result.attrname] = download_url_split.geturl()
+            else:
+                logger.debug(
+                    "Updating feed URL: <%s>%s</%s>",
+                    url_result.getparent().tag,
+                    download_url_split.geturl(),
+                    url_result.getparent().tag,
                 )
+                # Store the original remote URL in a namespace attribute
+                url_parent.attrib[f"{{{self.NAMESPACE}}}text"] = url_result
+                # Update the URL in the archive XML to the local, relative URL
+                url_parent.text = download_url_split.geturl()
 
-        if excs:  # pragma: no cover
+        if excs:
             # Ensure the feed item is processed again if any problem occurred with with
             # it's downloads
             raise list(excs.values())[0]

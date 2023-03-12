@@ -3,9 +3,10 @@ Test the feed-archiver representation of an archive of syndication feeeds.
 """
 
 import typing
-
+import unittest
 from unittest import mock
 
+from .. import archive
 from .. import tests
 
 
@@ -70,3 +71,26 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
             None,
             "Archive updated feed items not empty",
         )
+
+
+class FeedarchiverInvalidArchiveTests(unittest.TestCase):
+    """
+    Test archives with invalid configuration.
+    """
+
+    def test_archive_wo_config(self):
+        """
+        An archive with no configuration raises a helpful error.
+        """
+        with self.assertRaises(ValueError, msg="Wrong empty config error"):
+            archive.Archive(tests.FeedarchiverTestCase.ARCHIVES_PATH / "empty")
+
+    def test_archive_wo_feeds(self):
+        """
+        An archive with no feeds configured raises a helpful error.
+        """
+        feed_archive = archive.Archive(
+            tests.FeedarchiverTestCase.ARCHIVES_PATH / "empty-feeds",
+        )
+        with self.assertRaises(ValueError, msg="Wrong empty feeds error"):
+            feed_archive.load_config()

@@ -49,7 +49,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         self.root_path = pathlib.Path(root_dir)
         self.root_stat = os.statvfs(self.root_path)
         self.config_path = self.root_path / self.FEED_CONFIGS_BASENAME
-        if not self.config_path.is_file():  # pragma: no cover
+        if not self.config_path.is_file():
             raise ValueError(f"Feeds definition path is not a file: {self.config_path}")
 
         self.recreate = recreate
@@ -79,7 +79,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         )
 
         feed_configs = archive_config["feeds"]
-        if not feed_configs:  # pragma: no cover
+        if not feed_configs:
             raise ValueError(f"No feeds defined: {str(self.config_path)!r}")
 
         self.archive_feeds = []

@@ -1,0 +1,3 @@
+defaults:
+  base-url: "https://feeds.example.com"
+feeds: []

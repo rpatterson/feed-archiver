@@ -4,8 +4,11 @@ Test the feed-archiver linking of enclosures into media libraries.
 
 import os
 import pathlib
+import logging
 
 import feedarchiver
+from .. import archive
+from .. import feed
 from .. import tests
 
 
@@ -134,4 +137,72 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         self.assertTrue(
             updated_link_path.is_symlink(),
             "New downloaded file link is not a symlink",
+        )
+
+    def test_feed_relink_missing_feed(self):
+        """
+        The `relink` raises a helpful error if the archived feed XML is missing.
+        """
+        self.update_feed(self.archive_feed)
+        self.archive_feed.path.unlink()
+        with self.assertLogs(
+            archive.logger,
+            level=logging.ERROR,
+        ) as logged_msgs:
+            feedarchiver.relink(archive_dir=self.archive_feed.archive.root_path)
+        self.assertEqual(
+            len(logged_msgs.records),
+            1,
+            "Wrong number of download logged archive records",
+        )
+        self.assertIn(
+            "Could not locate feed in archive",
+            logged_msgs.records[0].exc_info[1].args[0],
+            "Wrong logged record message",
+        )
+
+    def test_feed_relink_multiple_feed_files(self):
+        """
+        The `relink` logs a helpful warning if there are multiple archived feeds.
+        """
+        self.update_feed(self.archive_feed)
+        self.archive_feed.path.with_suffix(".xml").write_text(
+            self.archive_feed.path.read_text(),
+        )
+        self.archive_feed.path.rename(self.archive_feed.path.with_suffix(".xml.rss"))
+        with self.assertLogs(
+            feed.logger,
+            level=logging.WARNING,
+        ) as logged_msgs:
+            feedarchiver.relink(archive_dir=self.archive_feed.archive.root_path)
+        self.assertGreater(
+            len(logged_msgs.records),
+            0,
+            "Missing logged records",
+        )
+        self.assertIn(
+            "Multiple XML files found for feed",
+            logged_msgs.records[0].message,
+            "Wrong logged record message",
+        )
+
+
+class FeedarchiverRelinkEdgeTests(tests.FeedarchiverTestCase):
+    """
+    Test `relink` sub-command edge cases.
+    """
+
+    EXAMPLE_RELATIVE = pathlib.Path("empty-items")
+
+    def test_feed_relinking_wo_items(self):
+        """
+        The `relink` sub-command tolerates feeds without items.
+        """
+        self.update_feed(self.archive_feed)
+        relink_results = feedarchiver.relink(
+            archive_dir=self.archive_feed.archive.root_path,
+        )
+        self.assertFalse(
+            relink_results,
+            "Empty feed returned relink results",
         )
