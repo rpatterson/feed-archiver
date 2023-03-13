@@ -14,7 +14,13 @@ Required
 High Priority
 *************
 
-#. Playlist creation for media enclosures using the same plugin system as for linking.
+#. Generate an ``./index.html`` at the archive root with feed titles linked to the
+   local, archived feed XML to make it easier to browse archived feeds and subscribe to
+   them in podcatcher clients.
+
+#. Playlist creation for media enclosures using the a similar plugin system as for
+   linking.  Maybe start by moving the local archived feed XML handing into such a
+   plugin system.
 
 #. Any documentation improvements!
 
@@ -84,3 +90,7 @@ Nice to Have
    paths?
 
 #. Option to use hard links instead of symlinks.
+
+#. More examples of template configurations to match feed metadata: e.g. prepending
+   ``<itunes:episode>`` to link basename, extracting album directory from feed item
+   title.
