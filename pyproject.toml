@@ -63,7 +63,14 @@ disable = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["argcomplete", "user_agent", "arrapi", "requests_toolbelt.*", "feedparser"]
+module = [
+    "importlib_metadata",
+    "argcomplete",
+    "user_agent",
+    "arrapi",
+    "requests_toolbelt.*",
+    "feedparser",
+]
 ignore_missing_imports = true
 
 [tool.vulture]

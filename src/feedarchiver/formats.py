@@ -45,8 +45,8 @@ class FeedFormat:
     ITEM_TAG = ""
     ITEM_ID_TAG = ""
     DOWNLOAD_TEXT_TAGS = ["link", "url"]
-    DOWNLOAD_CONTENT_TAGS = ["enclosure", "content"]
-    DOWNLOAD_CONTENT_EXPR = "@rel='enclosure'"
+    DOWNLOAD_ENCLOSURE_TAGS = ["enclosure", "content"]
+    DOWNLOAD_ENCLOSURE_EXPR = "@rel='enclosure'"
     DOWNLOAD_ATTR_NAMES = ["href", "url", "src"]
 
     # XPaths that differ between formats but can't be generalized from the above
@@ -80,19 +80,19 @@ class FeedFormat:
             f"{download_feed_prefix} and {download_text_expr}]/text()",
             f"{download_feed_prefix}]//{download_attr_step}",
         ]
-        download_content_tags_expr = " or ".join(
-            f"local-name()='{download_content_tag}'"
-            for download_content_tag in cls.DOWNLOAD_CONTENT_TAGS
+        download_enclosure_tags_expr = " or ".join(
+            f"local-name()='{download_enclosure_tag}'"
+            for download_enclosure_tag in cls.DOWNLOAD_ENCLOSURE_TAGS
         )
-        download_content_expr = (
-            f"{download_content_tags_expr} or {cls.DOWNLOAD_CONTENT_EXPR}"
+        download_enclosure_expr = (
+            f"{download_enclosure_tags_expr} or {cls.DOWNLOAD_ENCLOSURE_EXPR}"
         )
         cls.DOWNLOAD_ITEM_ASSET_URLS_XPATHS = [
             f".//*[{download_text_expr}]/text()",
-            f".//*[not({download_content_expr})]/{download_attr_step}",
+            f".//*[not({download_enclosure_expr})]/{download_attr_step}",
         ]
-        cls.DOWNLOAD_ITEM_CONTENT_URLS_XPATHS = [
-            f".//*[{download_content_expr}]/{download_attr_step}",
+        cls.DOWNLOAD_ITEM_ENCLOSURE_URLS_XPATHS = [
+            f".//*[{download_enclosure_expr}]/{download_attr_step}",
         ]
 
         # Register this specific feed format by it's root element tag name

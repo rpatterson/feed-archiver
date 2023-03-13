@@ -1,5 +1,5 @@
 """
-Plugins for linking feed item enclosures/content into media libraries.
+Plugins for linking feed item enclosures into media libraries.
 """
 
 import re
@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
 
 def load_plugins(parent, parent_config):
     """
-    Pre-process and validate the content link path configurations.
+    Pre-process and validate the enclosure link path configurations.
     """
     archive = getattr(parent, "archive", parent)
     link_path_defaults = archive.global_config.get("plugins", {}).get("link-paths", {})
@@ -69,12 +69,12 @@ def load_plugins(parent, parent_config):
 
 class LinkPathPlugin:
     """
-    A plugin for linking feed item enclosures/content into media libraries.
+    A plugin for linking feed item enclosures into media libraries.
     """
 
     def __init__(self, parent, config):
         """
-        Instantiate a plugin for linking enclosures/content into media libraries.
+        Instantiate a plugin for linking enclosures into media libraries.
         """
         self.parent = parent
         self.config = config
@@ -89,7 +89,7 @@ class LinkPathPlugin:
 
     def __call__(self, *args, **kwargs):  # pragma: no cover
         """
-        Determine the paths that should be linked to the feed item enclosure/content.
+        Determine the paths that should be linked to the feed item enclosure.
 
         Plugin implementations may return a list of paths and let the `ArchiveFeed`
         instance handle the actual linking including appending an numerical index to the

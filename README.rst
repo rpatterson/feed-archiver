@@ -369,9 +369,8 @@ Sonarr TV Series Plugin
 
 The ``sonarr`` plugin uses values from the link path configuration and/or the ``match``
 groups to lookup a TV series/show managed by `Sonarr`_, then lookup an episode video
-file that corresponds to the feed item enclosure/content, and link the enclosure/content
-next to that video file.  The ``link-paths`` configuration or ``match`` groups must
-contain:
+file that corresponds to the feed item enclosure, and link the enclosure next to that
+video file.  The ``link-paths`` configuration or ``match`` groups must contain:
 
 - ``url`` and ``api-key`` used to `connect to the Sonarr API`_
 - ``series_id`` or ``series_title`` used to `look up the TV show/series`_, note that
@@ -383,7 +382,7 @@ contain:
 They may also include:
 
 - ``stem-append`` containing a string to append to the episode file stem before the
-  enclosure/content suffix/extension
+  enclosure suffix/extension
 
 
 ************

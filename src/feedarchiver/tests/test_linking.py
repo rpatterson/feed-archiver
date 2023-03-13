@@ -27,37 +27,39 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         """
         By default, enclosures are symlinked to `.../Feed Title/Item Title.ext`.
         """
-        feeds_content_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
+        feeds_enclosures_path = (
+            self.archive_feed.archive.root_path / "Music" / "Podcasts"
+        )
         self.assertFalse(
-            feeds_content_path.is_dir(),
+            feeds_enclosures_path.is_dir(),
             "Feed item enclosure symlinks hierarchy exists before updating",
         )
 
         self.update_feed(self.archive_feed)
 
         self.assertTrue(
-            feeds_content_path.is_dir(),
+            feeds_enclosures_path.is_dir(),
             "Feed item enclosure symlinks hierarchy does not exist after updating",
         )
-        feed_content_path = feeds_content_path / self.FEED_BASENAME
+        feed_enclosures_path = feeds_enclosures_path / self.FEED_BASENAME
         self.assertTrue(
-            feed_content_path.is_dir(),
+            feed_enclosures_path.is_dir(),
             "Feed missing from symlinks hierarchy",
         )
-        download_content_path = feed_content_path / self.ITEM_DOWNLOAD_BASENAME
+        enclosure_path = feed_enclosures_path / self.ITEM_DOWNLOAD_BASENAME
         self.assertTrue(
-            download_content_path.is_symlink(),
+            enclosure_path.is_symlink(),
             "Item enclosure missing from symlinks hierarchy",
         )
         enclosure_archive_path = (
             self.archive.root_path / self.ENCLOSURE_RELATIVE
         ).with_suffix(".mp3")
-        item_content_target = pathlib.Path(
-            os.path.relpath(enclosure_archive_path, download_content_path.parent),
+        item_enclosures_target = pathlib.Path(
+            os.path.relpath(enclosure_archive_path, enclosure_path.parent),
         )
         self.assertEqual(
-            os.readlink(download_content_path),
-            str(item_content_target),
+            os.readlink(enclosure_path),
+            str(item_enclosures_target),
             "Item enclosure symlink to wrong target",
         )
 
@@ -67,11 +69,13 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         """
         # Verify initial test fixture
         self.update_feed(self.archive_feed)
-        feeds_content_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
-        feed_content_path = feeds_content_path / self.FEED_BASENAME
-        download_content_path = feed_content_path / self.ITEM_DOWNLOAD_BASENAME
+        feeds_enclosures_path = (
+            self.archive_feed.archive.root_path / "Music" / "Podcasts"
+        )
+        feed_enclosures_path = feeds_enclosures_path / self.FEED_BASENAME
+        enclosure_path = feed_enclosures_path / self.ITEM_DOWNLOAD_BASENAME
         self.assertTrue(
-            download_content_path.is_symlink(),
+            enclosure_path.is_symlink(),
             "Item enclosure missing from symlinks hierarchy",
         )
 
@@ -91,11 +95,11 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
             args=["--archive-dir", str(self.archive_feed.archive.root_path), "relink"],
         )
         self.assertFalse(
-            download_content_path.exists(),
+            enclosure_path.exists(),
             "Original downloaded file symlink still exists",
         )
         updated_link_path = (
-            feed_content_path / f"{self.ITEM_BASENAME} - {self.DOWNLOAD_BASENAME}"
+            feed_enclosures_path / f"{self.ITEM_BASENAME} - {self.DOWNLOAD_BASENAME}"
         )
         self.assertTrue(
             updated_link_path.is_symlink(),
@@ -107,10 +111,12 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         The `relink` sub-command tolerates already deleted symlinks.
         """
         self.update_feed(self.archive_feed)
-        feeds_content_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
-        feed_content_path = feeds_content_path / self.FEED_BASENAME
-        download_content_path = feed_content_path / self.ITEM_DOWNLOAD_BASENAME
-        download_content_path.unlink()
+        feeds_enclosures_path = (
+            self.archive_feed.archive.root_path / "Music" / "Podcasts"
+        )
+        feed_enclosures_path = feeds_enclosures_path / self.FEED_BASENAME
+        enclosure_path = feed_enclosures_path / self.ITEM_DOWNLOAD_BASENAME
+        enclosure_path.unlink()
 
         # Change the archive configuration such that downloaded files are symlinked to
         # different locations.
@@ -128,11 +134,11 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         # the path downloaded files should be linked to.
         feedarchiver.relink(archive_dir=self.archive_feed.archive.root_path)
         self.assertFalse(
-            download_content_path.exists(),
+            enclosure_path.exists(),
             "Original downloaded file symlink still exists",
         )
         updated_link_path = (
-            feed_content_path / f"{self.ITEM_BASENAME} - {self.DOWNLOAD_BASENAME}"
+            feed_enclosures_path / f"{self.ITEM_BASENAME} - {self.DOWNLOAD_BASENAME}"
         )
         self.assertTrue(
             updated_link_path.is_symlink(),

@@ -101,7 +101,7 @@ class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
 
     def __call__(self, enclosure_path, match, *args, **kwargs):
         """
-        Lookup the episode and link the enclosure/content next to the video file.
+        Lookup the episode and link the enclosure next to the video file.
         """
         series_id, season_number, episode_numbers, stem_append = self.validate_params(
             match,

@@ -38,7 +38,7 @@ class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
         **kwargs,
     ):  # pylint: disable=too-many-arguments
         """
-        Link the feed item enclosure/content to a target path expanded from a template.
+        Link the feed item enclosure to a target path expanded from a template.
         """
         # Maybe find a better template format/engine, perhaps Jinja2?
         # We need a templating engine that supports a very rich set of operations
