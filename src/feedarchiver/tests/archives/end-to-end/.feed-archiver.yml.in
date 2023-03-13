@@ -1,18 +1,18 @@
 defaults:
   base-url: "https://feeds.example.com"
   plugins:
-    link-paths:
+    enclosures:
       sonarr:
         url: "http://sonarr:8989"
         api-key: "${SONARR_API_KEY}"
-  link-paths:
+  enclosures:
     - template: "\
       ./Music/Podcasts/{utils.quote_sep(feed_parsed.feed.title).strip()}\
       /{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}"
 feeds:
   # A Creative Commons licensed feed
   - remote-url: "https://www.democracynow.org/podcast.xml"
-    link-paths:
+    enclosures:
       # This particular feed is a podcast about a TV series/show.  Link enclosures
       # from feed items about an individual episode next to the episode video file as
       # an alternate audio track using a non-default plugin.

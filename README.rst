@@ -138,7 +138,7 @@ in multiple locations in media libraries.
 Because syndication feeds may have a number of different ways to correspond to library
 media, this functionality needs to be highly configurable and in order to be highly
 configurable it is more complex to customize to a specific goal.  As such, using this
-feature requires using `a link path plugin`_, or the skill level of a junior developer,
+feature requires using `an enclosure plugin`_, or the skill level of a junior developer,
 or someone who is comfortable reading and interpreting technical documentation, or
 re-using example configurations known to work by others.
 
@@ -218,16 +218,16 @@ See also the command-line help for details on options and arguments::
 			  will be downloaded (default: .)
 
 To link feed item enclosures into an `alternate hierarchy`_, such as in a media library,
-add a ``link-paths`` key to the feed configuration whose value is an list/array of
+add a ``enclosures`` key to the feed configuration whose value is an list/array of
 objects each defining one alternative path to link to the feed item enclosure.  Any
-``link-paths`` defined in the top-level ``defaults`` key will be used for all feeds.
-Configuration to be shared across multiple ``link-paths`` configurations may be placed
-in the corresponding ``defaults`` / ``plugins`` / ``link-paths`` / ``{plugin_name}``
+``enclosures`` defined in the top-level ``defaults`` key will be used for all feeds.
+Configuration to be shared across multiple ``enclosures`` configurations may be placed
+in the corresponding ``defaults`` / ``plugins`` / ``enclosures`` / ``{plugin_name}``
 object.  The actual linking of enclosures is delegated to `plugins`_.
 
 When updating the archive from the remote feed URLs using the ``$ feed-archiver
 update`` sub-command, the enclosures of new items are linked as configured.  If the
-``link-paths`` configuration changes or any of the used plugins refer to external
+``enclosures`` configuration changes or any of the used plugins refer to external
 resources that may change, such as the with the ``sonarr`` plugin when `Sonarr`_ has
 upgraded or renamed the corresponding video files, use the  ``$ feed-archiver relink``
 command to update all existing links.
@@ -238,10 +238,10 @@ Plugins
 *******
 
 How feed item enclosures are linked into a media library is delegated to plugins or
-add-ons.  Specifically, the ``plugin`` key in a ``link-paths`` configuration must be a
+add-ons.  Specifically, the ``plugin`` key in a ``enclosures`` configuration must be a
 string which is the name of `a Python entry point`_ registered in the
-``feedarchiver.linkpaths`` group.  The entry point object reference must point to a
-``feedarchiver.linkpaths.LinkPathPlugin`` subclass which accepts the following arguments
+``feedarchiver.enclosures`` group.  The entry point object reference must point to a
+``feedarchiver.enclosures.EnclosurePlugin`` subclass which accepts the following arguments
 when instantiated:
 
 #. ``parent=dict``
@@ -252,7 +252,7 @@ when instantiated:
 #. ``config=dict``
 
    The Python dictionary object from the de-serialized archive configuration YAML for
-   this specific link path configuration.
+   this specific enclosure configuration.
 
 and whose instances must be callable and accept the following arguments when called:
 
@@ -305,17 +305,17 @@ If the plugin returns a value, it must be a list of strings and will be used as 
 target paths at which to link the enclosure.  Relative paths are resolved against the
 archive root.  These paths are not escaped, so if escaping is needed it must be a part
 of the plugin configuration. If no plugins link a given enclosure, then any plugins
-whose ``fallback`` key is ``true`` will be applied. Here's an example ``link-paths``
+whose ``fallback`` key is ``true`` will be applied. Here's an example ``enclosures``
 definition::
 
   defaults:
     base-url: "https://feeds.example.com"
     plugins:
-      link-paths:
+      enclosures:
 	sonarr:
 	  url: "http://localhost:8989"
 	  api-key: "????????????????????????????????"
-    link-paths:
+    enclosures:
       # Link all feed item enclosures into the media library under the podcasts
       # directory.  Link items into an album directory named by series title if
       # matching.
@@ -340,7 +340,7 @@ definition::
     - remote-url: "\
       https://foo-username:secret@grault.example.com\
       /feeds/garply.rss?bar=qux%2Fbaz#corge"
-      link-paths:
+      enclosures:
 	# This particular feed is a podcast about a TV series/show.  Link enclosures
 	# from feed items about an individual episode next to the episode video file as
 	# an external audio track using a non-default plugin.
@@ -362,15 +362,15 @@ default ``template`` is::
 
   ./Feeds/{utils.quote_sep(feed_parsed.feed.title).strip()}/{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}
 
-The format strings may reference any of `the arguments passed into link path plugins`_.
+The format strings may reference any of `the arguments passed into enclosure plugins`_.
 
 Sonarr TV Series Plugin
 =======================
 
-The ``sonarr`` plugin uses values from the link path configuration and/or the ``match``
+The ``sonarr`` plugin uses values from the enclosure configuration and/or the ``match``
 groups to lookup a TV series/show managed by `Sonarr`_, then lookup an episode video
 file that corresponds to the feed item enclosure, and link the enclosure next to that
-video file.  The ``link-paths`` configuration or ``match`` groups must contain:
+video file.  The ``enclosures`` configuration or ``match`` groups must contain:
 
 - ``url`` and ``api-key`` used to `connect to the Sonarr API`_
 - ``series_id`` or ``series_title`` used to `look up the TV show/series`_, note that
@@ -398,8 +398,8 @@ development.
 
 
 .. _alternate hierarchy: `Ingest Feed Enclosures Into Media Libraries`_
-.. _a link path plugin: `Plugins`_
-.. _the arguments passed into link path plugins: `Plugins`_
+.. _an enclosure plugin: `Plugins`_
+.. _the arguments passed into enclosure plugins: `Plugins`_
 
 .. _pip: https://pip.pypa.io/en/stable/installation/
 .. _argcomplete: https://kislyuk.github.io/argcomplete/#installation

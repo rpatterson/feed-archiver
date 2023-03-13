@@ -15,7 +15,7 @@ import user_agent
 
 from . import utils
 from . import feed
-from . import linkpaths
+from . import enclosures
 from .utils import mimetypes
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,8 @@ class Archive:  # pylint: disable=too-many-instance-attributes
 
     # Initialized when the configuration is loaded prior to update
     global_config = None
-    link_path_plugins = None
-    link_path_fallack_plugins = None
+    enclosure_plugins = None
+    enclosure_fallack_plugins = None
     # The default base URL for assembling absolute URLs
     url = url_split = None
     archive_feeds = None
@@ -73,10 +73,10 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         self.global_config = archive_config["defaults"]
         self.url = self.global_config["base-url"]
         self.url_split = urllib.parse.urlsplit(self.global_config["base-url"])
-        self.link_path_plugins, self.link_path_fallack_plugins = linkpaths.load_plugins(
-            self,
-            self.global_config,
-        )
+        (
+            self.enclosure_plugins,
+            self.enclosure_fallack_plugins,
+        ) = enclosures.load_plugins(self, self.global_config)
 
         feed_configs = archive_config["feeds"]
         if not feed_configs:

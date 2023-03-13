@@ -1,16 +1,16 @@
 """
-The default link path plugin, expands a template into the target path.
+The default enclosure plugin, expands a template into the target path.
 """
 
 import pathlib
 
 from .. import utils  # noqa, pylint: disable=unused-import
-from .. import linkpaths
+from .. import enclosures
 
 
-class TemplateLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
+class TemplateEnclosurePlugin(enclosures.EnclosurePlugin):  # noqa: V102
     """
-    The default link path plugin, expands a template into the target path.
+    The default enclosure plugin, expands a template into the target path.
     """
 
     # Default a hierarchy under the feed title and item title

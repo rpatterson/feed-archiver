@@ -17,12 +17,12 @@ except ImportError:  # pragma: no cover
 import arrapi
 import tenacity
 
-from .. import linkpaths
+from .. import enclosures
 
 logger = logging.getLogger(__name__)
 
 
-class SonarrLinkPathPlugin(linkpaths.LinkPathPlugin):  # noqa: V102
+class SonarrEnclosurePlugin(enclosures.EnclosurePlugin):  # noqa: V102
     """
     Link enclosures about a TV series episode next to the video file as external audio.
     """

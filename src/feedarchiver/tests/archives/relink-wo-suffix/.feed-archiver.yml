@@ -1,18 +1,18 @@
 defaults:
   base-url: "https://feeds.example.com"
   plugins:
-    link-paths:
+    enclosures:
       sonarr:
         url: "http://localhost:8989"
         api-key: "secret"
-  link-paths:
+  enclosures:
     - template: "\
       ./Music/Podcasts/{utils.quote_sep(feed_parsed.feed.title).strip()}\
       /{utils.quote_sep(item_parsed.title).strip()} - {enclosure_path.name}"
 feeds:
   - remote-url:
       "https://foo.example.com/podcast/feed"
-    link-paths:
+    enclosures:
       # This particular feed is a podcast about a TV series/show.  Link enclosures
       # from feed items about an individual episode next to the episode video file as
       # an alternate audio track using a non-default plugin.

@@ -3,7 +3,7 @@ defaults:
 feeds:
   - remote-url:
       "https://foo.example.com/podcast/empty.rss"
-    link-paths:
+    enclosures:
       - template: "\
         ./Music/Podcasts/{utils.quote_sep(feed_parsed.feed.title).strip()}\
         /{utils.quote_sep(item_parsed.title).strip()}{enclosure_path.suffix}"

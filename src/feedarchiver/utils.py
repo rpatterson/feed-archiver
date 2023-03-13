@@ -135,7 +135,7 @@ def quote_sep(string_):  # noqa: V103
     """
     Return the string with all occurrences of path separators, slashes, quoted.
 
-    Useful to sanitize input from feed XML when used in link path template plugin string
+    Useful to sanitize input from feed XML when used in enclosure template plugin string
     formats from adding unintended path parts.
     """
     quoted = string_.replace(os.sep, QUOTED_SEP)
@@ -185,7 +185,7 @@ def copy_empty_items_parent(feed_format, items_parent):
             # non-item elements after feed item elements, either interspersed or at the
             # end.  This is rare, however, in fact I've never seen an instance of it,
             # items are *most* of a feed's elements and use of the items parent other
-            # elements in link path plugin configurations is rare, so avoid unnecessary
+            # elements in enclosure plugin configurations is rare, so avoid unnecessary
             # iteration until someone reports an issue with this.
             break
         items_parent_copy.append(copy.deepcopy(child))
@@ -194,7 +194,7 @@ def copy_empty_items_parent(feed_format, items_parent):
 
 # We need to parse the archive and remote feed XML using `etree` because we need to be
 # able to modify the XML and write it to the archive, something that `feedparser`
-# doesn't provide.  Link path plugins, however, frequently need the richer parsing
+# doesn't provide.  enclosure plugins, however, frequently need the richer parsing
 # support that `feedparser` *does* provide, such as parsing dates and times.  That rich
 # parsing is only needed in the rare case of new items being added to the archive's
 # version of the feed, so only do the rich parsing on a per-item basis.
