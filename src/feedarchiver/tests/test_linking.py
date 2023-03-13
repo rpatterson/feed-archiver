@@ -27,9 +27,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         """
         By default, enclosures are symlinked to `.../Feed Title/Item Title.ext`.
         """
-        feeds_links_path = (
-            self.archive_feed.archive.root_path / "Music" / "Podcasts"
-        )
+        feeds_links_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
         self.assertFalse(
             feeds_links_path.is_dir(),
             "Feed item enclosure symlinks hierarchy exists before updating",
@@ -69,9 +67,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         """
         # Verify initial test fixture
         self.update_feed(self.archive_feed)
-        feeds_links_path = (
-            self.archive_feed.archive.root_path / "Music" / "Podcasts"
-        )
+        feeds_links_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
         feed_links_path = feeds_links_path / self.FEED_BASENAME
         link_path = feed_links_path / self.ITEM_DOWNLOAD_BASENAME
         self.assertTrue(
@@ -111,9 +107,7 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         The `relink` sub-command tolerates already deleted symlinks.
         """
         self.update_feed(self.archive_feed)
-        feeds_links_path = (
-            self.archive_feed.archive.root_path / "Music" / "Podcasts"
-        )
+        feeds_links_path = self.archive_feed.archive.root_path / "Music" / "Podcasts"
         feed_links_path = feeds_links_path / self.FEED_BASENAME
         link_path = feed_links_path / self.ITEM_DOWNLOAD_BASENAME
         link_path.unlink()

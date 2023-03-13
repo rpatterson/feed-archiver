@@ -176,18 +176,18 @@ class ArchiveFeed:
                 if item_download_paths is None:
                     continue
                 (
-                    item_download_asset_paths,
-                    item_download_enclosure_paths,
+                    item_asset_paths,
+                    item_enclosure_paths,
                 ) = item_download_paths
-                download_paths.update(item_download_asset_paths)
-                download_paths.update(item_download_enclosure_paths)
+                download_paths.update(item_asset_paths)
+                download_paths.update(item_enclosure_paths)
                 updated_items[remote_item_id] = remote_item_elem
 
                 self.link_item_enclosures(
                     remote_format=remote_format,
                     feed_elem=archived_items_parent,
                     item_elem=remote_item_elem,
-                    item_enclosure_paths=item_download_enclosure_paths,
+                    item_enclosure_paths=item_enclosure_paths,
                 )
 
                 archived_items_parent.insert(first_item_idx, remote_item_elem)
@@ -282,21 +282,21 @@ class ArchiveFeed:
         """
         Download all the enclosures from a feed item.
         """
-        item_download_asset_urls = formats.all_xpaths_results(
+        item_asset_urls = formats.all_xpaths_results(
             remote_item_elem,
             remote_format.DOWNLOAD_ITEM_ASSET_URLS_XPATHS,
         )
-        item_download_enclosure_urls = formats.all_xpaths_results(
+        item_enclosure_urls = formats.all_xpaths_results(
             remote_item_elem,
             remote_format.DOWNLOAD_ITEM_ENCLOSURE_URLS_XPATHS,
         )
         try:
             # Download enclosures and assets only for this item.
-            item_download_asset_paths = self.download_urls(
-                item_download_asset_urls,
+            item_asset_paths = self.download_urls(
+                item_asset_urls,
             )
-            item_download_enclosure_paths = self.download_urls(
-                item_download_enclosure_urls,
+            item_enclosure_paths = self.download_urls(
+                item_enclosure_urls,
             )
         except Exception:  # pylint: disable=broad-except
             logger.exception(
@@ -306,7 +306,7 @@ class ArchiveFeed:
             if utils.POST_MORTEM:  # pragma: no cover
                 pdb.post_mortem()
             return None
-        return item_download_asset_paths, item_download_enclosure_paths
+        return item_asset_paths, item_enclosure_paths
 
     def update_self(self, feed_format, archive_root):
         """
@@ -655,11 +655,11 @@ class ArchiveFeed:
         """
         Link item enclosures into media library hierarchies using plugins.
         """
-        enclosure_paths = {}
+        link_paths = {}
         if not self.enclosure_plugins and not self.enclosure_fallack_plugins:
             # Avoid unnecessary work when no link plugins are configured, particularly
             # parsing the item with `feedparser`.
-            return enclosure_paths
+            return link_paths
 
         feed_parsed = utils.parse_item_feed(remote_format, feed_elem, item_elem)
         (item_parsed,) = feed_parsed.entries
@@ -669,7 +669,7 @@ class ArchiveFeed:
         ) in item_enclosure_paths.items():
             link_idx = 0
             for enclosure_plugin in self.enclosure_plugins:
-                for enclosure_path in self.list_item_enclosure_link_plugin_paths(
+                for link_path in self.list_plugin_enclosure_links(
                     feed_elem,
                     feed_parsed,
                     item_elem,
@@ -678,11 +678,11 @@ class ArchiveFeed:
                     enclosure_path,
                     enclosure_plugin,
                 ):
-                    enclosure_paths.setdefault(url_result, []).append(
+                    link_paths.setdefault(url_result, []).append(
                         self.link_plugin_file(
                             url_result,
                             enclosure_path,
-                            enclosure_path,
+                            link_path,
                             link_idx,
                         )
                     )
@@ -692,7 +692,7 @@ class ArchiveFeed:
                 continue
             # Link and fallback configurations for this enclosure
             for enclosure_plugin in self.enclosure_fallack_plugins:
-                for enclosure_path in self.list_item_enclosure_link_plugin_paths(
+                for link_path in self.list_plugin_enclosure_links(
                     feed_elem,
                     feed_parsed,
                     item_elem,
@@ -701,18 +701,18 @@ class ArchiveFeed:
                     enclosure_path,
                     enclosure_plugin,
                 ):
-                    enclosure_paths.setdefault(url_result, []).append(
+                    link_paths.setdefault(url_result, []).append(
                         self.link_plugin_file(
                             url_result,
                             enclosure_path,
-                            enclosure_path,
+                            link_path,
                             link_idx,
                         )
                     )
                     link_idx += 1
-        return enclosure_paths
+        return link_paths
 
-    def list_item_enclosure_link_plugin_paths(
+    def list_plugin_enclosure_links(
         self,
         feed_elem,
         feed_parsed,
@@ -723,7 +723,7 @@ class ArchiveFeed:
         enclosure_plugin,
     ):  # pylint: disable=too-many-arguments
         """
-        Return the enclosure enclosures for an individual download and plugin.
+        Return the links for an individual enclosure and plugin.
         """
         kwargs = {}
         match = None
@@ -742,7 +742,7 @@ class ArchiveFeed:
             str(enclosure_path),
         )
         try:
-            enclosure_link_strs = enclosure_plugin(
+            link_strs = enclosure_plugin(
                 archive_feed=self,
                 feed_elem=feed_elem,
                 feed_parsed=feed_parsed,
@@ -761,15 +761,15 @@ class ArchiveFeed:
             )
             if utils.POST_MORTEM:  # pragma: no cover
                 pdb.post_mortem()
-            enclosure_link_strs = []
-        if enclosure_link_strs is None:  # pragma: no cover
+            link_strs = []
+        if link_strs is None:  # pragma: no cover
             # Plugin handled any linking itself
-            enclosure_link_strs = []
-        if isinstance(enclosure_link_strs, str):  # pragma: no cover
-            enclosure_link_strs = [enclosure_link_strs]
+            link_strs = []
+        if isinstance(link_strs, str):  # pragma: no cover
+            link_strs = [link_strs]
         # Filter out duplicate paths but preserve order
         uniq_link_strs = []
-        for enclosure_link_str in enclosure_link_strs:
+        for enclosure_link_str in link_strs:
             if enclosure_link_str not in uniq_link_strs:
                 uniq_link_strs.append(enclosure_link_str)
         return [
@@ -825,7 +825,7 @@ class ArchiveFeed:
         self,
         url_result,
         enclosure_archive_relative,
-        enclosure_path,
+        link_path,
         link_idx,
     ):
         """
@@ -835,46 +835,46 @@ class ArchiveFeed:
         enclosure_link_target = pathlib.Path(
             os.path.relpath(
                 self.archive.root_path / enclosure_archive_relative,
-                enclosure_path.parent,
+                link_path.parent,
             ),
         )
 
         # Append numerical index if there are multiple enclosure downloads for this
         # item.
-        enclosure_link_stem = enclosure_path.stem
+        enclosure_link_stem = link_path.stem
         enclosure_index = 0
-        while os.path.lexists(enclosure_path):
-            if enclosure_path.is_symlink() and os.readlink(enclosure_path) == str(
+        while os.path.lexists(link_path):
+            if link_path.is_symlink() and os.readlink(link_path) == str(
                 enclosure_link_target
             ):
                 logger.debug(
                     "Duplicate item URL, skip enclosure link: %r -> %r",
-                    str(enclosure_path),
+                    str(link_path),
                     str(enclosure_link_target),
                 )
                 break
             enclosure_index += 1
-            enclosure_path = enclosure_path.with_name(
+            link_path = link_path.with_name(
                 enclosure_link_stem[
                     : self.archive.root_stat.f_namemax
-                    - (len(enclosure_path.suffix) + len(str(enclosure_index)))
+                    - (len(link_path.suffix) + len(str(enclosure_index)))
                 ]
                 + str(enclosure_index)
-                + enclosure_path.suffix,
+                + link_path.suffix,
             )
         else:
             logger.info(
                 "Linking item enclosure: %r -> %r",
-                str(enclosure_path),
+                str(link_path),
                 str(enclosure_link_target),
             )
-            enclosure_path.parent.mkdir(parents=True, exist_ok=True)
-            enclosure_path.symlink_to(enclosure_link_target)
+            link_path.parent.mkdir(parents=True, exist_ok=True)
+            link_path.symlink_to(enclosure_link_target)
 
         url_result.getparent().attrib[
             f"{{{self.NAMESPACE}}}enclosure-link-{link_idx}"
-        ] = str(enclosure_path)
-        return enclosure_path
+        ] = str(link_path)
+        return link_path
 
 
 def update_download_metadata(download_response, download_path):
