@@ -182,18 +182,21 @@ simplest form, this can just be a file like so::
   defaults:
     base-url: "https://feeds.example.com"
   feeds:
-    - remote-url: "\
+    - title: "Garply Podcast Title"
+      remote-url: "\
       https://foo-username:secret@grault.example.com\
       /feeds/garply.rss?bar=qux%2Fbaz#corge"
   ...
 
-Then simple run the ``$ feed-archiver`` command in that directory to update the archive
-from the current version of the feeds::
+Then run the ``$ feed-archiver`` command in that directory to update the archive from
+the current version of the feeds and write an HTML index with links to the archived
+feeds::
 
   $ cd "/var/www/html/feeds/"
   $ feed-archiver
   INFO:Retrieving feed URL: https://foo-username:secret@grault.example.com/feeds/garply.rss
   ...
+  INFO:Writing HTML index: /var/www/html/feeds/index.html
 
 See also the command-line help for details on options and arguments::
 

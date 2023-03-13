@@ -27,6 +27,8 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         mock_update_method.return_value = self.UPDATE_RETURN_VALUE
 
         self.archive.load_config()
+        mock_feed_class.return_value.config = mock_feed_class.mock_calls[0][2]["config"]
+        mock_feed_class.return_value.path = self.feed_path
         mock_feed_class.assert_any_call(
             archive=self.archive,
             config={"remote-url": self.feed_url},
@@ -63,6 +65,8 @@ class FeedarchiverArchiveTests(tests.FeedarchiverTestCase):
         """
         mock_update_method = mock_feed_class.return_value.update
         mock_update_method.return_value = None
+        self.archive.load_config()
+        mock_feed_class.return_value.config = mock_feed_class.mock_calls[0][2]["config"]
 
         updated_feeds = self.archive.update()
 

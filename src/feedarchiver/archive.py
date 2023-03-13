@@ -12,6 +12,8 @@ import pdb
 import yaml
 import requests
 import user_agent
+from lxml import etree  # nosec B410
+from lxml.html import builder  # nosec B410
 
 from . import utils
 from . import feed
@@ -262,7 +264,41 @@ class Archive:  # pylint: disable=too-many-instance-attributes
         """
         Request the URL of each feed in the archive and update contents accordingly.
         """
-        return self.run_feeds_command("update")
+        feeds_results = self.run_feeds_command("update")
+        html = builder.HTML(
+            builder.HEAD(
+                builder.TITLE("Feed Archive Index"),
+            ),
+            builder.BODY(
+                builder.H1("Feed Archive Index"),
+                builder.P(
+                    "Use the links below to subscribe to the feeds archived here:",
+                ),
+                builder.UL(
+                    *(
+                        builder.LI(
+                            builder.A(
+                                archive_feed.config.get(
+                                    "title",
+                                    archive_feed.config.get(
+                                        "name",
+                                        str(archive_feed.path),
+                                    ),
+                                ),
+                                href=str(archive_feed.path),
+                            ),
+                        )
+                        for archive_feed in self.archive_feeds
+                    )
+                ),
+            ),
+        )
+        logger.info(
+            "Writing HTML index: %s",
+            self.root_path / "index.html",
+        )
+        etree.ElementTree(html).write(self.root_path / "index.html", pretty_print=True)
+        return feeds_results
 
     def relink(self):
         """

@@ -14,10 +14,6 @@ Required
 High Priority
 *************
 
-#. Generate an ``./index.html`` at the archive root with feed titles linked to the
-   local, archived feed XML to make it easier to browse archived feeds and subscribe to
-   them in podcatcher clients.
-
 #. Add an enclosure plugin to create playlists.
 
 #. Any documentation improvements!
