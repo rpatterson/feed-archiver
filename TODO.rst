@@ -18,9 +18,7 @@ High Priority
    local, archived feed XML to make it easier to browse archived feeds and subscribe to
    them in podcatcher clients.
 
-#. Playlist creation for media enclosures using the a similar plugin system as for
-   linking.  Maybe start by moving the local archived feed XML handing into such a
-   plugin system.
+#. Add an enclosure plugin to create playlists.
 
 #. Any documentation improvements!
 
