@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements/py37/user.txt --resolver=backtracking pyproject.toml
 #
-argcomplete==2.0.0
+argcomplete==2.1.1
     # via feed-archiver (pyproject.toml)
 arrapi==1.4.2
     # via feed-archiver (pyproject.toml)
@@ -12,13 +12,13 @@ backports-cached-property==1.0.2 ; python_version < "3.8"
     # via feed-archiver (pyproject.toml)
 certifi==2022.12.7
     # via requests
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via requests
 feedparser==6.0.10
     # via feed-archiver (pyproject.toml)
 idna==3.4
     # via requests
-importlib-metadata==4.13.0 ; python_version < "3.8"
+importlib-metadata==5.2.0 ; python_version < "3.8"
     # via
     #   argcomplete
     #   feed-archiver (pyproject.toml)
@@ -41,7 +41,7 @@ tenacity==8.2.2
     # via feed-archiver (pyproject.toml)
 typing-extensions==4.5.0
     # via importlib-metadata
-urllib3==1.26.14
+urllib3==1.26.15
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)

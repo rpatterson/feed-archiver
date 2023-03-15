@@ -4,13 +4,13 @@
 #
 #    pip-compile --output-file=requirements/py39/user.txt --resolver=backtracking pyproject.toml
 #
-argcomplete==2.0.0
+argcomplete==2.1.1
     # via feed-archiver (pyproject.toml)
 arrapi==1.4.2
     # via feed-archiver (pyproject.toml)
 certifi==2022.12.7
     # via requests
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via requests
 feedparser==6.0.10
     # via feed-archiver (pyproject.toml)
@@ -33,7 +33,7 @@ six==1.16.0
     # via user-agent
 tenacity==8.2.2
     # via feed-archiver (pyproject.toml)
-urllib3==1.26.14
+urllib3==1.26.15
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)
