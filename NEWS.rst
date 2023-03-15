@@ -1,3 +1,38 @@
+Feedarchiver 1.0.0b10 (2023-03-15)
+==================================
+
+Features
+--------
+
+- Write an ``./index.html`` file listing links to archived feeds. (archive-index)
+- Rename the ``link-paths`` plugin system to a more accurate name, ``enclosures``.  Note
+  that this requires an update to existing archive configurations using ``link-paths``
+  plugins. (enclosure-plugin-rename)
+- Replace ``content`` term with more correct ``enclosure`` term.  Requires running the ``$
+  feed-archiver relink`` sub-command to update existing archives. (enclosure-term)
+- Avoid unintended sub-directories in link path plugin template paths, add support for
+  quoting path separators in plugin configuration. (link-quote-path-sep)
+- Make a parsed version of the feed and item with richer data available to link path
+  plugin configurations, e.g. dates and times. (link-rich-parser)
+- Provide access to regular expression symbolic group names in the ``template`` plugins
+  format strings. (re-group-names)
+- Improve link plugin template usability by providing the ``basename`` via a
+  ``pathlib.Path`` object and use that to improve the default enclosure link basename. (template-url-path)
+
+
+Bugfixes
+--------
+
+- Fix an error when backup feed XML is present in the archive. (feed-backups)
+- Filter out duplicate link paths returned from plugins. (link-duplicates)
+
+
+Misc
+----
+
+- lint-missing-reports
+
+
 Feedarchiver 1.0.0b9 (2023-02-22)
 =================================
 
