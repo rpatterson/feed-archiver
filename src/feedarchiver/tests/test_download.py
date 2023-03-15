@@ -8,7 +8,7 @@ import pathlib
 import urllib
 
 from lxml import etree  # nosec: B410
-import requests_mock
+import respx.models
 
 from .. import utils
 from .. import tests
@@ -25,8 +25,8 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         """
         # Put the mocks in place
         self.update_feed(self.archive_feed)
-        with self.assertRaises(requests_mock.exceptions.NoMockAddress):
-            self.archive.requests.get("http://example.com")
+        with self.assertRaises(respx.models.AllMockedAssertionError):
+            self.archive.client.get("http://example.com")
 
     def test_download_file_metadata(self):
         """
@@ -50,10 +50,10 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
 
         # Download the enclosure into the archive
         orig_request_mocks = self.mock_remote(self.archive_feed)
-        redirect_request_mock = self.requests_mock.get(
+        redirect_request_mock = self.client_mock.get(
             self.ENCLOSURE_URL,
+        ).respond(
             status_code=302,
-            reason="Found",
             headers={"Location": self.ENCLOSURE_REDIRECT_URL},
         )
         self.archive_feed.update()
@@ -65,12 +65,6 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         )
 
         # The most appropriate file basename is symlinked to the download file
-        _, download_request_mock = orig_request_mocks[self.ENCLOSURE_URL]
-        self.assertEqual(
-            download_request_mock.call_count,
-            0,
-            "Mock request without redirect response called",
-        )
         self.assertEqual(
             redirect_request_mock.call_count,
             1,
@@ -86,10 +80,12 @@ class FeedarchiverDownloadTests(tests.FeedarchiverDownloadsTestCase):
         # Test in the absence of the response headers
         self.archive_feed.path.unlink()
         enclosure_archive_path.unlink()
-        no_header_request_mock = self.requests_mock.get(
+        no_header_request_mock = self.client_mock.get(
             self.ENCLOSURE_URL,
+        ).respond(
             content=self.ENCLOSURE_MOCK_PATH.read_bytes(),
         )
+        no_header_request_mock.reset()
         self.assert_no_header_download_mtime(
             no_header_request_mock,
             self.archive.root_path / self.ENCLOSURE_RELATIVE.with_suffix(".mp3"),

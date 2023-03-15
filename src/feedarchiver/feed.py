@@ -12,7 +12,6 @@ import logging
 import pdb
 
 from lxml import etree  # nosec B410
-from requests_toolbelt.downloadutils import stream
 
 from . import utils
 from .utils import mimetypes
@@ -73,7 +72,7 @@ class ArchiveFeed:
         Request the URL of one feed in the archive and update contents accordingly.
         """
         logger.debug("Requesting feed: %r", self.url)
-        remote_response = self.archive.requests.get(self.url)
+        remote_response = self.archive.client.get(self.url)
         # Maybe update the extension based on the headers
         self.path = self.archive.root_path / self.archive.response_to_path(
             remote_response,
@@ -336,7 +335,7 @@ class ArchiveFeed:
         logger.debug("Parsing remote XML: %r", self.url)
         remote_root = etree.fromstring(  # nosec: B320
             remote_response.content,
-            base_url=remote_response.url,
+            base_url=str(remote_response.url),
             parser=utils.XML_PARSER,
         )
         return etree.ElementTree(remote_root)
@@ -597,9 +596,9 @@ class ArchiveFeed:
         """
         logger.info("Downloading URL into archive: %r", url_result)
         url_split = self.resolve_url(url_result)
-        with self.archive.requests.get(
+        with self.archive.client.stream(
+            "GET",
             url_split.geturl(),
-            stream=True,
         ) as download_response:
             download_path = self.archive.root_path / self.archive.response_to_path(
                 download_response,
@@ -614,34 +613,11 @@ class ArchiveFeed:
                 return download_path
             logger.debug("Writing download into archive: %r", str(download_relative))
             download_path.parent.mkdir(parents=True, exist_ok=True)
-            stream.stream_response_to_file(download_response, path=download_path)
-        download_stat = download_path.stat()
+            with download_path.open("wb") as download_opened:
+                for data in download_response.iter_bytes():
+                    download_opened.write(data)
 
         update_download_metadata(download_response, download_path)
-
-        if (
-            download_response.headers.get(
-                "Content-Encoding",
-                "binary",
-            )
-            .strip()
-            .lower()
-            == "binary"
-            and "Content-Length" in download_response.headers
-        ):
-            try:
-                remote_content_length = int(
-                    download_response.headers["Content-Length"].strip(),
-                )
-            except ValueError:  # pragma: no cover
-                pass
-            else:
-                if download_stat.st_size != remote_content_length:  # pragma: no cover
-                    logger.error(
-                        "Downloaded content size different from remote: %r -> %r",
-                        download_stat.st_size,
-                        remote_content_length,
-                    )
 
         return download_path
 

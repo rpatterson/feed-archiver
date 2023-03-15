@@ -65,7 +65,7 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         The command line supports sub-commands.
         """
         cwd = pathlib.Path.cwd()
-        os.chdir(self.tmp_dir.name)
+        os.chdir(self.archive.root_path)
         try:
             self.assertIsNone(
                 feedarchiver.main(args=["update"]),
@@ -92,7 +92,7 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         module_main_process = subprocess.run(  # nosec B603
             [sys.executable, "-m", "feedarchiver", "update"],
             check=False,
-            cwd=self.tmp_dir.name,
+            cwd=self.archive.root_path,
         )
         self.assertEqual(
             module_main_process.returncode,
@@ -126,7 +126,7 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         script_process = subprocess.run(  # nosec B603
             [prefix_path / "bin" / "feed-archiver", "update"],
             check=False,
-            cwd=self.tmp_dir.name,
+            cwd=self.archive.root_path,
         )
         self.assertEqual(
             script_process.returncode,

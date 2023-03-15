@@ -12,6 +12,7 @@ import unittest
 
 from lxml import etree  # nosec: B410
 
+import respx
 import requests_mock
 
 from .. import utils
@@ -64,34 +65,35 @@ class FeedarchiverTestCase(
         super().setUp()
 
         # Mock HTTP/S requests:
+        # https://lundberg.github.io/respx/guide/#mock-httpx
+        # TODO: Switch to `assert_all_called=True`
+        self.client_mock = respx.MockRouter(assert_all_called=False)
+        self.addCleanup(self.client_mock.stop)
+        self.client_mock.start()
+        # Mock requests made by external libraries, e.g. API client:
         # https://requests-mock.readthedocs.io/en/latest/fixture.html#fixtures
-        self.requests_mock = requests_mock.Mocker()
-        self.addCleanup(self.requests_mock.stop)
-        self.requests_mock.start()
+        self.request_mocker = requests_mock.Mocker()
+        self.addCleanup(self.request_mocker.stop)
+        self.request_mocker.start()
 
         # Create a temporary directory for mutable test data
-        self.tmp_dir = (
-            tempfile.TemporaryDirectory(  # pylint: disable=consider-using-with
-                suffix=self.EXAMPLE_RELATIVE.suffix,
-                prefix=f"{self.EXAMPLE_RELATIVE.stem}-",
-            )
+        tmp_dir = tempfile.TemporaryDirectory(  # pylint: disable=consider-using-with
+            suffix=self.EXAMPLE_RELATIVE.suffix,
+            prefix=f"{self.EXAMPLE_RELATIVE.stem}-",
         )
-        self.addCleanup(self.tmp_dir.cleanup)
+        self.addCleanup(tmp_dir.cleanup)
 
         # Use the example/sample test data basename to assemble the rest of the
         # filesystem paths used by the tests.
         self.archive_path = self.ARCHIVES_PATH / self.EXAMPLE_RELATIVE
 
         # Copy the testing example feeds archive
-        if pathlib.Path(self.tmp_dir.name).exists():  # pragma: no cover
-            shutil.rmtree(self.tmp_dir.name)
-        shutil.copytree(
-            src=self.archive_path,
-            dst=self.tmp_dir.name,
-        )
-        self.archive = archive.Archive(self.tmp_dir.name)
+        if pathlib.Path(tmp_dir.name).exists():  # pragma: no cover
+            shutil.rmtree(tmp_dir.name)
+        shutil.copytree(src=self.archive_path, dst=tmp_dir.name)
+        self.archive = archive.Archive(tmp_dir.name)
         # Mock the Sonarr request that is sent when the config is loaded
-        self.requests_mock.get(
+        self.request_mocker.get(
             f"{self.SONARR_URL}/api/v3/system/status?apikey=secret",
             json={"version": "3.0.6.1342"},
         )
@@ -128,15 +130,23 @@ class FeedarchiverTestCase(
             mock_url = archive_feed.archive.path_to_url(
                 archive_feed.archive.root_path / mock_path.relative_to(remote_mock_path)
             )
-            request_mocks[mock_url] = (
-                mock_path,
-                self.requests_mock.get(
+            if mock_url.startswith(self.SONARR_URL):
+                # Mock Servarr requests using the same library as API client
+                mock_response = self.request_mocker.get(
                     mock_url,
                     # Ensure the download response includes `Last-Modified`
                     headers=mock_headers,
                     content=mock_bytes,
-                ),
-            )
+                )
+            else:
+                mock_response = self.client_mock.get(
+                    mock_url,
+                ).respond(
+                    # Ensure the download response includes `Last-Modified`
+                    headers=mock_headers,
+                    content=mock_bytes,
+                )
+            request_mocks[mock_url] = (mock_path, mock_response)
         return request_mocks
 
     def update_feed(self, archive_feed, remote_mock=None):

@@ -10,7 +10,7 @@ import tracemalloc
 import pdb
 
 import yaml
-import requests
+import httpx
 import user_agent
 from lxml import etree  # nosec B410
 from lxml.html import builder  # nosec B410
@@ -56,9 +56,9 @@ class Archive:  # pylint: disable=too-many-instance-attributes
 
         self.recreate = recreate
 
-        self.requests = requests.Session()
+        self.client = httpx.Client(follow_redirects=True)
         # Avoid bot detection, real-world `User-Agent` HTTP header values
-        self.requests.headers.update({"User-Agent": user_agent.generate_user_agent()})
+        self.client.headers.update({"User-Agent": user_agent.generate_user_agent()})
 
     def load_config(self):
         """
@@ -114,7 +114,7 @@ class Archive:  # pylint: disable=too-many-instance-attributes
                 request = url_response.history[0].request
             else:
                 request = url_response.request
-        url_path = self.url_to_path(request.url)
+        url_path = self.url_to_path(str(request.url))
         mime_type = None
 
         # First try to get the MIME type from the response headers

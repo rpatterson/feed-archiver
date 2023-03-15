@@ -153,6 +153,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         )
 
         # Update the archive after the remote feed is updated with a new item added
+        get_mock.reset()
         added_item_request_mocks, _ = self.update_feed(
             archive_feed=self.archive_feed,
             remote_mock="added-item",
@@ -191,6 +192,7 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
         _, added_item_get_mock = added_item_request_mocks[self.feed_url]
 
         # Update the archive after the remote feed is updated with an item removed
+        added_item_get_mock.reset()
         removed_item_request_mocks, _ = self.update_feed(
             archive_feed=self.archive_feed,
             remote_mock="removed-item",
@@ -361,10 +363,12 @@ class FeedarchiverFeedTests(tests.FeedarchiverTestCase):
             / "added-item"
             / tests.FeedarchiverTestCase.FEED_ARCHIVE_RELATIVE
         )
-        no_header_request_mock = self.requests_mock.get(
+        no_header_request_mock = self.client_mock.get(
             self.feed_url,
+        ).respond(
             content=no_header_feed_mock_path.read_bytes(),
         )
+        no_header_request_mock.reset()
         self.assert_no_header_download_mtime(
             no_header_request_mock,
             self.feed_path,
