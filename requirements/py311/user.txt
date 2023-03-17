@@ -6,7 +6,7 @@
 #
 anyio==3.6.2
     # via httpcore
-argcomplete==2.1.1
+argcomplete==2.1.2
     # via feed-archiver (pyproject.toml)
 arrapi==1.4.2
     # via feed-archiver (pyproject.toml)

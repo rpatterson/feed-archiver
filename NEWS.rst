@@ -27,12 +27,6 @@ Bugfixes
 - Filter out duplicate link paths returned from plugins. (link-duplicates)
 
 
-Misc
-----
-
-- lint-missing-reports
-
-
 Feedarchiver 1.0.0b9 (2023-02-22)
 =================================
 
@@ -40,24 +34,6 @@ Features
 --------
 
 - Support all currently maintained versions of Python. (python-versions)
-
-
-Feedarchiver 1.0.0b8 (2023-01-23)
-=================================
-
-No significant changes.
-
-
-Feedarchiver 1.0.0b7 (2023-01-13)
-=================================
-
-No significant changes.
-
-
-Feedarchiver 1.0.0b6 (2022-12-23)
-=================================
-
-No significant changes.
 
 
 Feedarchiver 1.0.0b5 (2022-12-22)
@@ -77,24 +53,6 @@ Bugfixes
 - Fix the check that the remote feed format (RSS vs Atom) matches the archived feed. (wrong-archive-feed-format-check)
 
 
-Feedarchiver 1.0.0b4 (2022-12-19)
-=================================
-
-No significant changes.
-
-
-Feedarchiver 1.0.0b3 (2022-12-18)
-=================================
-
-No significant changes.
-
-
-Feedarchiver 1.0.0b2 (2022-12-18)
-=================================
-
-No significant changes.
-
-
 Feedarchiver 1.0.0b1 (2022-12-17)
 =================================
 
@@ -111,12 +69,6 @@ Features
 --------
 
 - First stable release. (initial-release)
-
-
-Feedarchiver 0.1.2 (2022-12-16)
-===============================
-
-No significant changes.
 
 
 Feedarchiver 0.1.2b1 (2022-12-16)
@@ -138,12 +90,6 @@ Bugfixes
   archive version of the feed if possible.  If there are errors parsing it, then treat it
   as if it's the first time archiving this feed. (archive-feed-parse-errors)
 - Cleanup ``pathlib.Path(...)`` objects in ``$ feed-archiver update`` output. (download-path-output)
-
-
-Feedarchiver 0.1.1 (2022-12-14)
-===============================
-
-No significant changes.
 
 
 Feedarchiver 0.1.1b0 (2022-12-14)
