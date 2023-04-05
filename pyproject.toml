@@ -22,12 +22,13 @@ annotated_tag = true
 bump_message = """\
 build(release): Version $current_version → $new_version
 
-[actions skip]
+[ci skip]
 """
 [tool.towncrier]
 # https://towncrier.readthedocs.io/en/stable/#quick-start
 package = "feedarchiver"
 package_dir = "src"
+name = "feed-archiver"
 
 [tool.pylint.MASTER]
 # Ensure `duplicate-code` and any other errors that depend on not runnining in parallel
