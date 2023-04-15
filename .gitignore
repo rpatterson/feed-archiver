@@ -21,8 +21,7 @@ __pycache__
 env/
 build/
 develop-eggs/
-dist/
-/downloads/
+downloads/
 eggs/
 .eggs/
 lib/
@@ -30,7 +29,6 @@ lib64/
 parts/
 sdist/
 var/
-var-*/
 *.egg-info
 **/*.egg-info
 .installed.cfg
@@ -54,7 +52,6 @@ pip-delete-this-directory.txt
 htmlcov/
 .tox
 **/.tox
-.tox-*
 .coverage
 .coverage.*
 coverage.*

@@ -5,7 +5,8 @@ Test the feed-archiver Command-Line Interface.
 import sys
 import os
 import io
-import subprocess
+import runpy
+import subprocess  # nosec B404
 import contextlib
 import pathlib
 
@@ -24,7 +25,7 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         """
         The Python package is on `sys.path` and thus importable.
         """
-        import_process = subprocess.run(
+        import_process = subprocess.run(  # nosec B603
             [sys.executable, "-c", "import feedarchiver"],
             check=False,
         )
@@ -73,6 +74,15 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         finally:
             os.chdir(cwd)
 
+    def test_cli_options(self):
+        """
+        The command line script accepts options controlling behavior.
+        """
+        self.assertIsNone(
+            feedarchiver.main(args=["--log-level", "DEBUG", "foobar", "-q"]),
+            "Wrong console script options return value",
+        )
+
     def test_cli_option_errors(self):
         """
         The command line script displays useful messages for invalid option values.
@@ -84,11 +94,11 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
             "Wrong invalid option message",
         )
 
-    def test_cli_module_main(self):
+    def test_cli_dash_m_option(self):
         """
-        The package/module supports execution via Python's `-m` option.
+        The package supports execution via Python's `-m` CLI option.
         """
-        module_main_process = subprocess.run(
+        module_main_process = subprocess.run(  # nosec B603
             [sys.executable, "-m", "feedarchiver", "update"],
             check=False,
             cwd=self.tmp_dir.name,
@@ -99,6 +109,18 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
             "Running via Python's `-m` option exited with non-zero status code",
         )
 
+    def test_cli_module_main(self):
+        """
+        The package supports execution via Python's `-m` option.
+        """
+        with self.assertRaises(SystemExit, msg="CLI didn't exit") as exc_context:
+            runpy.run_module("feedarchiver")
+        self.assertEqual(
+            exc_context.exception.code,
+            2,
+            "Wrong `runpy` exit status code",
+        )
+
     def test_cli_exit_code(self):
         """
         The command line script exits with status code zero if there are no exceptions.
@@ -107,10 +129,10 @@ class FeedarchiverCLITests(tests.FeedarchiverTestCase):
         prefix_path = pathlib.Path(sys.argv[0]).parent
         while not (prefix_path / "bin").is_dir():
             prefix_path = prefix_path.parent
-            if prefix_path.parent is prefix_path.parents[-1]:  # pragma: no cover
+            if prefix_path.parent is list(prefix_path.parents)[-1]:  # pragma: no cover
                 raise ValueError(f"Could not find script prefix path: {sys.argv[0]}")
 
-        script_process = subprocess.run(
+        script_process = subprocess.run(  # nosec B603
             [(prefix_path / "bin" / "feed-archiver").resolve(), "update"],
             check=False,
             cwd=self.tmp_dir.name,
