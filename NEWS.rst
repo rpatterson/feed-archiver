@@ -13,6 +13,7 @@ Feedarchiver 1.0.0b10 (2023-03-15)
 Features
 --------
 
+- Address a Bandit warning about requests without timeouts. (request-timeouts)
 - Write an ``./index.html`` file listing links to archived feeds. (archive-index)
 - Rename the ``link-paths`` plugin system to a more accurate name, ``enclosures``.  Note
   that this requires an update to existing archive configurations using ``link-paths``
