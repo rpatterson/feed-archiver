@@ -71,6 +71,12 @@ Bugfixes
 - Don't report results from the ``update`` sub-command when there are none. (empty-results)
 
 
+Feedarchiver 1.0.0 (2022-12-16)
+===============================
+
+No significant changes.
+
+
 Feedarchiver 1.0.0b0 (2022-12-16)
 =================================
 

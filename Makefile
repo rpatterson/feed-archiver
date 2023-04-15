@@ -16,6 +16,10 @@ GPG_SIGNING_KEYID=2EFF7CCE6828E359
 CI_UPSTREAM_NAMESPACE=rpatterson
 CI_PROJECT_NAME=feed-archiver
 
+# Project-specific options:
+DEBUG=
+POST_MORTEM=
+
 
 ## "Private" Variables:
 
@@ -40,6 +44,7 @@ PS1?=$$
 EMPTY=
 COMMA=,
 
+# Values derived from the environment:
 USER_NAME:=$(shell id -u -n)
 USER_FULL_NAME:=$(shell \
     getent passwd "$(USER_NAME)" | cut -d ":" -f 5 | cut -d "," -f 1)
@@ -1408,6 +1413,33 @@ endif
 	    false
 	fi
 	date | tee -a "$(@)"
+
+# Static site server set up
+./server/.htpasswd: .SHELLFLAGS = -eu -o pipefail -c
+./server/.htpasswd:
+	echo "Enter a HTTP Basic authentication password for the static site server."
+	if ! which htpasswd
+	then
+	    sudo apt-get update
+	    sudo apt-get install -y apache2-utils
+	fi
+	htpasswd -c "$(@)" "feed-archiver"
+
+# Extract the Sonarr API key
+./sonarr/config/config.xml: ./var/log/docker-build.log
+	docker compose up -d sonarr
+	sleep 1
+	until [ -e "$(@)" ]
+	do
+	    sleep 0.1
+	done
+./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml: \
+		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
+		./sonarr/config/config.xml
+	export SONARR_API_KEY=$$(
+	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
+	)
+	$(MAKE) "template=$(<)" "target=$(@)" expand-template
 
 # GPG signing key creation and management in CI
 export GPG_PASSPHRASE=
