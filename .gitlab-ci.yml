@@ -1,5 +1,3 @@
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
-
 default:
   image:
     name: "$CI_TEMPLATE_REGISTRY_HOST/rpatterson/$CI_PROJECT_NAME:build-host"
@@ -30,10 +28,12 @@ build-test:
   stage: "build-test"
   rules:
     - if: >-
-        $CI_COMMIT_TAG
-      when: "never"
-    - if: >-
-        $CI_PIPELINE_SOURCE != "schedule"
+        ($CI_COMMIT_TAG == null || $CI_COMMIT_TAG == "")
+        && $CI_PIPELINE_SOURCE != "schedule"
+        && (
+          $CI_COMMIT_MESSAGE !~ /(?ims).*\[actions skip\].*/
+          || $CI_COMMIT_BRANCH == "master"
+        )
   interruptible: true
   parallel:
     matrix:
@@ -75,23 +75,33 @@ release:
   # Avoid unnecessary artifact downloads:
   # https://docs.gitlab.com/ee/ci/yaml/#dependencies
   dependencies: []
+  variables:
+    DOCKER_BUILD_PULL: "true"
   rules:
     - if: >-
-        $CI_COMMIT_TAG
-      when: "never"
-    - if: >-
-        $CI_PROJECT_NAMESPACE == "rpatterson"
-        && $CI_COMMIT_BRANCH =~ "^(develop|master)"
+        ($CI_COMMIT_TAG == null || $CI_COMMIT_TAG == "")
+        && $CI_PROJECT_NAMESPACE == "rpatterson"
+        && $CI_COMMIT_BRANCH != null
+        && $CI_COMMIT_BRANCH =~ "^(develop|master)$"
         && $CI_PIPELINE_SOURCE != "schedule"
+        && (
+          $CI_COMMIT_MESSAGE !~ /(?ims).*\[actions skip\].*/
+          || $CI_COMMIT_BRANCH == "master"
+        )
   script:
     - >-
-      entrypoint make -e BUILD_REQUIREMENTS=false
-      release-bump test-clean
-      release-python test-clean
+      entrypoint make -e release-python test-clean
   artifacts:
     paths:
       - "./NEWS-release.rst"
       - "./dist/feed?archiver-*"
+
+# TEMPLATE: Optionally add a scheduled pipeline with the following variables to
+# periodically upgrade all requirements and run CI:
+# - `DOCKER_BUILD_PULL=true`
+# - `SCHEDULED_TARGETS=devel-upgrade-branch`
+# - `TEMPLATE_IGNORE_EXISTING=true`
+# WARNING: Running this even just daily can easily exhaust the gitlab.org free quotas.
 
 scheduled:
   stage: "scheduled"

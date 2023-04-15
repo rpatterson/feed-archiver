@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
 
-  ## Container for use by end users
+  ## Container for use by end users:
   feed-archiver:
     image: "merpatterson/feed-archiver"
     container_name: "feed-archiver"

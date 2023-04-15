@@ -16,13 +16,14 @@ write_to = "src/feedarchiver/version.py"
 # provides VCS hooks to enforce that commit messages comply with conventional commits:
 # https://commitizen-tools.github.io/commitizen/
 name = "cz_conventional_commits"
+changelog_start_rev = "v0.0.0"
 version = "1.0.0b10"
 tag_format = "v$version"
 annotated_tag = true
 bump_message = """\
 build(release): Version $current_version → $new_version
 
-[ci skip]
+[actions skip]
 """
 [tool.towncrier]
 # https://towncrier.readthedocs.io/en/stable/#quick-start

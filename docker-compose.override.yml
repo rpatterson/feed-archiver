@@ -5,7 +5,7 @@ version: "3.8"
 
 services:
 
-  ## Configuration specific to this checkout
+  # Configuration specific to development:
   feed-archiver:
     image: "merpatterson/feed-archiver:${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
     container_name: "feed-archiver-checkout"
@@ -41,7 +41,9 @@ services:
   ofelia:
     container_name: "feed-archiver-devel-ofelia"
 
-  ## Container for use by developers
+  ## Contianers used for development and release:
+
+  # Container for use by developers:
   feed-archiver-devel:
     image: "merpatterson/feed-archiver:devel-${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
     container_name: "feed-archiver-devel"
@@ -71,8 +73,6 @@ services:
       - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/:/usr/local/src/feed-archiver/var/"
       - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/.tox/:/usr/local/src/feed-archiver/.tox/"
       - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/feed_archiver.egg-info/:/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
-
-  ## Contianers during development and release
 
   # https://github.com/hadolint/hadolint#how-to-use
   hadolint:
@@ -108,7 +108,16 @@ services:
       --file "/data/README.md" --short "feed archiver foundation or template"
       --debug "merpatterson/feed-archiver"
 
-  ## Container for use by end users
+  gitlab-release-cli:
+    image: "registry.gitlab.com/gitlab-org/release-cli:latest"
+    environment:
+      CI_JOB_TOKEN: "${CI_JOB_TOKEN:-}"
+    volumes:
+      - "./:/usr/local/src/feed-archiver/"
+    working_dir: "/usr/local/src/feed-archiver/"
+
+  ## Containers for simulating CI/CD:
+
   build-host:
     image: "merpatterson/feed-archiver:build-host"
     build: "${CHECKOUT_DIR}/build-host/"
@@ -127,12 +136,4 @@ services:
       # DEBUG: "true"
     working_dir: "${CHECKOUT_DIR}"
     command: >-
-      make -e build-docker test-docker release-bump release
-
-  gitlab-release-cli:
-    image: "registry.gitlab.com/gitlab-org/release-cli:latest"
-    environment:
-      CI_JOB_TOKEN: "${CI_JOB_TOKEN:-}"
-    volumes:
-      - "./:/usr/local/src/feed-archiver/"
-    working_dir: "/usr/local/src/feed-archiver/"
+      make -e build-docker test-docker release
