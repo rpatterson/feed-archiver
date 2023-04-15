@@ -117,7 +117,6 @@ ENV/
 
 # Project-specific build artifacts
 /README.md
-/NEWS-release.rst
 # Local, development `$ docker compose ...` end-to-end stack
 /src/feedarchiver/tests/archives/end-to-end/*
 !/src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in
