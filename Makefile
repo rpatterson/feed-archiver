@@ -12,7 +12,6 @@ export TEMPLATE_IGNORE_EXISTING=false
 PYTHON_SUPPORTED_MINORS=3.11 3.10 3.9 3.8 3.7
 # Project-specific variables
 export DOCKER_USER=merpatterson
-# TEMPLATE: See comments towards the bottom and update.
 GPG_SIGNING_KEYID=2EFF7CCE6828E359
 CI_UPSTREAM_NAMESPACE=rpatterson
 CI_PROJECT_NAME=feed-archiver
@@ -1466,10 +1465,6 @@ endif
 	date | tee -a "$(@)"
 endif
 
-# TEMPLATE: Optionally, use the following command to generate a GitLab CI/CD runner
-# configuration, register it with your project, compare it with the template
-# prerequisite, apply the appropriate changes and then  run using `$ docker compose up
-# gitlab-runner`.  Particularly useful to conserve shared runner minutes:
 ./gitlab-runner/config/config.toml: ./gitlab-runner/config/config.toml.in
 	docker compose run --rm gitlab-runner register \
 	    --url "https://gitlab.com/" --docker-image "docker" --executor "docker"
@@ -1520,9 +1515,6 @@ pull-docker: ./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
 	echo "ERROR: Could not pull any existing docker image"
 	false
 
-# TEMPLATE: Run this once for your project.  See the `./var/log/docker-login*.log`
-# targets for the authentication environment variables that need to be set or just login
-# to those container registries manually and touch these targets.
 .PHONY: bootstrap-project
 ### Run any tasks needed to be run once for a given project by a maintainer
 bootstrap-project: \

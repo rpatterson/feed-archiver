@@ -428,7 +428,7 @@ development.
 
 .. _the Docker image: https://hub.docker.com/r/merpatterson/feed-archiver
 .. _`the example ./docker-compose.yml file`:
-   https://gitlab.com/rpatterson/feed-archiver/blob/master/docker-compose.yml
+   https://gitlab.com/rpatterson/feed-archiver/blob/main/docker-compose.yml
 
 .. _`This project is hosted on GitLab`:
    https://gitlab.com/rpatterson/feed-archiver

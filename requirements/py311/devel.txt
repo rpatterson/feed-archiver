@@ -6,27 +6,25 @@
 #
 anyio==3.6.2
     # via httpcore
-argcomplete==2.1.2
+argcomplete==3.0.5
     # via feed-archiver (pyproject.toml)
 arrapi==1.4.2
     # via feed-archiver (pyproject.toml)
-astroid==2.15.0
+astroid==2.15.2
     # via
     #   pylint
     #   pylint-celery
     #   pylint-flask
     #   requirements-detector
 attrs==22.2.0
-    # via
-    #   pytest
-    #   pytest-subtests
+    # via pytest-subtests
 autoflake==1.7.8
     # via feed-archiver (pyproject.toml)
 autopep8==2.0.2
     # via feed-archiver (pyproject.toml)
 bandit==1.7.5
     # via prospector
-black==23.1.0
+black==23.3.0
     # via feed-archiver (pyproject.toml)
 build==0.10.0
     # via
@@ -57,7 +55,7 @@ colorama==0.4.6
     #   typer
 commonmark==0.9.1
     # via rich
-coverage==7.2.2
+coverage==7.2.3
     # via feed-archiver (pyproject.toml)
 dill==0.3.6
     # via pylint
@@ -71,7 +69,7 @@ dodgy==0.2.1
     # via prospector
 feedparser==6.0.10
     # via feed-archiver (pyproject.toml)
-filelock==3.10.0
+filelock==3.11.0
     # via virtualenv
 flake8==2.3.0
     # via
@@ -89,19 +87,19 @@ gitpython==3.1.31
     #   prospector
 h11==0.14.0
     # via httpcore
-httpcore==0.16.3
+httpcore==0.17.0
     # via httpx
-httpx==0.23.3
+httpx==0.24.0
     # via
     #   feed-archiver (pyproject.toml)
     #   respx
-identify==2.5.21
+identify==2.5.22
     # via pre-commit
 idna==3.4
     # via
     #   anyio
+    #   httpx
     #   requests
-    #   rfc3986
 incremental==22.10.0
     # via towncrier
 iniconfig==2.0.0
@@ -125,7 +123,7 @@ mccabe==0.7.0
     #   flake8
     #   prospector
     #   pylint
-mypy==1.1.1
+mypy==1.2.0
     # via prospector
 mypy-extensions==1.0.0
     # via
@@ -133,7 +131,7 @@ mypy-extensions==1.0.0
     #   mypy
 nodeenv==1.7.0
     # via pre-commit
-packaging==23.0
+packaging==23.1
     # via
     #   black
     #   build
@@ -150,9 +148,9 @@ pep8==1.7.1
     # via flake8
 pep8-naming==0.10.0
     # via prospector
-pip-tools==6.12.3
+pip-tools==6.13.0
     # via feed-archiver (pyproject.toml)
-platformdirs==3.1.1
+platformdirs==3.2.0
     # via
     #   black
     #   pylint
@@ -161,7 +159,7 @@ pluggy==1.0.0
     # via pytest
 poetry-semver==0.1.0
     # via requirements-detector
-pre-commit==3.2.0
+pre-commit==3.2.2
     # via feed-archiver (pyproject.toml)
 prospector[with_everything]==1.9.0
     # via feed-archiver (pyproject.toml)
@@ -169,7 +167,7 @@ pycodestyle==2.10.0
     # via
     #   autopep8
     #   prospector
-pydantic==1.10.6
+pydantic==1.10.7
     # via rstcheck-core
 pydocstyle==6.3.0
     # via prospector
@@ -178,11 +176,11 @@ pyflakes==2.5.0
     #   autoflake
     #   flake8
     #   prospector
-pygments==2.14.0
+pygments==2.15.0
     # via
     #   pyroma
     #   rich
-pylint==2.17.0
+pylint==2.17.2
     # via
     #   prospector
     #   pylint-celery
@@ -205,7 +203,7 @@ pyproject-hooks==1.0.0
     # via build
 pyroma==4.2
     # via prospector
-pytest==7.2.2
+pytest==7.3.1
     # via
     #   feed-archiver (pyproject.toml)
     #   pytest-subtests
@@ -232,8 +230,6 @@ requirements-detector==1.1.0
     # via prospector
 respx==0.20.1
     # via feed-archiver (pyproject.toml)
-rfc3986[idna2008]==1.5.0
-    # via httpx
 rich==12.6.0
     # via
     #   bandit
@@ -273,7 +269,7 @@ toml==0.10.2
     #   prospector
     #   requirements-detector
     #   vulture
-tomlkit==0.11.6
+tomlkit==0.11.7
     # via pylint
 towncrier==22.12.0
     # via feed-archiver (pyproject.toml)
@@ -281,9 +277,9 @@ trove-classifiers==2023.3.9
     # via pyroma
 typer[all]==0.7.0
     # via rstcheck
-types-docutils==0.19.1.6
+types-docutils==0.19.1.7
     # via rstcheck-core
-types-pyyaml==6.0.12.8
+types-pyyaml==6.0.12.9
     # via feed-archiver (pyproject.toml)
 typing-extensions==4.5.0
     # via
