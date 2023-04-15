@@ -23,12 +23,12 @@ Archive the full contents of RSS/Atom syndication feeds including enclosures and
      - .. figure:: https://gitlab.com/rpatterson/feed-archiver/-/badges/release.svg
 	  :alt: GitLab latest release
 	  :target: https://gitlab.com/rpatterson/feed-archiver/-/releases
-       .. figure:: https://gitlab.com/rpatterson/feed-archiver/badges/master/pipeline.svg
-	  :alt: GitLab CI/CD pipeline status
-	  :target: https://gitlab.com/rpatterson/feed-archiver/-/commits/master
-       .. figure:: https://gitlab.com/rpatterson/feed-archiver/badges/master/coverage.svg
-	  :alt: GitLab coverage report
-	  :target: https://gitlab.com/rpatterson/feed-archiver/-/commits/master
+       .. figure:: https://gitlab.com/rpatterson/feed-archiver/badges/main/pipeline.svg
+          :alt: GitLab CI/CD pipeline status
+          :target: https://gitlab.com/rpatterson/feed-archiver/-/commits/main
+       .. figure:: https://gitlab.com/rpatterson/feed-archiver/badges/main/coverage.svg
+          :alt: GitLab coverage report
+	  :target: https://gitlab.com/rpatterson/feed-archiver/-/commits/main
        .. figure:: https://img.shields.io/gitlab/stars/rpatterson/feed-archiver?gitlab_url=https%3A%2F%2Fgitlab.com&logo=gitlab
 	  :alt: GitLab repo stars
 	  :target: https://gitlab.com/rpatterson/feed-archiver
@@ -39,19 +39,19 @@ Archive the full contents of RSS/Atom syndication feeds including enclosures and
        .. figure:: https://github.com/rpatterson/feed-archiver/actions/workflows/build-test.yml/badge.svg
           :alt: GitHub Actions status
           :target: https://github.com/rpatterson/feed-archiver/actions/workflows/build-test.yml
-       .. figure:: https://codecov.io/github/rpatterson/feed-archiver/branch/master/graph/badge.svg?token=GNKVQ8VYOU
+       .. figure:: https://codecov.io/github/rpatterson/feed-archiver/branch/main/graph/badge.svg?token=GNKVQ8VYOU
           :alt: Codecov test coverage
 	  :target: https://codecov.io/github/rpatterson/feed-archiver
        .. figure:: https://img.shields.io/github/stars/rpatterson/feed-archiver?logo=github
 	  :alt: GitHub repo stars
 	  :target: https://github.com/rpatterson/feed-archiver/
 
-     - .. figure:: https://img.shields.io/docker/v/merpatterson/feed-archiver?sort=semver&logo=docker
-	  :alt: Docker Hub image version (latest semver)
-	  :target: https://hub.docker.com/r/merpatterson/feed-archiver
+     - .. figure:: https://img.shields.io/docker/v/merpatterson/feed-archiver/main?sort=semver&logo=docker
+          :alt: Docker Hub image version (latest semver)
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
        .. figure:: https://img.shields.io/docker/pulls/merpatterson/feed-archiver?logo=docker
-	  :alt: Docker Hub image pulls count
-	  :target: https://hub.docker.com/r/merpatterson/feed-archiver
+          :alt: Docker Hub image pulls count
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
        .. figure:: https://img.shields.io/docker/stars/merpatterson/feed-archiver?logo=docker
 	  :alt: Docker Hub stars
 	  :target: https://hub.docker.com/r/merpatterson/feed-archiver
@@ -435,4 +435,4 @@ development.
 .. _`a mirror on GitHub`:
    https://github.com/rpatterson/feed-archiver
 .. _`the ./CONTRIBUTING.rst file`:
-   https://gitlab.com/rpatterson/feed-archiver/blob/master/CONTRIBUTING.rst
+   https://gitlab.com/rpatterson/feed-archiver/blob/main/CONTRIBUTING.rst

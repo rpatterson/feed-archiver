@@ -95,12 +95,34 @@ export PYTHON_WHEEL=
 
 # Values derived from VCS/git:
 VCS_LOCAL_BRANCH:=$(shell git branch --show-current)
-CI_COMMIT_REF_NAME=
+CI_COMMIT_BRANCH=
+GITHUB_REF_TYPE=
 GITHUB_REF_NAME=
-ifneq ($(CI_COMMIT_REF_NAME),)
-VCS_LOCAL_BRANCH=$(CI_COMMIT_REF_NAME)
-else ifneq ($(GITHUB_REF_NAME),)
+ifeq ($(VCS_LOCAL_BRANCH),)
+ifneq ($(CI_COMMIT_BRANCH),)
+VCS_LOCAL_BRANCH=$(CI_COMMIT_BRANCH)
+else ifeq ($(GITHUB_REF_TYPE),branch)
 VCS_LOCAL_BRANCH=$(GITHUB_REF_NAME)
+endif
+endif
+VCS_TAG=
+CI_COMMIT_TAG=
+ifeq ($(VCS_TAG),)
+ifneq ($(CI_COMMIT_TAG),)
+VCS_TAG=$(CI_COMMIT_TAG)
+else ifeq ($(GITHUB_REF_TYPE),tag)
+VCS_TAG=$(GITHUB_REF_NAME)
+endif
+endif
+ifeq ($(VCS_LOCAL_BRANCH),)
+# Guess branch name from tag:
+ifneq ($(shell echo "$(VCS_TAG)" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$$'),)
+# Final release, should be from main:
+VCS_LOCAL_BRANCH=main
+else ifneq ($(shell echo "$(VCS_TAG)" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+.+$$'),)
+# Pre-release, should be from develop:
+VCS_LOCAL_BRANCH=develop
+endif
 endif
 # Reproduce what we need of git's branch and remote configuration and logic:
 VCS_CLONE_REMOTE:=$(shell git config "clone.defaultRemoteName")
@@ -137,15 +159,17 @@ endif
 CI=false
 ifeq ($(CI),true)
 ifeq ($(VCS_COMPARE_BRANCH),develop)
-VCS_COMPARE_BRANCH=master
-else ifneq ($(VCS_BRANCH),master)
+VCS_COMPARE_BRANCH=main
+else ifneq ($(VCS_BRANCH),main)
 VCS_COMPARE_BRANCH=develop
 endif
 # If pushing to upstream release branches, get release data compared to the previous
 # release:
 else ifeq ($(VCS_COMPARE_BRANCH),develop)
-VCS_COMPARE_BRANCH=master
+VCS_COMPARE_BRANCH=main
 endif
+VCS_BRANCH_SUFFIX=upgrade
+VCS_MERGE_BRANCH=$(VCS_BRANCH:%-$(VCS_BRANCH_SUFFIX)=%)
 # Assemble the targets used to avoid redundant fetches during release tasks:
 VCS_FETCH_TARGETS=./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH)
 ifneq ($(VCS_REMOTE)/$(VCS_BRANCH),$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH))
@@ -153,7 +177,7 @@ VCS_FETCH_TARGETS+=./var/git/refs/remotes/$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BR
 endif
 # Also fetch develop for merging back in the final release:
 VCS_RELEASE_FETCH_TARGETS=./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH)
-ifeq ($(VCS_BRANCH),master)
+ifeq ($(VCS_BRANCH),main)
 VCS_RELEASE_FETCH_TARGETS+=./var/git/refs/remotes/$(VCS_COMPARE_REMOTE)/develop
 ifneq ($(VCS_REMOTE)/$(VCS_BRANCH),$(VCS_COMPARE_REMOTE)/develop)
 ifneq ($(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH),$(VCS_COMPARE_REMOTE)/develop)
@@ -161,14 +185,17 @@ VCS_FETCH_TARGETS+=./var/git/refs/remotes/$(VCS_COMPARE_REMOTE)/develop
 endif
 endif
 endif
+ifneq ($(VCS_MERGE_BRANCH),$(VCS_BRANCH))
+VCS_FETCH_TARGETS+=./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_MERGE_BRANCH)
+endif
 # Determine the sequence of branches to find closes existing build artifacts, such as
 # docker images:
 VCS_BRANCHES=$(VCS_BRANCH)
-ifneq ($(VCS_BRANCH),master)
+ifneq ($(VCS_BRANCH),main)
 ifneq ($(VCS_BRANCH),develop)
 VCS_BRANCHES+=develop
 endif
-VCS_BRANCHES+=master
+VCS_BRANCHES+=main
 endif
 
 # Values used to run Tox:
@@ -195,7 +222,8 @@ CI_PROJECT_NAMESPACE=$(CI_UPSTREAM_NAMESPACE)
 CI_TEMPLATE_REGISTRY_HOST=registry.gitlab.com
 CI_REGISTRY=$(CI_TEMPLATE_REGISTRY_HOST)/$(CI_PROJECT_NAMESPACE)
 CI_REGISTRY_IMAGE=$(CI_REGISTRY)/$(CI_PROJECT_NAME)
-DOCKER_COMPOSE_RUN_ARGS=--rm
+DOCKER_COMPOSE_RUN_ARGS=
+DOCKER_COMPOSE_RUN_ARGS+= --rm
 ifneq ($(CI),true)
 DOCKER_COMPOSE_RUN_ARGS+= --quiet-pull
 endif
@@ -269,7 +297,7 @@ PIP_COMPILE_ARGS=--upgrade
 RELEASE_PUBLISH=false
 PYPI_REPO=testpypi
 PYPI_HOSTNAME=test.pypi.org
-# Only publish releases from the `master` or `develop` branches:
+# Only publish releases from the `main` or `develop` branches:
 ifeq ($(CI),true)
 # Compile requirements on CI/CD as a check to make sure all changes to dependencies have
 # been reflected in the frozen/pinned versions, but don't upgrade packages so that
@@ -278,10 +306,10 @@ ifeq ($(CI),true)
 PIP_COMPILE_ARGS=
 endif
 GITHUB_RELEASE_ARGS=--prerelease
-# Only publish releases from the `master` or `develop` branches and only under the
+# Only publish releases from the `main` or `develop` branches and only under the
 # canonical CI/CD platform:
 ifeq ($(GITLAB_CI),true)
-ifeq ($(VCS_BRANCH),master)
+ifeq ($(VCS_BRANCH),main)
 RELEASE_PUBLISH=true
 PYPI_REPO=pypi
 PYPI_HOSTNAME=pypi.org
@@ -414,7 +442,7 @@ $(PYTHON_ENVS:%=build-requirements-%):
 
 .PHONY: build-docker
 ### Set up for development in Docker containers.
-build-docker: build-pkgs
+build-docker: build-pkgs ./var/log/tox/build/build.log
 	$(MAKE) -e -j PYTHON_WHEEL="$(call current_pkg,.whl)" \
 	    DOCKER_BUILD_ARGS="--progress plain" \
 	    $(PYTHON_MINORS:%=build-docker-%)
@@ -439,22 +467,22 @@ $(DOCKER_REGISTRIES:%=build-docker-tags-%): \
 		./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
 		./var/log/tox/build/build.log
 	docker_image=$(DOCKER_IMAGE_$(@:build-docker-tags-%=%))
+	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$(PYTHON_ENV)-$(DOCKER_BRANCH_TAG)
+ifeq ($(VCS_BRANCH),main)
+# Only update tags end users may depend on to be stable from the `main` branch
 	VERSION=$$(./.tox/build/bin/cz version --project)
 	major_version=$$(echo $${VERSION} | sed -nE 's|([0-9]+).*|\1|p')
 	minor_version=$$(
 	    echo $${VERSION} | sed -nE 's|([0-9]+\.[0-9]+).*|\1|p'
 	)
-	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$(PYTHON_ENV)-$(DOCKER_BRANCH_TAG)
-ifeq ($(VCS_BRANCH),master)
-# Only update tags end users may depend on to be stable from the `master` branch
 	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$(PYTHON_ENV)-$${minor_version}
 	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$(PYTHON_ENV)-$${major_version}
 	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$(PYTHON_ENV)
 endif
 # This variant is the default used for tags such as `latest`
-ifeq ($(PYTHON_ENV),$(PYTHON_LATEST_ENV))
+ifeq ($(PYTHON_MINOR),$(PYTHON_HOST_MINOR))
 	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$(DOCKER_BRANCH_TAG)
-ifeq ($(VCS_BRANCH),master)
+ifeq ($(VCS_BRANCH),main)
 	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$${minor_version}
 	echo $${docker_image}:$(DOCKER_VARIANT_PREFIX)$${major_version}
 ifeq ($(DOCKER_VARIANT),)
@@ -471,7 +499,7 @@ $(PYTHON_MINORS:%=build-docker-requirements-%): ./.env
 	export PYTHON_MINOR="$(@:build-docker-requirements-%=%)"
 	export PYTHON_ENV="py$(subst .,,$(@:build-docker-requirements-%=%))"
 	$(MAKE) -e build-docker-volumes-$${PYTHON_ENV} \
-	    "./var/docker/$(PYTHON_ENV)/log/build-devel.log"
+	    "./var/docker/$${PYTHON_ENV}/log/build-devel.log"
 	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
 	    make -e PYTHON_MINORS="$(@:build-docker-requirements-%=%)" \
 	    PIP_COMPILE_ARGS="$(PIP_COMPILE_ARGS)" \
@@ -508,9 +536,10 @@ test-debug: ./var/log/tox/$(PYTHON_ENV)/editable.log
 
 .PHONY: test-docker
 ### Run the full suite of tests, coverage checks, and code linters in containers.
-test-docker: build-pkgs ./var/log/codecov-install.log
+test-docker: build-pkgs ./var/log/tox/build/build.log ./var/log/codecov-install.log
 	$(MAKE) -e -j PYTHON_WHEEL="$(call current_pkg,.whl)" \
 	    DOCKER_BUILD_ARGS="--progress plain" \
+	    DOCKER_COMPOSE_RUN_ARGS="$(DOCKER_COMPOSE_RUN_ARGS) -T" \
 	    $(PYTHON_MINORS:%=test-docker-%)
 
 .PHONY: $(PYTHON_MINORS:%=test-docker-%)
@@ -557,10 +586,10 @@ endif
 
 .PHONY: test-docker-lint
 ### Check the style and content of the `./Dockerfile*` files.
-test-docker-lint: ./.env build-docker-volumes-$(PYTHON_ENV)
+test-docker-lint: ./.env build-docker-volumes-$(PYTHON_ENV) \
+		./var/log/docker-login-DOCKER.log
 	docker compose pull hadolint
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) hadolint \
-	    hadolint "./Dockerfile"
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) hadolint
 	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) hadolint \
 	    hadolint "./Dockerfile.devel"
 	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) hadolint \
@@ -578,8 +607,8 @@ ifneq ($(PYTHON_MINOR),$(PYTHON_HOST_MINOR))
 	exit
 endif
 endif
-ifeq ($(VCS_COMPARE_BRANCH),master)
-# On `master`, compare with the previous commit on `master`
+ifeq ($(VCS_COMPARE_BRANCH),main)
+# On `main`, compare with the previous commit on `main`
 	vcs_compare_rev="$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH)^"
 else
 	vcs_compare_rev="$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH)"
@@ -627,35 +656,15 @@ release: release-python release-docker
 
 .PHONY: release-python
 ### Publish installable Python packages to PyPI.
-release-python: ./var/log/tox/build/build.log $(VCS_RELEASE_FETCH_TARGETS) \
+release-python: ./var/log/tox/build/build.log ./var/log/git-remotes.log \
+		./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
 		~/.pypirc ./.env build-docker-volumes-$(PYTHON_ENV)
-ifeq ($(VCS_BRANCH),master)
-	if ! ./.tox/build/bin/python ./bin/get-base-version $$(
-	    ./.tox/build/bin/cz version --project
-	)
-	then
-# There's no pre-release for which to publish a final release:
-	    exit
-	fi
-else
-# Only release if required by conventional commits:
-	exit_code=0
-	./.tox/build/bin/python ./bin/cz-check-bump || exit_code=$$?
-	if (( $$exit_code == 3 || $$exit_code == 21 ))
-	then
-# No commits require a release:
-	    exit
-	elif (( $$exit_code != 0 ))
-	then
-	    exit $$exit_code
-	fi
-endif
-# Only release from the `master` or `develop` branches:
+# Only release from the `main` or `develop` branches:
 ifeq ($(RELEASE_PUBLISH),true)
 # Import the private signing key from CI secrets
 	$(MAKE) -e ./var/log/gpg-import.log
 # Bump the version and build the final release packages:
-	$(MAKE) -e release-bump build-pkgs
+	$(MAKE) -e build-pkgs
 # https://twine.readthedocs.io/en/latest/#using-twine
 	./.tox/build/bin/twine check ./dist/feed?archiver-*
 # The VCS remote should reflect the release before the release is published to ensure
@@ -663,32 +672,13 @@ ifeq ($(RELEASE_PUBLISH),true)
 # place on any mirrors, using multiple `pushurl` remotes, for those project hosts as
 # well:
 	$(MAKE) -e test-clean
-ifeq ($(VCS_BRANCH),master)
-# Merge the bumped version back into `develop`:
-	bump_rev="$$(git rev-parse HEAD)"
-	git checkout "develop" --
-	git merge --ff --gpg-sign \
-	    -m "Merge branch 'master' release back into develop" "$${bump_rev}"
-	git push --no-verify --tags "$(VCS_REMOTE)" "HEAD:develop"
-	git checkout "$${bump_rev}" --
-endif
-ifneq ($(GITHUB_ACTIONS),true)
-ifneq ($(PROJECT_GITHUB_PAT),)
-# Ensure the tag is available for creating the GitHub release below but push *before* to
-# GitLab to avoid a race with repository mirrorying:
-	git push --no-verify --tags "github" "HEAD:$(VCS_BRANCH)"
-endif
-endif
-	git push --no-verify --tags "$(VCS_REMOTE)" "HEAD:$(VCS_BRANCH)"
 	./.tox/build/bin/twine upload -s -r "$(PYPI_REPO)" \
-	    ./dist/feed?archiver-*.whl \
-	    ./dist/feed?archiver-*.tar.gz
+	    ./dist/feed?archiver-*
 	export VERSION=$$(./.tox/build/bin/cz version --project)
 # Create a GitLab release
 	./.tox/build/bin/twine upload -s -r "gitlab" \
-	    ./dist/feed?archiver-*.whl \
-	    ./dist/feed?archiver-*.tar.gz
-	release_cli_args="--description ./NEWS-release.rst"
+	    ./dist/feed?archiver-*
+	release_cli_args="--description ./NEWS-VERSION.rst"
 	release_cli_args+=" --tag-name v$${VERSION}"
 	release_cli_args+=" --assets-link {\
 	\"name\":\"PyPI\",\
@@ -711,21 +701,24 @@ endif
 	    create $${release_cli_args}
 # Create a GitHub release
 	gh release create "v$${VERSION}" $(GITHUB_RELEASE_ARGS) \
-	    --notes-file "./NEWS-release.rst" ./dist/feed?archiver-*
+	    --notes-file "./NEWS-VERSION.rst" ./dist/feed?archiver-*
 endif
 
 .PHONY: release-docker
 ### Publish all container images to all container registries.
 release-docker: build-docker-volumes-$(PYTHON_ENV) build-docker \
 		$(DOCKER_REGISTRIES:%=./var/log/docker-login-%.log)
-	$(MAKE) -e -j $(PYTHON_MINORS:%=release-docker-%)
+	$(MAKE) -e -j DOCKER_COMPOSE_RUN_ARGS="$(DOCKER_COMPOSE_RUN_ARGS) -T" \
+	    $(PYTHON_MINORS:%=release-docker-%)
 
 .PHONY: $(PYTHON_MINORS:%=release-docker-%)
 ### Publish the container images for one Python version to all container registry.
 $(PYTHON_MINORS:%=release-docker-%): $(DOCKER_REGISTRIES:%=./var/log/docker-login-%.log)
 	export PYTHON_ENV="py$(subst .,,$(@:release-docker-%=%))"
-	$(MAKE) -e -j $(DOCKER_REGISTRIES:%=release-docker-registry-%)
-ifeq ($${PYTHON_ENV},$(PYTHON_LATEST_ENV))
+	$(MAKE) -e -j DOCKER_COMPOSE_RUN_ARGS="$(DOCKER_COMPOSE_RUN_ARGS) -T" \
+	    $(DOCKER_REGISTRIES:%=release-docker-registry-%)
+ifeq ($${PYTHON_ENV},$(PYTHON_HOST_ENV))
+	$(MAKE) -e "./var/log/docker-login-DOCKER.log"
 	docker compose pull pandoc docker-pushrm
 	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) docker-pushrm
 endif
@@ -752,7 +745,7 @@ $(DOCKER_REGISTRIES:%=release-docker-registry-%):
 
 .PHONY: release-bump
 ### Bump the package version if on a branch that should trigger a release.
-release-bump: ~/.gitconfig ./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
+release-bump: ~/.gitconfig $(VCS_RELEASE_FETCH_TARGETS) \
 		./var/log/git-remotes.log ./var/log/tox/build/build.log \
 		./var/docker/$(PYTHON_ENV)/log/build-devel.log \
 		./.env build-docker-volumes-$(PYTHON_ENV)
@@ -762,9 +755,32 @@ release-bump: ~/.gitconfig ./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
 	    echo "CRITICAL: Cannot bump version with staged changes"
 	    false
 	fi
+# Ensure the local branch is updated to the forthcoming version bump commit:
+	git switch -C "$(VCS_BRANCH)" "$$(git rev-parse HEAD)" --
+ifeq ($(VCS_BRANCH),main)
+	if ! ./.tox/build/bin/python ./bin/get-base-version $$(
+	    ./.tox/build/bin/cz version --project
+	)
+	then
+# There's no pre-release for which to publish a final release:
+	    exit
+	fi
+else
+# Only release if required by conventional commits:
+	exit_code=0
+	./.tox/build/bin/python ./bin/cz-check-bump || exit_code=$$?
+	if (( $$exit_code == 3 || $$exit_code == 21 ))
+	then
+# No commits require a release:
+	    exit
+	elif (( $$exit_code != 0 ))
+	then
+	    exit $$exit_code
+	fi
+endif
 # Collect the versions involved in this release according to conventional commits:
 	cz_bump_args="--check-consistency --no-verify"
-ifneq ($(VCS_BRANCH),master)
+ifneq ($(VCS_BRANCH),main)
 	cz_bump_args+=" --prerelease beta"
 endif
 ifeq ($(RELEASE_PUBLISH),true)
@@ -779,10 +795,12 @@ endif
 	    $(TOX_EXEC_BUILD_ARGS) cz bump $${cz_bump_args} --yes --dry-run |
 	    sed -nE 's|.* ([^ ]+) *→ *([^ ]+).*|\2|p'
 	) || true
-	docker compose run --rm feed-archiver-devel $(TOX_EXEC_ARGS) \
-	    towncrier build --version "$${next_version}" --draft --yes \
-	        >"./NEWS-release.rst"
 # Build and stage the release notes to be commited by `$ cz bump`
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	    tox exec $(TOX_EXEC_OPTS) -e "$(PYTHON_ENV)" -qq -- \
+	    towncrier build --version "$${next_version}" --draft --yes \
+	    >"./NEWS-VERSION.rst"
+	git add -- "./NEWS-VERSION.rst"
 	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
 	    $(TOX_EXEC_ARGS) towncrier build --version "$${next_version}" --yes
 # Increment the version in VCS
@@ -797,6 +815,27 @@ ifneq ($(CI),true)
 # If running under CI/CD then the image will be updated in the next pipeline stage.
 # For testing locally, however, ensure the image is up-to-date for subsequent recipes.
 	$(MAKE) -e "./var/docker/$(PYTHON_ENV)/log/build-user.log"
+endif
+ifeq ($(VCS_BRANCH),main)
+# Merge the bumped version back into `develop`:
+	bump_rev="$$(git rev-parse HEAD)"
+	git switch -C "develop" --track "$(VCS_COMPARE_REMOTE)/develop" --
+	git merge --ff --gpg-sign \
+	    -m "Merge branch 'main' release back into develop" "$${bump_rev}"
+ifeq ($(CI),true)
+	git push --no-verify --tags "$(VCS_COMPARE_REMOTE)" "HEAD:develop"
+endif
+	git switch -C "$(VCS_BRANCH)" "$${bump_rev}" --
+endif
+ifneq ($(GITHUB_ACTIONS),true)
+ifneq ($(PROJECT_GITHUB_PAT),)
+# Ensure the tag is available for creating the GitHub release below but push *before* to
+# GitLab to avoid a race with repository mirrorying:
+	git push --no-verify --tags "github" "HEAD:$(VCS_BRANCH)"
+endif
+endif
+ifeq ($(CI),true)
+	git push --no-verify --tags "$(VCS_REMOTE)" "HEAD:$(VCS_BRANCH)"
 endif
 
 
@@ -815,34 +854,30 @@ devel-format: $(HOME)/.local/var/log/feed-archiver-host-install.log
 
 .PHONY: devel-upgrade
 ### Update all fixed/pinned dependencies to their latest available versions.
-devel-upgrade: ./.env build-docker-volumes-$(PYTHON_ENV)
+devel-upgrade: ./.env build-docker-volumes-$(PYTHON_ENV) \
+		./var/docker/$(PYTHON_ENV)/log/build-devel.log \
+		./var/log/tox/build/build.log
 	touch "./setup.cfg" "./requirements/build.txt.in" \
 	    "./build-host/requirements.txt.in"
 # Ensure the network is create first to avoid race conditions
 	docker compose create feed-archiver-devel
-	$(MAKE) -e PIP_COMPILE_ARGS="--upgrade" -j \
+	$(MAKE) -e -j PIP_COMPILE_ARGS="--upgrade" \
+	    DOCKER_COMPOSE_RUN_ARGS="$(DOCKER_COMPOSE_RUN_ARGS) -T" \
 	    $(PYTHON_MINORS:%=build-docker-requirements-%)
 # Update VCS hooks from remotes to the latest tag.
 	$(TOX_EXEC_BUILD_ARGS) pre-commit autoupdate
 
 .PHONY: devel-upgrade-branch
 ### Reset an upgrade branch, commit upgraded dependencies on it, and push for review.
-devel-upgrade-branch: ~/.gitconfig ./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
+devel-upgrade-branch: ~/.gitconfig ./var/log/gpg-import.log \
+		./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
 		./var/log/git-remotes.log
 	remote_branch_exists=false
 	if git fetch "$(VCS_REMOTE)" "$(VCS_BRANCH)-upgrade"
 	then
 	    remote_branch_exists=true
 	fi
-	if git show-ref -q --heads "$(VCS_BRANCH)-upgrade"
-	then
-# Reset an existing local branch to the latest upstream before upgrading
-	    git checkout "$(VCS_BRANCH)-upgrade"
-	    git reset --hard "$(VCS_BRANCH)" --
-	else
-# Create a new local branch from the latest upstream before upgrading
-	    git checkout -b "$(VCS_BRANCH)-upgrade" "$(VCS_BRANCH)"
-	fi
+	git switch -C "$(VCS_BRANCH)-upgrade" --track "$(VCS_REMOTE)/$(VCS_BRANCH)" --
 	now=$$(date -u)
 	$(MAKE) -e devel-upgrade
 	if $(MAKE) -e "test-clean"
@@ -877,6 +912,19 @@ ifeq ($(CI),true)
 	$(VCS_BRANCH)-upgrade:$(VCS_REMOTE)/$(VCS_BRANCH)-upgrade"
 	fi
 	git push $${git_push_args} "$(VCS_REMOTE)" "HEAD:$(VCS_BRANCH)-upgrade"
+endif
+
+.PHONY: devel-merge
+### Merge this branch with a suffix back into it's un-suffixed upstream.
+devel-merge: ~/.gitconfig ./var/log/git-remotes.log \
+		./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_MERGE_BRANCH)
+	merge_rev="$$(git rev-parse HEAD)"
+	git switch -C "$(VCS_MERGE_BRANCH)" --track "$(VCS_REMOTE)/$(VCS_MERGE_BRANCH)"
+	git merge --ff --gpg-sign -m \
+	    $$'Merge branch \'$(VCS_BRANCH)\' into $(VCS_MERGE_BRANCH)\n\n[ci merge]' \
+	    "$${merge_rev}"
+ifeq ($(CI),true)
+	git push --no-verify --tags "$(VCS_REMOTE)" "HEAD:$(VCS_MERGE_BRANCH)"
 endif
 
 
@@ -974,7 +1022,8 @@ $(PYTHON_ENVS:%=./var/log/tox/%/editable.log):
 		./var/docker/$(PYTHON_ENV)/log/rebuild.log
 	true DEBUG Updated prereqs: $(?)
 	$(MAKE) -e "./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH)" \
-	    build-docker-volumes-$(PYTHON_ENV) "./var/log/tox/build/build.log"
+	    build-docker-volumes-$(PYTHON_ENV) "./var/log/tox/build/build.log" \
+	    "./var/log/docker-login-DOCKER.log"
 	mkdir -pv "$(dir $(@))"
 # Workaround issues with local images and the development image depending on the end
 # user image.  It seems that `depends_on` isn't sufficient.
@@ -998,10 +1047,6 @@ else
 	    --build-arg PYTHON_MINOR=$(PYTHON_MINOR) \
 	    --build-arg PYTHON_ENV=$(PYTHON_ENV) \
 	    --build-arg VERSION=$${VERSION}"
-ifeq ($(CI),true)
-# Workaround broken interactive session detection
-	docker pull "python:${PYTHON_MINOR}"
-endif
 	docker_build_devel_tags=""
 	for devel_tag in $$(
 	    $(MAKE) -e DOCKER_VARIANT="devel" --no-print-directory build-docker-tags
@@ -1011,9 +1056,9 @@ endif
 	done
 	docker_build_caches=""
 ifeq ($(GITLAB_CI),true)
-# Don't cache when building final releases on `master`
+# Don't cache when building final releases on `main`
 	$(MAKE) -e "./var/log/docker-login-GITLAB.log" || true
-ifneq ($(VCS_BRANCH),master)
+ifneq ($(VCS_BRANCH),main)
 	if $(MAKE) -e DOCKER_VARIANT="devel" pull-docker
 	then
 	    docker_build_caches+=" --cache-from \
@@ -1023,7 +1068,7 @@ endif
 endif
 ifeq ($(GITHUB_ACTIONS),true)
 	$(MAKE) -e "./var/log/docker-login-GITHUB.log" || true
-ifneq ($(VCS_BRANCH),master)
+ifneq ($(VCS_BRANCH),main)
 	if $(MAKE) -e DOCKER_VARIANT="devel" pull-docker
 	then
 	    docker_build_caches+=" --cache-from \
@@ -1031,7 +1076,11 @@ ifneq ($(VCS_BRANCH),master)
 	fi
 endif
 endif
-	docker buildx build --pull $${docker_build_args} $${docker_build_devel_tags} \
+ifeq ($(CI),true)
+# Workaround broken interactive session detection
+	docker pull "python:${PYTHON_MINOR}"
+endif
+	docker buildx build $${docker_build_args} $${docker_build_devel_tags} \
 	    $${docker_build_caches} --file "./Dockerfile.devel" "./"
 # Ensure any subsequent builds have optimal caches
 ifeq ($(GITLAB_CI),true)
@@ -1085,7 +1134,7 @@ endif
 	done
 	docker_build_caches=""
 ifeq ($(GITLAB_CI),true)
-ifneq ($(VCS_BRANCH),master)
+ifneq ($(VCS_BRANCH),main)
 	if $(MAKE) -e pull-docker
 	then
 	    docker_build_caches+=" \
@@ -1094,7 +1143,7 @@ ifneq ($(VCS_BRANCH),master)
 endif
 endif
 ifeq ($(GITHUB_ACTIONS),true)
-ifneq ($(VCS_BRANCH),master)
+ifneq ($(VCS_BRANCH),main)
 	if $(MAKE) -e pull-docker
 	then
 	    docker_build_caches+=" \
@@ -1102,7 +1151,7 @@ ifneq ($(VCS_BRANCH),master)
 	fi
 endif
 endif
-	docker buildx build --pull $${docker_build_args} $${docker_build_user_tags} \
+	docker buildx build $${docker_build_args} $${docker_build_user_tags} \
 	    --build-arg PYTHON_WHEEL="$${PYTHON_WHEEL}" $${docker_build_caches} "./"
 # Ensure any subsequent builds have optimal caches
 ifeq ($(GITLAB_CI),true)
@@ -1238,11 +1287,12 @@ $(VCS_FETCH_TARGETS): ./.git/logs/HEAD
 	fi
 	branch_path="$(@:var/git/refs/remotes/%=%)"
 	mkdir -pv "$(dir $(@))"
-	if ! git fetch $${git_fetch_args} "$${branch_path%%/*}" "$${branch_path#*/}" |
+	if ! git fetch $${git_fetch_args} "$${branch_path%%/*}" "$${branch_path#*/}" |&
 	    tee -a "$(@)"
 	then
 # If the local branch doesn't exist, fall back to the pre-release branch:
-	    git fetch $${git_fetch_args} "$${branch_path%%/*}" "develop" | tee -a "$(@)"
+	    git fetch $${git_fetch_args} "$${branch_path%%/*}" "develop" |&
+	        tee -a "$(@)"
 	fi
 
 ./.git/hooks/pre-commit:
@@ -1265,16 +1315,27 @@ $(VCS_FETCH_TARGETS): ./.git/logs/HEAD
 	git config --global user.email "$(USER_EMAIL)"
 
 ./var/log/git-remotes.log:
-ifeq ($(RELEASE_PUBLISH),true)
+	mkdir -pv "$(dir $(@))"
 	set +x
 ifneq ($(VCS_REMOTE_PUSH_URL),)
-	git remote set-url --push --add "origin" "$(VCS_REMOTE_PUSH_URL)"
+	if ! git remote get-url --push --all "origin" |
+	    grep -q -F "$(VCS_REMOTE_PUSH_URL)"
+	then
+	    echo "INFO:Adding push url for remote 'origin'"
+	    git remote set-url --push --add "origin" "$(VCS_REMOTE_PUSH_URL)" |
+	        tee -a "$(@)"
+	fi
 endif
 ifneq ($(GITHUB_ACTIONS),true)
 ifneq ($(PROJECT_GITHUB_PAT),)
 # Also add a fetch remote for the `$ gh ...` CLI tool to detect:
-	git remote add "github" \
-	    "https://$(PROJECT_GITHUB_PAT)@github.com/$(CI_PROJECT_PATH).git"
+	if ! git remote get-url "github" >"/dev/null"
+	then
+	    echo "INFO:Adding remote 'github'"
+	    git remote add "github" \
+	        "https://$(PROJECT_GITHUB_PAT)@github.com/$(CI_PROJECT_PATH).git" |
+	        tee -a "$(@)"
+	fi
 else ifneq ($(CI_IS_FORK),true)
 	set +x
 	echo "ERROR: PROJECT_GITHUB_PAT missing from ./.env or CI secrets"
@@ -1283,8 +1344,7 @@ endif
 endif
 	set -x
 # Fail fast if there's still no push access
-	git push --no-verify --tags "origin"
-endif
+	git push --no-verify --tags "origin" | tee -a "$(@)"
 
 # Ensure release publishing authentication, mostly useful in automation such as CI.
 ~/.pypirc: ./home/.pypirc.in
@@ -1393,6 +1453,14 @@ ifneq ($(CI_IS_FORK),true)
 endif
 	date | tee -a "$(@)"
 endif
+
+# TEMPLATE: Optionally, use the following command to generate a GitLab CI/CD runner
+# configuration, register it with your project, compare it with the template
+# prerequisite, apply the appropriate changes and then  run using `$ docker compose up
+# gitlab-runner`.  Particularly useful to conserve shared runner minutes:
+./gitlab-runner/config/config.toml: ./gitlab-runner/config/config.toml.in
+	docker compose run --rm gitlab-runner register \
+	    --url "https://gitlab.com/" --docker-image "docker" --executor "docker"
 
 
 ## Utility Targets:

@@ -1,3 +1,5 @@
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
+
 default:
   image:
     name: "$CI_TEMPLATE_REGISTRY_HOST/rpatterson/$CI_PROJECT_NAME:build-host"
@@ -22,18 +24,29 @@ variables:
 stages:
   - "build-test"
   - "release"
+  - "release-bump"
+  - "release-version"
   - "scheduled"
+  - "merge-upgrade"
 
 build-test:
   stage: "build-test"
   rules:
     - if: >-
-        ($CI_COMMIT_TAG == null || $CI_COMMIT_TAG == "")
-        && $CI_PIPELINE_SOURCE != "schedule"
+        $CI_COMMIT_BRANCH != null
         && (
-          $CI_COMMIT_MESSAGE !~ /(?ims).*\[actions skip\].*/
-          || $CI_COMMIT_BRANCH == "master"
+          $CI_COMMIT_BRANCH !~ /^(develop|main)$/
+          || (
+            $CI_COMMIT_BRANCH == "develop"
+            && $CI_COMMIT_TITLE =~
+        /^build\(release\): Version [0-9]+\.[0-9]+\.[0-9]+.* → [0-9]+\.[0-9]+\.[0-9]+[^0-9].+$/
+          ) || (
+            $CI_COMMIT_BRANCH == "main"
+            && $CI_COMMIT_TITLE =~
+        /^build\(release\): Version [0-9]+\.[0-9]+\.[0-9]+.* → [0-9]+\.[0-9]+\.[0-9]+$/
+          )
         )
+        && $CI_PIPELINE_SOURCE != "schedule"
   interruptible: true
   parallel:
     matrix:
@@ -79,28 +92,86 @@ release:
     DOCKER_BUILD_PULL: "true"
   rules:
     - if: >-
-        ($CI_COMMIT_TAG == null || $CI_COMMIT_TAG == "")
-        && $CI_PROJECT_NAMESPACE == "rpatterson"
-        && $CI_COMMIT_BRANCH != null
-        && $CI_COMMIT_BRANCH =~ "^(develop|master)$"
-        && $CI_PIPELINE_SOURCE != "schedule"
-        && (
-          $CI_COMMIT_MESSAGE !~ /(?ims).*\[actions skip\].*/
-          || $CI_COMMIT_BRANCH == "master"
+        (
+          (
+            $CI_COMMIT_BRANCH == "develop"
+            && $CI_COMMIT_TITLE =~
+        /^build\(release\): Version [0-9]+\.[0-9]+\.[0-9]+.* → [0-9]+\.[0-9]+\.[0-9]+[^0-9].+$/
+          ) || (
+            $CI_COMMIT_BRANCH == "main"
+            && $CI_COMMIT_TITLE =~
+        /^build\(release\): Version [0-9]+\.[0-9]+\.[0-9]+.* → [0-9]+\.[0-9]+\.[0-9]+$/
+          )
         )
+        && $CI_PROJECT_NAMESPACE == "rpatterson"
   script:
     - >-
       entrypoint make -e release-python test-clean
   artifacts:
     paths:
-      - "./NEWS-release.rst"
       - "./dist/feed?archiver-*"
+
+merge-upgrade:
+  stage: "merge-upgrade"
+  needs: ["build-test"]
+  rules:
+    - if: >-
+        $CI_COMMIT_BRANCH =~ /^.+-upgrade$/
+  script:
+    - >-
+      entrypoint make -e VCS_BRANCH_SUFFIX="upgrade" devel-merge
+
+release-bump:
+  stage: "release-bump"
+  needs: []
+  dependencies: []
+  variables:
+    DOCKER_BUILD_PULL: "true"
+  rules:
+    - if: >-
+        (
+          (
+            $CI_COMMIT_BRANCH == "main"
+            && $CI_COMMIT_TITLE !~
+        /^build\(release\): Version [0-9]+\.[0-9]+\.[0-9]+.* → [0-9]+\.[0-9]+\.[0-9]+$/
+          ) || (
+            $CI_COMMIT_BRANCH == "develop"
+            && $CI_COMMIT_TITLE !~
+        /^build\(release\): Version [0-9]+\.[0-9]+\.[0-9]+.* → [0-9]+\.[0-9]+\.[0-9].*$/
+          )
+        )
+        && $CI_PIPELINE_SOURCE != "schedule"
+  script:
+    - >-
+      entrypoint make -e release-bump
+
+# Workaround GitLab's handling of pipeline status when pushing both a branch and a tag:
+release-version:
+  stage: "release-version"
+  needs: []
+  dependencies: []
+  rules:
+    - if: >-
+        $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+.*$/
+  inherit:
+    default: false
+  script:
+    - >-
+      true
 
 # TEMPLATE: Optionally add a scheduled pipeline with the following variables to
 # periodically upgrade all requirements and run CI:
+#
 # - `DOCKER_BUILD_PULL=true`
 # - `SCHEDULED_TARGETS=devel-upgrade-branch`
 # - `TEMPLATE_IGNORE_EXISTING=true`
+#
+# The `merge-upgrade` job will automatically merge `*-upgrade` branches when
+# `build-test` is successful, so add a protected branch rule for the `*-upgrade`
+# wildcard that allows force pushing.  The target branch for the scheduled pipeline thus
+# determines whether upgrade branches that pass CI will publish releases, pre-releases
+# for `develop` and final releases for `main`.
+#
 # WARNING: Running this even just daily can easily exhaust the gitlab.org free quotas.
 
 scheduled:
