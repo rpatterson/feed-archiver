@@ -1,9 +1,8 @@
-feed-archiver 2.0.0b0 (2023-04-15)
+feed-archiver 2.0.0b1 (2023-04-16)
 ==================================
 
 Bugfixes
 --------
 
-- Restore correct versions going forward.  Versions from here to v1.0.0 below are
-  incorrect.
+- Upgrade all requirements to the latest versions as of Sun Apr 16 03:54:21 PM UTC 2023.
 
