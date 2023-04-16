@@ -893,7 +893,7 @@ devel-upgrade-branch: ~/.gitconfig ./var/log/gpg-import.log \
 	then
 	    remote_branch_exists=true
 	fi
-	git switch -C "$(VCS_BRANCH)-upgrade" --track "$(VCS_REMOTE)/$(VCS_BRANCH)" --
+	git switch -C "$(VCS_BRANCH)-upgrade" --track "$(VCS_BRANCH)" --
 	now=$$(date -u)
 	$(MAKE) -e devel-upgrade
 	if $(MAKE) -e "test-clean"
@@ -903,11 +903,10 @@ devel-upgrade-branch: ~/.gitconfig ./var/log/gpg-import.log \
 	fi
 # Commit the upgrade changes
 	echo "Upgrade all requirements to the latest versions as of $${now}." \
-	    >"./src/feedarchiver/newsfragments/upgrade-requirements.bugfix.rst"
+	    >"./src/feedarchiver/newsfragments/+upgrade-requirements.bugfix.rst"
 	git add --update './build-host/requirements-*.txt' './requirements/*/*.txt' \
 	    "./.pre-commit-config.yaml"
-	git add \
-	    "./src/feedarchiver/newsfragments/upgrade-requirements.bugfix.rst"
+	git add "./src/feedarchiver/newsfragments/+upgrade-requirements.bugfix.rst"
 	git_commit_args="--all --gpg-sign"
 ifeq ($(CI),true)
 # Don't duplicate the CI run from the push below:
@@ -1056,7 +1055,7 @@ ifeq ($(DOCKER_BUILD_PULL),true)
 	        "./var/log/tox/$(PYTHON_ENV)/build.log"
 	    exit
 	fi
-else
+endif
 # https://github.com/moby/moby/issues/39003#issuecomment-879441675
 	docker_build_args="$(DOCKER_BUILD_ARGS) \
 	    --build-arg BUILDKIT_INLINE_CACHE=1 \
@@ -1120,7 +1119,6 @@ ifeq ($(CI),true)
 	touch "$(@)"
 else
 	$(MAKE) -e "$(@)"
-endif
 endif
 
 # Build the end-user image:
@@ -1497,7 +1495,7 @@ endif
 	date | tee -a "$(@)"
 endif
 
-./gitlab-runner/config/config.toml: ./gitlab-runner/config/config.toml.in
+./var/gitlab-runner/config/config.toml: ./gitlab-runner/config/config.toml.in
 	docker compose run --rm gitlab-runner register \
 	    --url "https://gitlab.com/" --docker-image "docker" --executor "docker"
 
