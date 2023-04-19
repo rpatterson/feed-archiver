@@ -59,6 +59,19 @@ Archive the full contents of RSS/Atom syndication feeds including enclosures and
 	  :alt: Docker Hub image size (latest semver)
 	  :target: https://hub.docker.com/r/merpatterson/feed-archiver
 
+     - .. figure:: https://img.shields.io/keybase/pgp/rpatterson?logo=keybase
+          :alt: KeyBase PGP key ID
+          :target: https://keybase.io/rpatterson
+       .. figure:: https://img.shields.io/github/followers/rpatterson?style=social
+          :alt: GitHub followers count
+          :target: https://github.com/rpatterson
+       .. figure:: https://img.shields.io/liberapay/receives/rpatterson.svg?logo=liberapay
+          :alt: LiberaPay donated per week
+          :target: https://liberapay.com/rpatterson/donate
+       .. figure:: https://img.shields.io/liberapay/patrons/rpatterson.svg?logo=liberapay
+          :alt: LiberaPay patrons count
+          :target: https://liberapay.com/rpatterson/donate
+
 The ``$ feed-archiver`` command aims to archive RSS/Atom feeds as fully as possible in
 such a way that the archive can serve (at least) 2 use cases:
 
@@ -78,6 +91,8 @@ such a way that the archive can serve (at least) 2 use cases:
     An alternate hierarchy of feed item enclosures better suited for ingestion into
     other media software, such as media library servers.  For example, your podcast
     episodes can also be made available in your `Jellyfin`_/Emby/Plex library.
+
+.. contents:: Table of Contents
 
 ********************
 Detailed Description
@@ -147,14 +162,42 @@ re-using example configurations known to work by others.
 Installation
 ****************************************************************************************
 
+Install and use either via a local, native installation or a Docker container image:
+
+Local/Native Installation
+========================================================================================
+
 Install using any tool for installing standard Python 3 distributions such as `pip`_::
 
-  $ sudo pip3 install feed-archiver
+  $ pip3 install --user feed-archiver
 
 Optional shell tab completion is available via `argcomplete`_.
 
-Or use `the Docker image`_.  See `the example ./docker-compose.yml file`_ for usage
-details.
+Docker Container Image Installation
+========================================================================================
+
+The recommended way to use the Docker container image is via `Docker Compose`_.  See
+`the example ./docker-compose.yml file`_ for an example configuration.  Once you have
+your configuration, you can create and run the container::
+
+  $ docker compose up
+
+Alternatively, you make use the image directly.  Pull `the Docker image`_::
+
+  $ docker pull "docker.io/merpatterson/feed-archiver"
+
+And then use the image to create and run a container::
+
+  $ docker run --rm -it "docker.io/merpatterson/feed-archiver" ...
+
+The Docker images support the following platforms or architectures:
+
+- ``linux/amd64``
+- ``linux/arm64``
+- ``linux/arm/v7``
+
+Images are tagged with the branch name so images tagged with ``main`` are final releases
+and images tagged with ``develop`` are pre-releases.
 
 
 ****************************************************************************************
@@ -212,6 +255,12 @@ See also the command-line help for details on options and arguments::
     --archive-dir [ARCHIVE_DIR], -a [ARCHIVE_DIR]
 			  the archive root directory into which all feeds, their enclosures and assets
 			  will be downloaded (default: .)
+
+If using the Docker container image, the container can be run from the command-line as
+well::
+
+  $ docker compose run "feed-archiver" feed-archiver --help
+  usage: feed-archiver [-h]
 
 To link feed item enclosures into an `alternate hierarchy`_, such as in a media library,
 add a ``enclosures`` key to the feed configuration whose value is an list/array of
@@ -382,7 +431,7 @@ They may also include:
 
 
 ****************************************************************************************
-CONTRIBUTING
+Contributing
 ****************************************************************************************
 
 NOTE: `This project is hosted on GitLab`_.  There's `a mirror on GitHub`_ but please use
@@ -427,6 +476,7 @@ development.
 .. _lookup the episode file: https://github.com/Sonarr/Sonarr/wiki/Episode#get
 
 .. _the Docker image: https://hub.docker.com/r/merpatterson/feed-archiver
+.. _`Docker Compose`: https://docs.docker.com/compose/
 .. _`the example ./docker-compose.yml file`:
    https://gitlab.com/rpatterson/feed-archiver/blob/main/docker-compose.yml
 

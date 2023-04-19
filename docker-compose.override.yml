@@ -7,7 +7,9 @@ services:
 
   # Configuration specific to development:
   feed-archiver:
-    image: "merpatterson/feed-archiver:${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
+    image: "\
+      registry.gitlab.com/rpatterson/feed-archiver\
+      :${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
     container_name: "feed-archiver-checkout"
     build:
       context: "${CHECKOUT_DIR}/"
@@ -45,7 +47,9 @@ services:
 
   # Container for use by developers:
   feed-archiver-devel:
-    image: "merpatterson/feed-archiver:devel-${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
+    image: "\
+      registry.gitlab.com/rpatterson/feed-archiver\
+      :devel-${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
     container_name: "feed-archiver-devel"
     profiles:
       - "test"
@@ -132,7 +136,7 @@ services:
 
   # The container in which CI/CD is run:
   build-host:
-    image: "merpatterson/feed-archiver:build-host"
+    image: "registry.gitlab.com/rpatterson/feed-archiver:build-host"
     profiles:
       - "ci"
     build: "${CHECKOUT_DIR}/build-host/"

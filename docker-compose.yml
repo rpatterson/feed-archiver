@@ -4,7 +4,7 @@ services:
 
   ## Container for use by end users:
   feed-archiver:
-    image: "merpatterson/feed-archiver"
+    image: "registry.gitlab.com/rpatterson/feed-archiver"
     container_name: "feed-archiver"
     # Needed because we expect the container to run once and exit and to be run by
     # ofelia from then on.
