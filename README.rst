@@ -184,11 +184,11 @@ your configuration, you can create and run the container::
 
 Alternatively, you make use the image directly.  Pull `the Docker image`_::
 
-  $ docker pull "docker.io/merpatterson/feed-archiver"
+  $ docker pull "registry.gitlab.org/rpatterson/feed-archiver"
 
 And then use the image to create and run a container::
 
-  $ docker run --rm -it "docker.io/merpatterson/feed-archiver" ...
+  $ docker run --rm -it "registry.gitlab.org/rpatterson/feed-archiver" ...
 
 The Docker images support the following platforms or architectures:
 
