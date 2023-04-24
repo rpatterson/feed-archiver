@@ -6,7 +6,7 @@
 #
 anyio==3.6.2
     # via httpcore
-argcomplete==3.0.5
+argcomplete==3.0.8
     # via feed-archiver (pyproject.toml)
 arrapi==1.4.2
     # via feed-archiver (pyproject.toml)
@@ -32,7 +32,7 @@ idna==3.4
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==5.2.0 ; python_version < "3.8"
+importlib-metadata==6.6.0 ; python_version < "3.8"
     # via
     #   argcomplete
     #   feed-archiver (pyproject.toml)

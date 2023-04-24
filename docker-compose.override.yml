@@ -8,7 +8,7 @@ services:
   # Configuration specific to development:
   feed-archiver:
     image: "\
-      registry.gitlab.com/rpatterson/feed-archiver\
+      ${DOCKER_REGISTRY_HOST:-registry.gitlab.com}/rpatterson/feed-archiver\
       :${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
     container_name: "feed-archiver-checkout"
     build:
@@ -48,7 +48,7 @@ services:
   # Container for use by developers:
   feed-archiver-devel:
     image: "\
-      registry.gitlab.com/rpatterson/feed-archiver\
+      ${DOCKER_REGISTRY_HOST:-registry.gitlab.com}/rpatterson/feed-archiver\
       :devel-${PYTHON_ENV:-py310}-${DOCKER_BRANCH_TAG:-develop}"
     container_name: "feed-archiver-devel"
     profiles:
@@ -76,9 +76,13 @@ services:
       - "${CHECKOUT_DIR}/home/:/home/feed-archiver/"
       # Avoid any clashes between image variants and/or the local host at both build and
       # run-time.
-      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/:/usr/local/src/feed-archiver/var/"
-      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/.tox/:/usr/local/src/feed-archiver/.tox/"
-      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/feed_archiver.egg-info/:/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
+      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/\
+        :/usr/local/src/feed-archiver/var/"
+      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}/.tox/\
+        :/usr/local/src/feed-archiver/.tox/"
+      - "${CHECKOUT_DIR}/var/docker/${PYTHON_ENV:-py310}\
+        /feed_archiver.egg-info/\
+        :/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
 
   # https://github.com/hadolint/hadolint#how-to-use
   hadolint:
@@ -102,8 +106,13 @@ services:
       TZ: "${TZ:-Etc/UTC}"
     volumes:
       - "${CHECKOUT_DIR}/:/data/"
+    entrypoint: "ash"
+    # Strip reStructuredText directives unsupported in Markdown:
     command: >-
-      "./README.rst" -f "rst" -t "markdown" -o "./README.md"
+      -xeu -c '
+        grep -Ev "^ *\.\. +(contents)::.*" "./README.rst" |
+        pandoc -f "rst" -t "markdown" -o "./var/README.md"
+      '
 
   docker-pushrm:
     image: "chko/docker-pushrm"
@@ -119,11 +128,12 @@ services:
     volumes:
       - "${CHECKOUT_DIR}/:/data/"
     command: >-
-      --file "/data/README.md" --short "feed archiver foundation or template"
+      --file "/data/var/README.md"
+      --short "feed archiver foundation or template"
       --debug "merpatterson/feed-archiver"
 
   gitlab-release-cli:
-    image: "registry.gitlab.com/gitlab-org/release-cli:latest"
+    image: "${DOCKER_REGISTRY_HOST:-registry.gitlab.com}/gitlab-org/release-cli:latest"
     profiles:
       - "release"
     environment:
@@ -136,7 +146,9 @@ services:
 
   # The container in which CI/CD is run:
   build-host:
-    image: "registry.gitlab.com/rpatterson/feed-archiver:build-host"
+    image: "\
+      ${DOCKER_REGISTRY_HOST:-registry.gitlab.com}/rpatterson/feed-archiver\
+      :build-host"
     profiles:
       - "ci"
     build: "${CHECKOUT_DIR}/build-host/"

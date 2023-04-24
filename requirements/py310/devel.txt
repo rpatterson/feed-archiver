@@ -6,7 +6,7 @@
 #
 anyio==3.6.2
     # via httpcore
-argcomplete==3.0.5
+argcomplete==3.0.8
     # via feed-archiver (pyproject.toml)
 arrapi==1.4.2
     # via feed-archiver (pyproject.toml)
@@ -141,7 +141,6 @@ packaging==23.1
     #   pyroma
     #   pytest
     #   requirements-detector
-    #   setuptools-scm
 pathspec==0.11.1
     # via black
 pbr==5.11.1
@@ -159,8 +158,6 @@ platformdirs==3.2.0
     #   virtualenv
 pluggy==1.0.0
     # via pytest
-poetry-semver==0.1.0
-    # via requirements-detector
 pre-commit==3.2.2
     # via feed-archiver (pyproject.toml)
 prospector[with_everything]==1.9.0
@@ -228,7 +225,7 @@ requests==2.28.2
     #   xenon
 requests-mock==1.10.0
     # via feed-archiver (pyproject.toml)
-requirements-detector==1.1.0
+requirements-detector==1.2.1
     # via prospector
 respx==0.20.1
     # via feed-archiver (pyproject.toml)
@@ -240,10 +237,10 @@ rstcheck==6.1.2
     # via feed-archiver (pyproject.toml)
 rstcheck-core==1.0.3
     # via rstcheck
+semver==3.0.0
+    # via requirements-detector
 setoptconf-tmp==0.3.1
     # via prospector
-setuptools-scm==7.1.0
-    # via feed-archiver (pyproject.toml)
 sgmllib3k==1.0.0
     # via feedparser
 shellingham==1.5.0.post1
@@ -281,13 +278,12 @@ tomli==2.0.1
     #   pylint
     #   pyproject-hooks
     #   pytest
-    #   setuptools-scm
     #   towncrier
 tomlkit==0.11.7
     # via pylint
 towncrier==22.12.0
     # via feed-archiver (pyproject.toml)
-trove-classifiers==2023.4.18
+trove-classifiers==2023.4.22
     # via pyroma
 typer[all]==0.7.0
     # via rstcheck
@@ -304,12 +300,11 @@ typing-extensions==4.5.0
     #   astroid
     #   mypy
     #   pydantic
-    #   setuptools-scm
 urllib3==1.26.15
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)
-virtualenv==20.21.0
+virtualenv==20.22.0
     # via pre-commit
 vulture==2.7
     # via prospector
