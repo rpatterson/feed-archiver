@@ -39,9 +39,9 @@ Archive the full contents of RSS/Atom syndication feeds including enclosures and
        .. figure:: https://github.com/rpatterson/feed-archiver/actions/workflows/build-test.yml/badge.svg
           :alt: GitHub Actions status
           :target: https://github.com/rpatterson/feed-archiver/actions/workflows/build-test.yml
-       .. figure:: https://codecov.io/github/rpatterson/feed-archiver/branch/main/graph/badge.svg?token=GNKVQ8VYOU
+       .. figure:: https://app.codecov.io/github/rpatterson/feed-archiver/branch/main/graph/badge.svg?token=GNKVQ8VYOU
           :alt: Codecov test coverage
-	  :target: https://codecov.io/github/rpatterson/feed-archiver
+	  :target: https://app.codecov.io/github/rpatterson/feed-archiver
        .. figure:: https://img.shields.io/github/stars/rpatterson/feed-archiver?logo=github
 	  :alt: GitHub repo stars
 	  :target: https://github.com/rpatterson/feed-archiver/
