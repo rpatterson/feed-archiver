@@ -670,23 +670,22 @@ test-push: $(VCS_FETCH_TARGETS) \
 		$(HOME)/.local/var/log/feed-archiver-host-install.log \
 		./var/docker/$(PYTHON_ENV)/log/build-devel.log \
 		build-docker-volumes-$(PYTHON_ENV) ./.env
+	vcs_compare_rev="$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH)"
 ifeq ($(CI),true)
 ifneq ($(PYTHON_MINOR),$(PYTHON_HOST_MINOR))
 # Don't waste CI time, only check for the canonical version:
 	exit
 endif
-endif
 ifeq ($(VCS_COMPARE_BRANCH),main)
 # On `main`, compare with the previous commit on `main`
 	vcs_compare_rev="$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH)^"
-else
-	vcs_compare_rev="$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH)"
+endif
+endif
 	if ! git fetch "$(VCS_COMPARE_REMOTE)" "$(VCS_COMPARE_BRANCH)"
 	then
 # Compare with the pre-release branch if this branch hasn't been pushed yet:
 	    vcs_compare_rev="$(VCS_COMPARE_REMOTE)/develop"
 	fi
-endif
 	exit_code=0
 	(
 	    $(TOX_EXEC_BUILD_ARGS) -- \
@@ -828,27 +827,28 @@ release-bump: ~/.gitconfig $(VCS_RELEASE_FETCH_TARGETS) \
 	fi
 # Ensure the local branch is updated to the forthcoming version bump commit:
 	git switch -C "$(VCS_BRANCH)" "$$(git rev-parse HEAD)" --
-ifeq ($(VCS_BRANCH),main)
-	if ! ./.tox/build/bin/python ./bin/get-base-version $$(
-	    ./.tox/build/bin/cz version --project
-	)
-	then
-# There's no pre-release for which to publish a final release:
-	    exit
-	fi
-else
-# Only release if required by conventional commits:
+# Check if a release is required:
 	exit_code=0
-	./.tox/build/bin/python ./bin/cz-check-bump || exit_code=$$?
-	if (( $$exit_code == 3 || $$exit_code == 21 ))
+	if [ "$(VCS_BRANCH)" = "main" ] &&
+	    ./.tox/build/bin/python ./bin/get-base-version $$(
+	        ./.tox/build/bin/cz version --project
+	    )
 	then
+# Release a previous pre-release as final regardless of whether commits since then
+# require a release:
+	    true
+	else
+# Is a release required by conventional commits:
+	    ./.tox/build/bin/python ./bin/cz-check-bump || exit_code=$$?
+	    if (( $$exit_code == 3 || $$exit_code == 21 ))
+	    then
 # No commits require a release:
-	    exit
-	elif (( $$exit_code != 0 ))
-	then
-	    exit $$exit_code
+	        exit
+	    elif (( $$exit_code != 0 ))
+	    then
+	        exit $$exit_code
+	    fi
 	fi
-endif
 # Collect the versions involved in this release according to conventional commits:
 	cz_bump_args="--check-consistency --no-verify"
 ifneq ($(VCS_BRANCH),main)
@@ -882,8 +882,6 @@ endif
 	    $(PYTHON_ENVS:%=./requirements/%/user.txt) \
 	    $(PYTHON_ENVS:%=./requirements/%/devel.txt) \
 	    $(PYTHON_ENVS:%=./build-host/requirements-%.txt)
-# Ensure the image is up-to-date for subsequent recipes.
-	$(MAKE) -e "./var/docker/$(PYTHON_ENV)/log/build-user.log"
 ifeq ($(VCS_BRANCH),main)
 # Merge the bumped version back into `develop`:
 	bump_rev="$$(git rev-parse HEAD)"

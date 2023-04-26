@@ -34,7 +34,7 @@ lxml==4.9.2
     # via feed-archiver (pyproject.toml)
 pyyaml==6.0
     # via feed-archiver (pyproject.toml)
-requests==2.28.2
+requests==2.29.0
     # via arrapi
 sgmllib3k==1.0.0
     # via feedparser
