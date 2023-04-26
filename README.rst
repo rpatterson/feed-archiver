@@ -94,12 +94,12 @@ such a way that the archive can serve (at least) 2 use cases:
 
 .. contents:: Table of Contents
 
-********************
+****************************************************************************************
 Detailed Description
-********************
+****************************************************************************************
 
 Mirror of Feed Enclosures and Assets
-====================================
+========================================================================================
 
 To serve use case #1, ``feed-archiver`` downloads enclosures and external assets
 (e.g. feed and item logos specified as URLs in the feed XMLs) to the archive's local
@@ -137,7 +137,7 @@ specifically, items will be ignored on subsequent retrievals of the same feed if
 have the same ``guid``/``id`` as items that have previously been archived for that feed.
 
 Ingest Feed Enclosures Into Media Libraries
-===========================================
+========================================================================================
 
 To serve use case #2, ``feed-archiver`` links the downloaded feed item enclosures into
 an alternate hierarchy based on feed item metadata that better reflects the
@@ -287,9 +287,9 @@ upgraded or renamed the corresponding video files, use the  ``$ feed-archiver re
 command to update all existing links.
 
 
-*******
+****************************************************************************************
 Plugins
-*******
+****************************************************************************************
 
 How feed item enclosures are linked into a media library is delegated to plugins or
 add-ons.  Specifically, the ``plugin`` key in a ``enclosures`` configuration must be a
@@ -407,7 +407,7 @@ definition::
   ...
 
 Default Template Plugin
-=======================
+========================================================================================
 
 If no ``plugin`` key is specified, the ``template`` plugin is used.  The link
 path config may include the ``template`` key containing a `Python format string`_ which
@@ -419,7 +419,7 @@ default ``template`` is::
 The format strings may reference any of `the arguments passed into enclosure plugins`_.
 
 Sonarr TV Series Plugin
-=======================
+========================================================================================
 
 The ``sonarr`` plugin uses values from the enclosure configuration and/or the ``match``
 groups to lookup a TV series/show managed by `Sonarr`_, then lookup an episode video
