@@ -1,5 +1,8 @@
-feed-archiver 2.0.2 (2023-04-26)
+feed-archiver 2.0.3 (2023-04-26)
 ================================
 
-No significant changes.
+Bugfixes
+--------
+
+- Upgrade all requirements to the latest versions as of Wed Apr 26 05:24:13 PM UTC 2023.
 
