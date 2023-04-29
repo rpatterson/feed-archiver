@@ -55,7 +55,7 @@ colorama==0.4.6
     #   typer
 commonmark==0.9.1
     # via rich
-coverage==7.2.3
+coverage==7.2.4
     # via feed-archiver (pyproject.toml)
 dill==0.3.6
     # via pylint
@@ -151,7 +151,7 @@ pep8-naming==0.10.0
     # via prospector
 pip-tools==6.13.0
     # via feed-archiver (pyproject.toml)
-platformdirs==3.4.0
+platformdirs==3.5.0
     # via
     #   black
     #   pylint
@@ -279,21 +279,21 @@ tomli==2.0.1
     #   pyproject-hooks
     #   pytest
     #   towncrier
-tomlkit==0.11.7
+tomlkit==0.11.8
     # via pylint
 towncrier==22.12.0
     # via feed-archiver (pyproject.toml)
-trove-classifiers==2023.4.25
+trove-classifiers==2023.4.29
     # via pyroma
 typer[all]==0.7.0
     # via rstcheck
-types-docutils==0.19.1.7
+types-docutils==0.19.1.8
     # via rstcheck-core
 types-pyyaml==6.0.12.9
     # via feed-archiver (pyproject.toml)
-types-requests==2.28.11.17
+types-requests==2.29.0.0
     # via feed-archiver (pyproject.toml)
-types-urllib3==1.26.25.10
+types-urllib3==1.26.25.11
     # via types-requests
 typing-extensions==4.5.0
     # via
@@ -307,7 +307,7 @@ urllib3==1.26.15
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)
-virtualenv==20.22.0
+virtualenv==20.23.0
     # via pre-commit
 vulture==2.7
     # via prospector
