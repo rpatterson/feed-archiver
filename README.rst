@@ -184,22 +184,22 @@ your configuration, you can create and run the container::
 
 Alternatively, you make use the image directly.  Pull `the Docker image`_::
 
-  $ docker pull "registry.gitlab.org/rpatterson/feed-archiver"
+  $ docker pull "registry.gitlab.com/rpatterson/feed-archiver"
 
 And then use the image to create and run a container::
 
-  $ docker run --rm -it "registry.gitlab.org/rpatterson/feed-archiver" ...
+  $ docker run --rm -it "registry.gitlab.com/rpatterson/feed-archiver" ...
 
 Images variant tags are published for the Python version, branch, and major/minor
 versions so that users can control when they get new images over time,
-e.g. ``registry.gitlab.org/merpatterson/feed-archiver:py310-main``.  The canonical
-Python version is 3.10 which is the version used in tags without ``py###``,
-e.g. ``registry.gitlab.org/merpatterson/feed-archiver:main``.  Pre-releases are from
+e.g. ``registry.gitlab.com/rpatterson/feed-archiver:py310-main``.  The canonical Python
+version is 3.10 which is the version used in tags without ``py###``,
+e.g. ``registry.gitlab.com/rpatterson/feed-archiver:main``.  Pre-releases are from
 ``develop`` and final releases are from ``main`` which is also the default for tags
-without a branch, e.g. ``registry.gitlab.org/merpatterson/feed-archiver:py310``. The
+without a branch, e.g. ``registry.gitlab.com/rpatterson/feed-archiver:py310``. The
 major/minor version tags are only applied to the final release images and without the
 corresponding ``main`` branch tag,
-e.g. ``registry.gitlab.org/merpatterson/feed-archiver:py310-v0.8``.
+e.g. ``registry.gitlab.com/rpatterson/feed-archiver:py310-v0.8``.
 
 Multi-platform Docker images are published containing images for the following
 platforms or architectures in the Python 3.10 ``py310`` variant:
