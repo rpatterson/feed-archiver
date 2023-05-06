@@ -34,7 +34,7 @@ lxml==4.9.2
     # via feed-archiver (pyproject.toml)
 pyyaml==6.0
     # via feed-archiver (pyproject.toml)
-requests==2.29.0
+requests==2.30.0
     # via arrapi
 sgmllib3k==1.0.0
     # via feedparser
@@ -47,7 +47,7 @@ sniffio==1.3.0
     #   httpx
 tenacity==8.2.2
     # via feed-archiver (pyproject.toml)
-urllib3==1.26.15
+urllib3==2.0.2
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)
