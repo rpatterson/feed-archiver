@@ -31,7 +31,7 @@ build==0.10.0
     #   feed-archiver (pyproject.toml)
     #   pip-tools
     #   pyroma
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   httpcore
     #   httpx
@@ -55,7 +55,7 @@ colorama==0.4.6
     #   typer
 commonmark==0.9.1
     # via rich
-coverage==7.2.4
+coverage==7.2.5
     # via feed-archiver (pyproject.toml)
 dill==0.3.6
     # via pylint
@@ -93,7 +93,7 @@ httpx==0.24.0
     # via
     #   feed-archiver (pyproject.toml)
     #   respx
-identify==2.5.23
+identify==2.5.24
     # via pre-commit
 idna==3.4
     # via
@@ -156,7 +156,7 @@ platformdirs==3.5.0
     #   virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==3.2.2
+pre-commit==3.3.1
     # via feed-archiver (pyproject.toml)
 prospector[with_everything]==1.9.0
     # via feed-archiver (pyproject.toml)
@@ -177,7 +177,7 @@ pygments==2.15.1
     # via
     #   pyroma
     #   rich
-pylint==2.17.3
+pylint==2.17.4
     # via
     #   prospector
     #   pylint-celery
@@ -215,7 +215,7 @@ pyyaml==6.0
     #   xenon
 radon==5.1.0
     # via xenon
-requests==2.29.0
+requests==2.30.0
     # via
     #   arrapi
     #   pyroma
@@ -270,23 +270,23 @@ tomlkit==0.11.8
     # via pylint
 towncrier==22.12.0
     # via feed-archiver (pyproject.toml)
-trove-classifiers==2023.4.29
+trove-classifiers==2023.5.2
     # via pyroma
 typer[all]==0.7.0
     # via rstcheck
-types-docutils==0.19.1.8
+types-docutils==0.19.1.9
     # via rstcheck-core
 types-pyyaml==6.0.12.9
     # via feed-archiver (pyproject.toml)
-types-requests==2.29.0.0
+types-requests==2.30.0.0
     # via feed-archiver (pyproject.toml)
-types-urllib3==1.26.25.11
+types-urllib3==1.26.25.12
     # via types-requests
 typing-extensions==4.5.0
     # via
     #   mypy
     #   pydantic
-urllib3==1.26.15
+urllib3==2.0.2
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)

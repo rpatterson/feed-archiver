@@ -12,7 +12,7 @@ arrapi==1.4.2
     # via feed-archiver (pyproject.toml)
 backports-cached-property==1.0.2 ; python_version < "3.8"
     # via feed-archiver (pyproject.toml)
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   httpcore
     #   httpx
@@ -40,7 +40,7 @@ lxml==4.9.2
     # via feed-archiver (pyproject.toml)
 pyyaml==6.0
     # via feed-archiver (pyproject.toml)
-requests==2.29.0
+requests==2.30.0
     # via arrapi
 sgmllib3k==1.0.0
     # via feedparser
@@ -58,7 +58,7 @@ typing-extensions==4.5.0
     #   anyio
     #   h11
     #   importlib-metadata
-urllib3==1.26.15
+urllib3==2.0.2
     # via requests
 user-agent==0.1.10
     # via feed-archiver (pyproject.toml)

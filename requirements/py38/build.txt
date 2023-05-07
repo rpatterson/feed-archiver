@@ -8,7 +8,7 @@ argcomplete==3.0.8
     # via commitizen
 bleach==6.0.0
     # via readme-renderer
-certifi==2022.12.7
+certifi==2023.5.7
     # via requests
 cffi==1.15.1
     # via cryptography
@@ -20,11 +20,11 @@ charset-normalizer==3.1.0
     #   requests
 colorama==0.4.6
     # via commitizen
-commitizen==3.1.1
+commitizen==3.2.1
     # via -r requirements/build.txt.in
 cryptography==40.0.2
     # via secretstorage
-decli==0.5.2
+decli==0.6.0
     # via commitizen
 distlib==0.3.6
     # via virtualenv
@@ -32,11 +32,11 @@ docutils==0.19
     # via readme-renderer
 filelock==3.12.0
     # via virtualenv
-identify==2.5.23
+identify==2.5.24
     # via pre-commit
 idna==3.4
     # via requests
-importlib-metadata==4.13.0
+importlib-metadata==6.6.0
     # via
     #   commitizen
     #   keyring
@@ -71,7 +71,7 @@ pkginfo==1.9.6
     # via twine
 platformdirs==3.5.0
     # via virtualenv
-pre-commit==3.2.2
+pre-commit==3.3.1
     # via -r requirements/build.txt.in
 prompt-toolkit==3.0.38
     # via questionary
@@ -89,11 +89,11 @@ questionary==1.10.0
     # via commitizen
 readme-renderer==37.3
     # via twine
-requests==2.29.0
+requests==2.30.0
     # via
     #   requests-toolbelt
     #   twine
-requests-toolbelt==0.10.1
+requests-toolbelt==1.0.0
     # via twine
 rfc3986==2.0.0
     # via twine
@@ -117,7 +117,7 @@ typing-extensions==4.5.0
     # via
     #   rich
     #   setuptools-scm
-urllib3==1.26.15
+urllib3==2.0.2
     # via
     #   requests
     #   twine
