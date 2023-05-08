@@ -136,7 +136,8 @@ services:
       - "${CHECKOUT_DIR:-.}/:/data/"
     command: >-
       --file "/data/README.md"
-      --short "feed archiver foundation or template"
+      --short "Archive the full contents of RSS/Atom syndication feeds including
+      enclosures and assets."
       --debug "merpatterson/feed-archiver"
 
   gitlab-release-cli:

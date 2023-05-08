@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Tests for this feed archiver foundation or template.
+Tests for Feed Archiver.
 """
 
 import os
