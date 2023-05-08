@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 server {
     # FIXME: Should we find a way to switch to HTTPS so we can use HTTP/2
     listen ${NGINX_PORT} default_server;

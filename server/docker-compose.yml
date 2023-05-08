@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 # Example `$ docker compose ...` configuration to demonstrate the requirements for
 # serving a feeds archive via a static site server.
 version: "3.8"

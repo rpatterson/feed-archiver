@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 # Example Sonarr service to demonstrate the integration with Prunerr.
 #
 # In a separate file because integrating with Sonarr is optional.  See the comment above
