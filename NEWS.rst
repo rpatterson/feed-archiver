@@ -92,6 +92,8 @@ Feedarchiver 1.0.0b10 (2023-03-15)
 Features
 --------
 
+- Add support for a fallback link configurations that take effect if no other
+  configurations link the enclosure.
 - Address a Bandit warning about requests without timeouts.
 - Write an ``./index.html`` file listing links to archived feeds.
 - Rename the ``link-paths`` plugin system to a more accurate name, ``enclosures``.  Note
