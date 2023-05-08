@@ -414,7 +414,7 @@ run-debug: build
 build: ./.git/hooks/pre-commit ./.env.~out~ \
 		$(HOME)/.local/var/log/feed-archiver-host-install.log \
 		build-docker ./server/.htpasswd \
-		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml
+		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.~out~
 
 .PHONY: $(PYTHON_ENVS:%=build-requirements-%)
 ### Compile fixed/pinned dependency versions if necessary.
@@ -1174,13 +1174,13 @@ endif
 	    sleep 0.1
 	done
 
-./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml: \
+./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.~out~: \
 		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
 		./sonarr/config/config.xml
 	export SONARR_API_KEY=$$(
 	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
 	)
-	$(MAKE) "template=$(<)" "target=$(@)" expand-template
+	$(call expand_template,$(<),$(@))
 
 # Install all tools required by recipes that have to be installed externally on the
 # host.  Use a target file outside this checkout to support multiple checkouts.  Use a
@@ -1369,13 +1369,6 @@ endif
 	do
 	    sleep 0.1
 	done
-./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml: \
-		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
-		./sonarr/config/config.xml
-	export SONARR_API_KEY=$$(
-	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
-	)
-	$(MAKE) "template=$(<)" "target=$(@)" expand-template
 
 # GPG signing key creation and management in CI
 export GPG_PASSPHRASE=
