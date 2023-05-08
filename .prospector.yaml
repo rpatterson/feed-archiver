@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 # https://prospector.landscape.io/en/master/profiles.html#global-configuration-options
 strictness: "veryhigh"
 test-warnings: true
@@ -25,7 +29,7 @@ pylint:
 #   run: true
 # FIXME: I confirmed the package is installed but couldn't get to work:
 #     Cannot run tool pyroma as support was not installed.
-#     Please install by running 'pip install prospector[with_pyroma]'
+#     Please install by running 'pip3 install prospector[with_pyroma]'
 # pyroma:
 #   run: true
 

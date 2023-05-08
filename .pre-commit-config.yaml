@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 # Run all test, linters and other code checks before committing and pushing.
 fail_fast: true
 repos:
@@ -14,12 +18,12 @@ repos:
       name: "test-push"
       stages: ["push"]
       entry: "make -e test-push"
-      language: "python"
+      language: "system"
       pass_filenames: false
 # Only run the longer running test check after everything else
     - id: "test"
       name: "test"
       stages: ["commit", "merge-commit", "push", "manual"]
       entry: "make -e test"
-      language: "python"
+      language: "system"
       pass_filenames: false

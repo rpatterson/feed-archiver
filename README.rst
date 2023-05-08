@@ -1,3 +1,7 @@
+.. SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+..
+.. SPDX-License-Identifier: MIT
+
 ########################################################################################
 Feed Archiver
 ########################################################################################
@@ -8,17 +12,17 @@ Archive the full contents of RSS/Atom syndication feeds including enclosures and
    :class: borderless align-right
 
    * - .. figure:: https://img.shields.io/pypi/v/feed-archiver.svg?logo=pypi&label=PyPI&logoColor=gold
-	  :alt: PyPI latest release version
-	  :target: https://pypi.org/project/feed-archiver/
-       .. figure:: https://img.shields.io/pypi/dm/feed-archiver.svg?color=blue&label=Downloads&logo=pypi&logoColor=gold
-	  :alt: PyPI downloads per month
-	  :target: https://pypi.org/project/feed-archiver/
+          :alt: PyPI latest release version
+          :target: https://pypi.org/project/feed-archiver/
        .. figure:: https://img.shields.io/pypi/pyversions/feed-archiver.svg?logo=python&label=Python&logoColor=gold
-	  :alt: PyPI Python versions
-	  :target: https://pypi.org/project/feed-archiver/
+          :alt: PyPI Python versions
+          :target: https://pypi.org/project/feed-archiver/
        .. figure:: https://img.shields.io/badge/code%20style-black-000000.svg
-	  :alt: Python code style
-	  :target: https://github.com/psf/black
+          :alt: Python code style
+          :target: https://github.com/psf/black
+       .. figure:: https://api.reuse.software/badge/gitlab.com/rpatterson/feed-archiver
+          :alt: REUSE license status
+          :target: https://api.reuse.software/info/gitlab.com/rpatterson/feed-archiver
 
      - .. figure:: https://gitlab.com/rpatterson/feed-archiver/-/badges/release.svg
 	  :alt: GitLab latest release
@@ -54,10 +58,10 @@ Archive the full contents of RSS/Atom syndication feeds including enclosures and
           :target: https://hub.docker.com/r/merpatterson/feed-archiver
        .. figure:: https://img.shields.io/docker/stars/merpatterson/feed-archiver?logo=docker
 	  :alt: Docker Hub stars
-	  :target: https://hub.docker.com/r/merpatterson/feed-archiver
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
        .. figure:: https://img.shields.io/docker/image-size/merpatterson/feed-archiver?logo=docker
 	  :alt: Docker Hub image size (latest semver)
-	  :target: https://hub.docker.com/r/merpatterson/feed-archiver
+          :target: https://hub.docker.com/r/merpatterson/feed-archiver
 
      - .. figure:: https://img.shields.io/keybase/pgp/rpatterson?logo=keybase
           :alt: KeyBase PGP key ID
@@ -161,8 +165,6 @@ re-using example configurations known to work by others.
 ****************************************************************************************
 Installation
 ****************************************************************************************
-
-Install and use either via a local, native installation or a Docker container image:
 
 Local/Native Installation
 ========================================================================================

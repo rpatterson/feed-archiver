@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 #
 # Perform any required volatile run-time initialization
 
@@ -25,8 +30,8 @@ main() {
 	then
 	    # Add a user to the `passwd` DB so that the `~feed-archiver/`
 	    # HOME directory can be looked up.
-	    adduser --uid "${PUID}" --disabled-password --gecos \
-		    "Feed Archiver,,," "feed-archiver" >"/dev/null"
+	    adduser --uid "${PUID}" --disabled-password \
+	        --gecos "Feed Archiver,,," "feed-archiver" >"/dev/null"
 	fi
 	# Fix the TTY ownership if the session is interactive
 	if tty_dev=$(tty)

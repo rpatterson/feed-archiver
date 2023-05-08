@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 ## Container image in which to build, test, and release the project
 
 # I *want* something to break to let me know if something changes in the latest version
@@ -29,7 +33,7 @@ ENV PATH="${HOME}/.local/bin:${PATH}"
 
 COPY [ "./requirements-py310.txt", "${HOME}/.local/lib/" ]
 RUN mkdir -pv "${HOME}/.local/var/log/" && \
-    pip install --no-cache-dir --user -r "${HOME}/.local/lib/requirements-py310.txt" \
+    pip3 install --no-cache-dir --user -r "${HOME}/.local/lib/requirements-py310.txt" \
     >"${HOME}/.local/var/log/feed-archiver-host-install.log"
 
 COPY [ "./bin/entrypoint", "/usr/local/bin/entrypoint" ]

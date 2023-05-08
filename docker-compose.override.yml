@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Ross Patterson <me@rpatterson.net>
+#
+# SPDX-License-Identifier: MIT
+
 # Override `$ docker compose ...` configuration for development or testing here in this
 # repo checkout.  Everything that may be used outside this checkout should be in
 # `./docker-compose.yml`.
@@ -13,6 +17,7 @@ services:
     container_name: "feed-archiver-checkout"
     build:
       context: "${CHECKOUT_DIR:-.}/"
+      target: "user"
       args:
         PYTHON_MINOR: "${PYTHON_MINOR:-3.10}"
         PYTHON_ENV: "${PYTHON_ENV:-py310}"
@@ -55,7 +60,7 @@ services:
       - "test"
     build:
       context: "${CHECKOUT_DIR:-.}/"
-      dockerfile: "${CHECKOUT_DIR:-.}/Dockerfile.devel"
+      target: "devel"
       args:
         PYTHON_MINOR: "${PYTHON_MINOR:-3.10}"
         PYTHON_ENV: "${PYTHON_ENV:-py310}"
@@ -76,11 +81,11 @@ services:
       - "${CHECKOUT_DIR:-.}/home/:/home/feed-archiver/"
       # Avoid any clashes between image variants and/or the local host at both build and
       # run-time.
-      - "${CHECKOUT_DIR:-.}/var/docker/${PYTHON_ENV:-py310}/\
+      - "${CHECKOUT_DIR:-.}/var-docker/${PYTHON_ENV:-py310}/\
         :/usr/local/src/feed-archiver/var/"
-      - "${CHECKOUT_DIR:-.}/var/docker/${PYTHON_ENV:-py310}/.tox/\
+      - "${CHECKOUT_DIR:-.}/var-docker/${PYTHON_ENV:-py310}/.tox/\
         :/usr/local/src/feed-archiver/.tox/"
-      - "${CHECKOUT_DIR:-.}/var/docker/${PYTHON_ENV:-py310}\
+      - "${CHECKOUT_DIR:-.}/var-docker/${PYTHON_ENV:-py310}\
         /feed_archiver.egg-info/\
         :/usr/local/src/feed-archiver/src/feed_archiver.egg-info/"
 
@@ -130,7 +135,7 @@ services:
     volumes:
       - "${CHECKOUT_DIR:-.}/:/data/"
     command: >-
-      --file "/data/var/README.md"
+      --file "/data/README.md"
       --short "feed archiver foundation or template"
       --debug "merpatterson/feed-archiver"
 
