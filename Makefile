@@ -629,8 +629,7 @@ $(PYTHON_MINORS:%=test-docker-%):
 .PHONY: test-docker-pyminor
 ### Run the full suite of tests inside a docker container for this Python version.
 test-docker-pyminor: build-docker-$(PYTHON_MINOR) \
-		$(HOME)/.local/var/log/feed-archiver-host-install.log \
-		./var/log/codecov-install.log
+		$(HOME)/.local/var/log/feed-archiver-host-install.log
 	docker_run_args="--rm"
 	if [ ! -t 0 ]
 	then
@@ -650,6 +649,7 @@ test-docker-pyminor: build-docker-$(PYTHON_MINOR) \
 ifeq ($(GITLAB_CI),true)
 ifeq ($(PYTHON_MINOR),$(PYTHON_HOST_MINOR))
 ifneq ($(CODECOV_TOKEN),)
+	$(MAKE) "./var/log/codecov-install.log"
 	codecov --nonZero -t "$(CODECOV_TOKEN)" \
 	    --file "./build/$(PYTHON_ENV)/coverage.xml"
 else ifneq ($(CI_IS_FORK),true)
@@ -812,7 +812,7 @@ ifeq ($(VCS_BRANCH),main)
 	then
 	    $(MAKE) -e "./var/log/docker-login-DOCKER.log"
 	    docker compose pull --quiet pandoc docker-pushrm
-	    docker compose run $(DOCKER_COMPOSE_RUN_ARGS) docker-pushrm
+	    docker compose up docker-pushrm
 	fi
 endif
 
@@ -927,7 +927,7 @@ devel-format: $(HOME)/.local/var/log/feed-archiver-host-install.log
 .PHONY: devel-upgrade
 ### Update all fixed/pinned dependencies to their latest available versions.
 devel-upgrade: ./.env.~out~ $(HOME)/.local/var/log/feed-archiver-host-install.log \
-		./var-docker/$(PYTHON_ENV)/log/build-devel.log
+		build-docker
 	touch "./setup.cfg" "./requirements/build.txt.in" \
 	    "./build-host/requirements.txt.in"
 # Ensure the network is create first to avoid race conditions
@@ -1013,7 +1013,7 @@ clean:
 	git clean -dfx -e "/var" -e "var-docker/" -e "/.env" -e "*~"
 	git clean -dfx "./var-docker/py*/.tox/" \
 	    "./var-docker/py*/feed_archiver.egg-info/"
-	rm -rfv "./var/log/" "./var-docker/py*/log/"
+	rm -rfv "./var/log/" ./var-docker/py*/log/
 
 
 ## Real Targets:
@@ -1106,12 +1106,12 @@ endif
 	    build-docker-build | tee -a "$(@)"
 # Represent that host install is baked into the image in the `${HOME}` bind volume:
 	docker compose run --rm -T --workdir "/home/feed-archiver/" \
-	    --entrypoint "mkdir" feed-archiver-devel -pv "./.local/var/log/"
+	    feed-archiver-devel mkdir -pv "./.local/var/log/"
 	docker run --rm --workdir "/home/feed-archiver/" --entrypoint "cat" \
 	    "$$(docker compose config --images feed-archiver-devel | head -n 1)" \
 	    "./.local/var/log/feed-archiver-host-install.log" |
 	    docker compose run --rm -T --workdir "/home/feed-archiver/" \
-	        --entrypoint "tee" feed-archiver-devel -a \
+	        feed-archiver-devel tee -a \
 	        "./.local/var/log/feed-archiver-host-install.log" >"/dev/null"
 # Update the pinned/frozen versions, if needed, using the container.  If changed, then
 # we may need to re-build the container image again to ensure it's current and correct.
@@ -1433,9 +1433,15 @@ then
     mkdir -pv "$(HOME)/.local/var/log/"
     ./bin/host-install >"$(HOME)/.local/var/log/feed-archiver-host-install.log"
 fi
-is_target_newer="0"
-test "$(2:%.~out~=%)" -nt "$(1)" || is_target_newer="$${?}"
-touch "$(2:%.~out~=%)"
+if [ "$(2:%.~out~=%)" -nt "$(1)" ]
+then
+    envsubst <"$(1)" >"$(2)"
+    exit
+fi
+if [ ! -e "$(2:%.~out~=%)" ]
+then
+    touch -d "@0" "$(2:%.~out~=%)"
+fi
 if [ "$(CI)" != "true" ]
 then
     envsubst <"$(1)" | diff -u "$(2:%.~out~=%)" "-" || true
@@ -1447,8 +1453,9 @@ set -x
 if [ ! -s "$(2:%.~out~=%)" ]
 then
     envsubst <"$(1)" >"$(2:%.~out~=%)"
+    touch -d "@0" "$(2:%.~out~=%)"
 fi
-if [ "$(TEMPLATE_IGNORE_EXISTING)" == "true" ] || (( "$${is_target_newer}" == 0 ))
+if [ "$(TEMPLATE_IGNORE_EXISTING)" == "true" ]
 then
     envsubst <"$(1)" >"$(2)"
     exit
