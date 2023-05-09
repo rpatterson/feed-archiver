@@ -1152,36 +1152,6 @@ endif
 ./.env.~out~: ./.env.in
 	$(call expand_template,$(<),$(@))
 
-# Static site server set up
-./server/.htpasswd: .SHELLFLAGS = -eu -o pipefail -c
-./server/.htpasswd:
-	echo "Enter a HTTP Basic authentication password for the static site server."
-	if ! which htpasswd
-	then
-	    sudo apt-get update
-	    sudo apt-get install -y apache2-utils
-	fi
-	htpasswd -c "$(@)" "feed-archiver"
-
-# Extract the Sonarr API key
-./sonarr/config/config.xml: ./var/docker/$(PYTHON_ENV)/log/build.log
-	mkdir -pv "$(dir $(@))"
-	docker compose rm -sf sonarr
-	docker compose up -d sonarr
-	sleep 1
-	until [ -e "$(@)" ]
-	do
-	    sleep 0.1
-	done
-
-./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.~out~: \
-		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
-		./sonarr/config/config.xml
-	export SONARR_API_KEY=$$(
-	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
-	)
-	$(call expand_template,$(<),$(@))
-
 # Install all tools required by recipes that have to be installed externally on the
 # host.  Use a target file outside this checkout to support multiple checkouts.  Use a
 # target specific to this project so that other projects can use the same approach but
@@ -1362,13 +1332,23 @@ endif
 	htpasswd -c "$(@)" "feed-archiver"
 
 # Extract the Sonarr API key
-./sonarr/config/config.xml: ./var/log/docker-build.log
+./sonarr/config/config.xml: ./var/docker/$(PYTHON_ENV)/log/build.log
+	mkdir -pv "$(dir $(@))"
+	docker compose rm -sf sonarr
 	docker compose up -d sonarr
 	sleep 1
 	until [ -e "$(@)" ]
 	do
 	    sleep 0.1
 	done
+
+./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.~out~: \
+		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
+		./sonarr/config/config.xml
+	export SONARR_API_KEY=$$(
+	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
+	)
+	$(call expand_template,$(<),$(@))
 
 # GPG signing key creation and management in CI
 export GPG_PASSPHRASE=
