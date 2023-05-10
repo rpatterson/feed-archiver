@@ -10,14 +10,16 @@
 # targets that follow.  If making changes here, please start by reading the philosophy
 # commentary at the bottom of this file.
 
+# Project specific values:
+export PROJECT_NAMESPACE=rpatterson
+export PROJECT_NAME=feed-archiver
+
 # Variables used as options to control behavior:
 export TEMPLATE_IGNORE_EXISTING=false
 # https://devguide.python.org/versions/#supported-versions
 PYTHON_SUPPORTED_MINORS=3.10 3.11 3.9 3.8 3.7
 export DOCKER_USER=merpatterson
 GPG_SIGNING_KEYID=2EFF7CCE6828E359
-CI_UPSTREAM_NAMESPACE=rpatterson
-CI_PROJECT_NAME=feed-archiver
 
 # Project-specific options:
 DEBUG=
@@ -99,6 +101,8 @@ PYTHON_SHORT_MINORS=$(subst .,,$(PYTHON_MINORS))
 PYTHON_ENVS=$(PYTHON_SHORT_MINORS:%=py%)
 PYTHON_ALL_ENVS=$(PYTHON_ENVS) build
 PYTHON_EXTRAS=test devel
+PYTHON_PROJECT_PACKAGE=$(subst -,,$(PROJECT_NAME))
+PYTHON_PROJECT_GLOB=$(subst -,?,$(PROJECT_NAME))
 export PYTHON_WHEEL=
 
 # Values derived from VCS/git:
@@ -269,6 +273,8 @@ endif
 export DOCKER_PASS
 
 # Values derived from or overridden by CI environments:
+CI_UPSTREAM_NAMESPACE=$(PROJECT_NAMESPACE)
+CI_PROJECT_NAME=$(PROJECT_NAME)
 ifeq ($(CI),true)
 TEMPLATE_IGNORE_EXISTING=true
 endif
@@ -401,8 +407,8 @@ run: build-docker-$(PYTHON_MINOR) ./.env.~out~
 ### Run the update sub-command in the container via the interactive debugger
 run-debug: build
 	docker compose run --rm -e DEBUG="$(DEBUG)" -e POST_MORTEM="$(POST_MORTEM)" \
-	    --entrypoint="python" "feed-archiver" -m "pdb" \
-	    "/usr/local/bin/feed-archiver" "update"
+	    --entrypoint="python" "$(PROJECT_NAME)" -m "pdb" \
+	    "/usr/local/bin/$(PROJECT_NAME)" "update"
 
 
 ## Build Targets:
@@ -412,9 +418,9 @@ run-debug: build
 .PHONY: build
 ### Set up everything for development from a checkout, local and in containers.
 build: ./.git/hooks/pre-commit ./.env.~out~ \
-		$(HOME)/.local/var/log/feed-archiver-host-install.log \
+		$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log \
 		build-docker ./server/.htpasswd \
-		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.~out~
+		./src/$(PYTHON_PROJECT_PACKAGE)/tests/archives/end-to-end/.$(PROJECT_NAME).yml.~out~
 
 .PHONY: $(PYTHON_ENVS:%=build-requirements-%)
 ### Compile fixed/pinned dependency versions if necessary.
@@ -451,14 +457,14 @@ build-pkgs: ./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
 	rm -vf ./dist/*
 # Build Python packages/distributions from the development Docker container for
 # consistency/reproducibility.
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	    tox run -e "$(PYTHON_ENV)" --pkg-only
 # Copy the wheel to a location accessible to all containers:
 	cp -lfv "$$(
 	    ls -t ./var-docker/$(PYTHON_ENV)/.tox/.pkg/dist/*.whl | head -n 1
 	)" "./dist/"
 # Also build the source distribution:
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	    tox run -e "$(PYTHON_ENV)" --override "testenv.package=sdist" --pkg-only
 	cp -lfv "$$(
 	    ls -t ./var-docker/$(PYTHON_ENV)/.tox/.pkg/dist/*.tar.gz | head -n 1
@@ -583,7 +589,7 @@ $(PYTHON_MINORS:%=build-docker-requirements-%): ./.env.~out~
 	export PYTHON_MINOR="$(@:build-docker-requirements-%=%)"
 	export PYTHON_ENV="py$(subst .,,$(@:build-docker-requirements-%=%))"
 	$(MAKE) -e "./var-docker/$${PYTHON_ENV}/log/build-devel.log"
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	    make -e PYTHON_MINORS="$(@:build-docker-requirements-%=%)" \
 	    PIP_COMPILE_ARGS="$(PIP_COMPILE_ARGS)" \
 	    build-requirements-py$(subst .,,$(@:build-docker-requirements-%=%))
@@ -602,6 +608,12 @@ test: test-docker-lint test-docker
 test-local:
 	tox $(TOX_RUN_ARGS) -e "$(TOX_ENV_LIST)"
 
+.PHONY: test-lint
+### Perform any linter or style checks, including non-code checks.
+test-lint: $(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log
+# Run non-code checks, e.g. documentation:
+	tox run -e "build"
+
 .PHONY: test-debug
 ### Run tests directly on the host and invoke the debugger on errors/failures.
 test-debug: ./.tox/$(PYTHON_ENV)/log/editable.log
@@ -609,8 +621,8 @@ test-debug: ./.tox/$(PYTHON_ENV)/log/editable.log
 
 .PHONY: test-docker
 ### Run the full suite of tests, coverage checks, and code linters in containers.
-test-docker: build-pkgs $(HOME)/.local/var/log/feed-archiver-host-install.log \
-		build-docker ./var/log/codecov-install.log
+test-docker: build-pkgs $(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log \
+		build-docker
 	tox run $(TOX_EXEC_OPTS) --notest -e "build"
 	$(MAKE) -e -j PYTHON_WHEEL="$(call current_pkg,.whl)" \
 	    DOCKER_BUILD_ARGS="$(DOCKER_BUILD_ARGS) --progress plain" \
@@ -629,7 +641,7 @@ $(PYTHON_MINORS:%=test-docker-%):
 .PHONY: test-docker-pyminor
 ### Run the full suite of tests inside a docker container for this Python version.
 test-docker-pyminor: build-docker-$(PYTHON_MINOR) \
-		$(HOME)/.local/var/log/feed-archiver-host-install.log
+		$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log
 	docker_run_args="--rm"
 	if [ ! -t 0 ]
 	then
@@ -637,12 +649,12 @@ test-docker-pyminor: build-docker-$(PYTHON_MINOR) \
 	    docker_run_args+=" -T"
 	fi
 # Ensure the dist/package has been correctly installed in the image
-	docker compose run --no-deps $${docker_run_args} feed-archiver \
-	    python -m feedarchiver --help
-	docker compose run --no-deps $${docker_run_args} feed-archiver \
-	    feed-archiver --help
+	docker compose run --no-deps $${docker_run_args} $(PROJECT_NAME) \
+	    python -m "$(PYTHON_PROJECT_PACKAGE)" --help
+	docker compose run --no-deps $${docker_run_args} $(PROJECT_NAME) \
+	    $(PROJECT_NAME) --help
 # Run from the development Docker container for consistency
-	docker compose run $${docker_run_args} feed-archiver-devel \
+	docker compose run $${docker_run_args} $(PROJECT_NAME)-devel \
 	    make -e PYTHON_MINORS="$(PYTHON_MINORS)" PYTHON_WHEEL="$(PYTHON_WHEEL)" \
 	        test-local
 # Upload any build or test artifacts to CI/CD providers
@@ -671,7 +683,7 @@ test-docker-lint: ./.env.~out~ ./var/log/docker-login-DOCKER.log
 .PHONY: test-push
 ### Perform any checks that should only be run before pushing.
 test-push: $(VCS_FETCH_TARGETS) \
-		$(HOME)/.local/var/log/feed-archiver-host-install.log \
+		$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log \
 		./var-docker/$(PYTHON_ENV)/log/build-devel.log ./.env.~out~
 	vcs_compare_rev="$(VCS_COMPARE_REMOTE)/$(VCS_COMPARE_BRANCH)"
 ifeq ($(CI),true)
@@ -704,7 +716,7 @@ endif
 	    exit $$exit_code
 	else
 	    docker compose run $(DOCKER_COMPOSE_RUN_ARGS) \
-	        feed-archiver-devel $(TOX_EXEC_ARGS) -- \
+	        $(PROJECT_NAME)-devel $(TOX_EXEC_ARGS) -- \
 	        towncrier check --compare-with "$${vcs_compare_rev}"
 	fi
 
@@ -730,7 +742,7 @@ release: release-pkgs release-docker
 
 .PHONY: release-pkgs
 ### Publish installable Python packages to PyPI if conventional commits require.
-release-pkgs: $(HOME)/.local/var/log/feed-archiver-host-install.log \
+release-pkgs: $(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log \
 		./var/log/git-remotes.log \
 		./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) ~/.pypirc.~out~ \
 		./.env.~out~
@@ -741,18 +753,18 @@ ifeq ($(RELEASE_PUBLISH),true)
 # Bump the version and build the final release packages:
 	$(MAKE) -e build-pkgs
 # https://twine.readthedocs.io/en/latest/#using-twine
-	./.tox/build/bin/twine check ./dist/feed?archiver-*
+	$(TOX_EXEC_BUILD_ARGS) -- twine check ./dist/$(PYTHON_PROJECT_GLOB)-*
 # The VCS remote should reflect the release before the release is published to ensure
 # that a published release is never *not* reflected in VCS.  Also ensure the tag is in
 # place on any mirrors, using multiple `pushurl` remotes, for those project hosts as
 # well:
 	$(MAKE) -e test-clean
-	./.tox/build/bin/twine upload -s -r "$(PYPI_REPO)" \
-	    ./dist/feed?archiver-*
+	$(TOX_EXEC_BUILD_ARGS) -- twine upload -s -r "$(PYPI_REPO)" \
+	    ./dist/$(PYTHON_PROJECT_GLOB)-*
 	export VERSION=$$($(TOX_EXEC_BUILD_ARGS) -qq -- cz version --project)
 # Create a GitLab release
 	./.tox/build/bin/twine upload -s -r "gitlab" \
-	    ./dist/feed?archiver-*
+	    ./dist/$(PYTHON_PROJECT_GLOB)-*
 	release_cli_args="--description ./NEWS-VERSION.rst"
 	release_cli_args+=" --tag-name v$${VERSION}"
 	release_cli_args+=" --assets-link {\
@@ -767,7 +779,7 @@ ifeq ($(RELEASE_PUBLISH),true)
 	}"
 	release_cli_args+=" --assets-link {\
 	\"name\":\"Docker-Hub-Container-Registry\",\
-	\"url\":\"https://hub.docker.com/r/merpatterson/$(CI_PROJECT_NAME)/tags\",\
+	\"url\":\"https://hub.docker.com/r/$(DOCKER_USER)/$(CI_PROJECT_NAME)/tags\",\
 	\"link_type\":\"image\"\
 	}"
 	docker compose pull gitlab-release-cli
@@ -776,7 +788,7 @@ ifeq ($(RELEASE_PUBLISH),true)
 	    create $${release_cli_args}
 # Create a GitHub release
 	gh release create "v$${VERSION}" $(GITHUB_RELEASE_ARGS) \
-	    --notes-file "./NEWS-VERSION.rst" ./dist/feed?archiver-*
+	    --notes-file "./NEWS-VERSION.rst" ./dist/$(PYTHON_PROJECT_GLOB)-*
 endif
 
 .PHONY: release-docker
@@ -820,7 +832,7 @@ endif
 ### Bump the package version if on a branch that should trigger a release.
 release-bump: ~/.gitconfig $(VCS_RELEASE_FETCH_TARGETS) \
 		./var/log/git-remotes.log \
-		$(HOME)/.local/var/log/feed-archiver-host-install.log \
+		$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log \
 		./var-docker/$(PYTHON_ENV)/log/build-devel.log ./.env.~out~
 	if ! git diff --cached --exit-code
 	then
@@ -869,13 +881,13 @@ endif
 	    $(TOX_EXEC_BUILD_ARGS) -qq -- cz bump $${cz_bump_args} --yes --dry-run |
 	    sed -nE 's|.* ([^ ]+) *→ *([^ ]+).*|\2|p;q'
 	) || true
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	    $(TOX_EXEC_ARGS) -qq -- \
 	    towncrier build --version "$${next_version}" --draft --yes \
 	    >"./NEWS-VERSION.rst"
 	git add -- "./NEWS-VERSION.rst"
 # Build and stage the release notes to be commited by `$ cz bump`:
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	    $(TOX_EXEC_ARGS) -- towncrier build --version "$${next_version}" --yes
 # Increment the version in VCS
 	$(TOX_EXEC_BUILD_ARGS) -- cz bump $${cz_bump_args}
@@ -915,23 +927,23 @@ endif
 
 .PHONY: devel-format
 ### Automatically correct code in this checkout according to linters and style checkers.
-devel-format: $(HOME)/.local/var/log/feed-archiver-host-install.log
+devel-format: $(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log
 	$(TOX_EXEC_ARGS) -- autoflake -r -i --remove-all-unused-imports \
 		--remove-duplicate-keys --remove-unused-variables \
-		--remove-unused-variables "./src/feedarchiver/"
-	$(TOX_EXEC_ARGS) -- autopep8 -v -i -r "./src/feedarchiver/"
-	$(TOX_EXEC_ARGS) -- black "./src/feedarchiver/"
+		--remove-unused-variables "./src/$(PYTHON_PROJECT_PACKAGE)/"
+	$(TOX_EXEC_ARGS) -- autopep8 -v -i -r "./src/$(PYTHON_PROJECT_PACKAGE)/"
+	$(TOX_EXEC_ARGS) -- black "./src/$(PYTHON_PROJECT_PACKAGE)/"
 	$(TOX_EXEC_ARGS) -- reuse addheader -r --skip-unrecognised \
 	    --copyright "Ross Patterson <me@rpatterson.net>" --license "MIT" "./"
 
 .PHONY: devel-upgrade
 ### Update all fixed/pinned dependencies to their latest available versions.
-devel-upgrade: ./.env.~out~ $(HOME)/.local/var/log/feed-archiver-host-install.log \
+devel-upgrade: ./.env.~out~ $(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log \
 		build-docker
 	touch "./setup.cfg" "./requirements/build.txt.in" \
 	    "./build-host/requirements.txt.in"
 # Ensure the network is create first to avoid race conditions
-	docker compose create feed-archiver-devel
+	docker compose create $(PROJECT_NAME)-devel
 	$(MAKE) -e -j PIP_COMPILE_ARGS="--upgrade" \
 	    DOCKER_COMPOSE_RUN_ARGS="$(DOCKER_COMPOSE_RUN_ARGS) -T" \
 	    $(PYTHON_MINORS:%=build-docker-requirements-%)
@@ -1069,13 +1081,13 @@ $(PYTHON_ENVS:%=./requirements/%/build.txt): ./requirements/build.txt.in
 #     $ ./.tox/build/bin/cz --help
 # Mostly useful for build/release tools.
 $(PYTHON_ALL_ENVS:%=./.tox/%/bin/pip-compile):
-	$(MAKE) -e "$(HOME)/.local/var/log/feed-archiver-host-install.log"
+	$(MAKE) -e "$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log"
 	tox run $(TOX_EXEC_OPTS) -e "$(@:.tox/%/bin/pip-compile=%)" --notest
 # Workaround tox's `usedevelop = true` not working with `./pyproject.toml`.  Use as a
 # prerequisite when using Tox-managed virtual environments directly and changes to code
 # need to take effect immediately.
 $(PYTHON_ENVS:%=./.tox/%/log/editable.log):
-	$(MAKE) -e "$(HOME)/.local/var/log/feed-archiver-host-install.log"
+	$(MAKE) -e "$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log"
 	mkdir -pv "$(dir $(@))"
 	tox exec $(TOX_EXEC_OPTS) -e "$(@:./.tox/%/log/editable.log=%)" -- \
 	    pip3 install -e "./" |& tee -a "$(@)"
@@ -1097,7 +1109,7 @@ ifeq ($(DOCKER_BUILD_PULL),true)
 	then
 	    touch "$(@)" "./var-docker/$(PYTHON_ENV)/log/rebuild.log"
 # Ensure the virtualenv in the volume is also current:
-	    docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	    docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	        tox run $(TOX_EXEC_OPTS) -e "$(PYTHON_ENV)" --notest
 	    exit
 	fi
@@ -1105,17 +1117,17 @@ endif
 	$(MAKE) -e DOCKER_VARIANT="devel" DOCKER_BUILD_ARGS="--load" \
 	    build-docker-build | tee -a "$(@)"
 # Represent that host install is baked into the image in the `${HOME}` bind volume:
-	docker compose run --rm -T --workdir "/home/feed-archiver/" \
-	    feed-archiver-devel mkdir -pv "./.local/var/log/"
-	docker run --rm --workdir "/home/feed-archiver/" --entrypoint "cat" \
-	    "$$(docker compose config --images feed-archiver-devel | head -n 1)" \
-	    "./.local/var/log/feed-archiver-host-install.log" |
-	    docker compose run --rm -T --workdir "/home/feed-archiver/" \
-	        feed-archiver-devel tee -a \
-	        "./.local/var/log/feed-archiver-host-install.log" >"/dev/null"
+	docker compose run --rm -T --workdir "/home/$(PROJECT_NAME)/" \
+	    $(PROJECT_NAME)-devel mkdir -pv "./.local/var/log/"
+	docker run --rm --workdir "/home/$(PROJECT_NAME)/" --entrypoint "cat" \
+	    "$$(docker compose config --images $(PROJECT_NAME)-devel | head -n 1)" \
+	    "./.local/var/log/$(PROJECT_NAME)-host-install.log" |
+	    docker compose run --rm -T --workdir "/home/$(PROJECT_NAME)/" \
+	        $(PROJECT_NAME)-devel tee -a \
+	        "./.local/var/log/$(PROJECT_NAME)-host-install.log" >"/dev/null"
 # Update the pinned/frozen versions, if needed, using the container.  If changed, then
 # we may need to re-build the container image again to ensure it's current and correct.
-	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) feed-archiver-devel \
+	docker compose run $(DOCKER_COMPOSE_RUN_ARGS) $(PROJECT_NAME)-devel \
 	    make -e PYTHON_MINORS="$(PYTHON_MINOR)" build-requirements-$(PYTHON_ENV)
 ifeq ($(CI),true)
 # On CI, any changes from compiling requirements is a failure so no need to waste time
@@ -1156,7 +1168,7 @@ endif
 # host.  Use a target file outside this checkout to support multiple checkouts.  Use a
 # target specific to this project so that other projects can use the same approach but
 # with different requirements.
-$(HOME)/.local/var/log/feed-archiver-host-install.log: ./bin/host-install \
+$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log: ./bin/host-install \
 		./build-host/requirements.txt.in
 	mkdir -pv "$(dir $(@))"
 	"$(<)" |& tee -a "$(@)"
@@ -1227,13 +1239,13 @@ $(VCS_FETCH_TARGETS): ./.git/logs/HEAD
 	fi
 
 ./.git/hooks/pre-commit:
-	$(MAKE) -e "$(HOME)/.local/var/log/feed-archiver-host-install.log"
+	$(MAKE) -e "$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log"
 	$(TOX_EXEC_BUILD_ARGS) -- pre-commit install \
 	    --hook-type "pre-commit" --hook-type "commit-msg" --hook-type "pre-push"
 
 # Capture any project initialization tasks for reference.  Not actually usable.
 ./pyproject.toml:
-	$(MAKE) -e "$(HOME)/.local/var/log/feed-archiver-host-install.log"
+	$(MAKE) -e "$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log"
 	$(TOX_EXEC_BUILD_ARGS) -- cz init
 
 # Tell Emacs where to find checkout-local tools needed to check the code.
@@ -1286,7 +1298,7 @@ endif
 	mkdir -pv "$(dir $(@))"
 	if [ -n "$${DOCKER_PASS}" ]
 	then
-	    printenv "DOCKER_PASS" | docker login -u "merpatterson" --password-stdin
+	    printenv "DOCKER_PASS" | docker login -u "$(DOCKER_USER)" --password-stdin
 	elif [ "$(CI_IS_FORK)" != "true" ]
 	then
 	    echo "ERROR: DOCKER_PASS missing from ./.env or CI secrets"
@@ -1329,7 +1341,7 @@ endif
 	    sudo apt-get update
 	    sudo apt-get install -y apache2-utils
 	fi
-	htpasswd -c "$(@)" "feed-archiver"
+	htpasswd -c "$(@)" "$(PROJECT_NAME)"
 
 # Extract the Sonarr API key
 ./sonarr/config/config.xml: ./var/docker/$(PYTHON_ENV)/log/build.log
@@ -1342,8 +1354,8 @@ endif
 	    sleep 0.1
 	done
 
-./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.~out~: \
-		./src/feedarchiver/tests/archives/end-to-end/.feed-archiver.yml.in \
+./src/$(PYTHON_PROJECT_PACKAGE)/tests/archives/end-to-end/.$(PROJECT_NAME).yml.~out~: \
+		./src/$(PYTHON_PROJECT_PACKAGE)/tests/archives/end-to-end/.$(PROJECT_NAME).yml.in \
 		./sonarr/config/config.xml
 	export SONARR_API_KEY=$$(
 	    sed -nE 's|.*<ApiKey>(.+)</ApiKey>.*|\1|p' "./sonarr/config/config.xml"
@@ -1431,7 +1443,7 @@ define expand_template=
 if ! which envsubst
 then
     mkdir -pv "$(HOME)/.local/var/log/"
-    ./bin/host-install >"$(HOME)/.local/var/log/feed-archiver-host-install.log"
+    ./bin/host-install >"$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log"
 fi
 if [ "$(2:%.~out~=%)" -nt "$(1)" ]
 then
@@ -1549,7 +1561,7 @@ endef
 .PHONY: pull-docker
 ### Pull an existing image best to use as a cache for building new images
 pull-docker: ./var/git/refs/remotes/$(VCS_REMOTE)/$(VCS_BRANCH) \
-		$(HOME)/.local/var/log/feed-archiver-host-install.log
+		$(HOME)/.local/var/log/$(PROJECT_NAME)-host-install.log
 	export VERSION=$$($(TOX_EXEC_BUILD_ARGS) -qq -- cz version --project)
 	for vcs_branch in $(VCS_BRANCHES)
 	do
