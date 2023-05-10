@@ -10,9 +10,9 @@ import re
 import pprint
 
 try:
-    from importlib.metadata import entry_points  # type: ignore
-except ImportError:  # pragma: no cover
     from importlib_metadata import entry_points  # type: ignore
+except ImportError:  # pragma: no cover
+    from importlib.metadata import entry_points  # type: ignore
 
 
 def load_plugins(parent, parent_config):
@@ -26,13 +26,13 @@ def load_plugins(parent, parent_config):
         raise ValueError(
             f"`enclosures` must be a list/array:\n{pprint.pformat(configs)}"
         )
-    entrypoints = {ep.name: ep for ep in entry_points()["feedarchiver.enclosures"]}
+    entrypoints = entry_points(group="feedarchiver.enclosures")
     plugins = []
     fallack_plugins = []
     for config in configs:
         # Perform any validation as early as possible
         name = config.get("plugin", "default")
-        if name not in entrypoints:  # pragma: no cover
+        if name not in entrypoints.names:  # pragma: no cover
             raise ValueError(
                 f"enclosure plugin name not registered: {name}",
             )

@@ -42,7 +42,7 @@ idna==3.4
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==6.6.0 ; python_version < "3.8"
+importlib-metadata==6.6.0 ; python_version < "3.10"
     # via
     #   argcomplete
     #   attrs
